@@ -31,9 +31,14 @@ export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 md:p-5 shadow-sm">
       <div className="flex items-baseline justify-between mb-3 gap-3 flex-wrap">
-        <h2 className="text-xs font-medium tracking-[0.25em] uppercase text-slate-500 dark:text-slate-400">
-          格局分析
-        </h2>
+        <span className="flex items-baseline gap-2">
+          <h2 className="text-xs font-medium tracking-[0.25em] uppercase text-slate-500 dark:text-slate-400">
+            格局分析
+          </h2>
+          <span className="text-[10px] text-slate-400 dark:text-slate-600">
+            点击具体格局查看释义
+          </span>
+        </span>
 
         {/* 图例 */}
         <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">

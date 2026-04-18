@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useBaziStore } from '@/lib/store'
+import { useBaziStore, HOUR_UNKNOWN } from '@/lib/store'
 
 const STORAGE_KEY = 'bazi.saved.v1'
 const SEEDED_KEY = 'bazi.saved.seeded'
@@ -41,6 +41,7 @@ const PRESETS: SavedEntry[] = [
   { name: '溥仪', year: 1906, month: 2, day: 7, hour: 12, sex: 1, savedAt: 0 },
   { name: '武则天', year: 625, month: 3, day: 7, hour: 0, sex: 0, savedAt: 0 },
   { name: 'XXX', year: 1953, month: 6, day: 15, hour: 12, sex: 1, savedAt: 0 },
+  { name: '张雪峰', year: 1984, month: 5, day: 18, hour: HOUR_UNKNOWN, sex: 1, savedAt: 0 },
 ]
 
 function seedIfAbsent() {
@@ -180,7 +181,10 @@ export function SaveLoadControls() {
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400">
                     {e.year}-{String(e.month).padStart(2, '0')}-{String(e.day).padStart(2, '0')}{' '}
-                    {String(e.hour).padStart(2, '0')}:00 · {e.sex === 1 ? '男' : '女'}
+                    {e.hour === HOUR_UNKNOWN
+                      ? '时辰未知'
+                      : `${String(e.hour).padStart(2, '0')}:00`}{' '}
+                    · {e.sex === 1 ? '男' : '女'}
                   </div>
                 </button>
                 <button

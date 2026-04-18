@@ -1,4 +1,5 @@
-import { useBaziStore } from '@/lib/store'
+import { useState } from 'react'
+import { useBaziStore, HOUR_UNKNOWN } from '@/lib/store'
 import { inputCls, labelCls, primaryBtn } from '@/lib/ui'
 import { SaveLoadControls } from '@@/SaveLoadControls'
 
@@ -11,6 +12,8 @@ export function BaziForm() {
   const setDate = useBaziStore((s) => s.setDate)
   const syncToUrl = useBaziStore((s) => s.syncToUrl)
 
+  const [hourUnknown, setHourUnknown] = useState(hour === HOUR_UNKNOWN)
+
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const f = new FormData(e.currentTarget)
@@ -18,11 +21,13 @@ export function BaziForm() {
       year: Number(f.get('year')),
       month: Number(f.get('month')),
       day: Number(f.get('day')),
-      hour: Number(f.get('hour')),
+      hour: hourUnknown ? HOUR_UNKNOWN : Number(f.get('hour')),
       sex: Number(f.get('sex')) === 0 ? 0 : 1,
     })
     syncToUrl()
   }
+
+  const hourInputValue = hour === HOUR_UNKNOWN ? 0 : hour
 
   return (
     <form
@@ -32,7 +37,27 @@ export function BaziForm() {
       <label className={labelCls}>年<input name="year" type="number" defaultValue={year} className={inputCls} /></label>
       <label className={labelCls}>月<input name="month" type="number" min={1} max={12} defaultValue={month} className={inputCls} /></label>
       <label className={labelCls}>日<input name="day" type="number" min={1} max={31} defaultValue={day} className={inputCls} /></label>
-      <label className={labelCls}>时<input name="hour" type="number" min={0} max={23} defaultValue={hour} className={inputCls} /></label>
+      <label className={labelCls}>
+        时
+        <input
+          name="hour"
+          type="number"
+          min={0}
+          max={23}
+          defaultValue={hourInputValue}
+          disabled={hourUnknown}
+          className={inputCls + (hourUnknown ? ' opacity-40 cursor-not-allowed' : '')}
+        />
+      </label>
+      <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 pb-2 select-none cursor-pointer">
+        <input
+          type="checkbox"
+          checked={hourUnknown}
+          onChange={(e) => setHourUnknown(e.currentTarget.checked)}
+          className="accent-amber-700"
+        />
+        时柱未知
+      </label>
       <label className={labelCls}>
         性别
         <select name="sex" defaultValue={sex} className={inputCls}>

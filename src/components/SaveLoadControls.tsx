@@ -130,11 +130,31 @@ export function SaveLoadControls() {
     setEntries(list)
   }
 
+  const onReset = () => {
+    if (!window.confirm('恢复出厂设置将清空你保存的全部排盘，仅保留内置命例，确定？')) return
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(SEEDED_KEY)
+    } catch {
+      /* ignore */
+    }
+    seedIfAbsent()
+    setEntries(loadAll())
+    setOpen(false)
+  }
+
   return (
     <div className="relative flex items-center gap-2" ref={wrapRef}>
       <button type="button" onClick={onSave} className={btnCls}>保存</button>
       <button type="button" onClick={onToggleLoad} className={btnCls}>
         加载 <span className="text-xs">▾</span>
+      </button>
+      <button
+        type="button"
+        onClick={onReset}
+        className={btnCls + ' text-slate-500 hover:text-red-600 hover:border-red-400 dark:hover:border-red-500'}
+      >
+        恢复出厂设置
       </button>
 
       {open && (

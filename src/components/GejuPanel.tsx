@@ -91,6 +91,10 @@ export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
           </div>
         )}
       </div>
+
+      <div className="mt-3 text-[10px] text-slate-400 dark:text-slate-600 text-right">
+        算法版本 v2，大部分有古籍背书，成格条件更苛刻，仅供参考
+      </div>
     </section>
   )
 }

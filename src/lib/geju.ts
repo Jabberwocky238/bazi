@@ -143,52 +143,44 @@ interface Ctx {
   yearZhi: Zhi
   dayWx: string
   season: '春' | '夏' | '秋' | '冬' | ''
+  /** 日主阳干 (甲/丙/戊/庚/壬) */
+  dayYang: boolean
 
   // —— 十神定性查询 ——
-  /** 十神在年/月/时干任意透出 */
   tou(s: string): boolean
-  /** 类别是否有任一十神透干 */
   touCat(c: ShishenCat): boolean
-  /** 十神在任意地支藏干出现 */
   zang(s: string): boolean
-  /** 十神透干或藏干 */
   has(s: string): boolean
-  /** 类别透干或藏干 */
   hasCat(c: ShishenCat): boolean
-  /** 某柱地支主气为该十神的柱号列表 (0=年 1=月 2=日 3=时) */
   mainAt(s: string): number[]
-  /** 十神"有力" = 透干 或 任一柱地支主气即此 */
   strong(s: string): boolean
-  /** 类别"有力" */
   strongCat(c: ShishenCat): boolean
 
-  // —— 五行定性查询 (按"柱数"计数, 非加权) ——
-  /** 年/月/日/时干中此五行的柱数 0-4 */
+  // —— 数量统计 (干位 + 所有藏干位) ——
+  /** 某十神总位数 (年月时干 + 四柱所有藏干) */
+  countOf(s: string): number
+  /** 某类别总位数 */
+  countCat(c: ShishenCat): number
+
+  // —— 五行定性查询 (按"柱数"计数) ——
   ganWxCount(wx: string): number
-  /** 年/月/日/时支主气中此五行的柱数 0-4 */
   zhiMainWxCount(wx: string): number
-  /** 该五行在天干透出 */
   touWx(wx: string): boolean
-  /** 该五行在地支主气有根 */
   rootWx(wx: string): boolean
 
-  // —— 日主强弱 (定性) ——
-  /** 月令主气生扶日主 (同类或印) */
+  // —— 日主强弱 ——
   deLing: boolean
-  /** 日支主气生扶日主 */
   deDi: boolean
-  /** 除日干外其余 7 位 (三干+四主气) 中生扶日主 ≥ 3 */
   deShi: boolean
-  /** 身旺: 三者得 ≥ 2 */
   shenWang: boolean
-  /** 身弱: 三者皆不得 */
   shenRuo: boolean
+  /** 比劫 + 印在四柱 (干位 + 主气) 的总位数 */
+  selfSupportN: number
 
   // —— 位置关系 ——
-  /** 十神 s1 与 s2 是否在相邻天干柱 (伤官见官之"紧贴") */
   adjacentTou(s1: string, s2: string): boolean
 
-  // —— 月令类别 (便于 raw check) ——
+  // —— 月令类别 ——
   monthCat: ShishenCat | ''
 }
 
@@ -250,6 +242,20 @@ function buildCtx(pillars: Pillar[]): Ctx {
       return SHI_SHEN_CAT[p.hideShishen[0] ?? ''] === c
     })
 
+  // 数量统计：天干 3 位 + 四柱所有藏干
+  const countOf = (s: string) => {
+    let n = 0
+    for (const g of ganSs) if (g === s) n++
+    for (const z of allZhi) if (z === s) n++
+    return n
+  }
+  const countCat = (c: ShishenCat) => {
+    let n = 0
+    for (const g of ganSs) if (SHI_SHEN_CAT[g] === c) n++
+    for (const z of allZhi) if (SHI_SHEN_CAT[z] === c) n++
+    return n
+  }
+
   const ganWxCount = (wx: string) =>
     pillars.filter((p) => ganWuxing(p.gan) === wx).length
   const zhiMainWxCount = (wx: string) =>
@@ -277,6 +283,12 @@ function buildCtx(pillars: Pillar[]): Ctx {
     return false
   }
 
+  const dayYang = ['甲', '丙', '戊', '庚', '壬'].includes(dayGan)
+  // 比劫 + 印总位数 (天干 + 四柱主气)，用于身弱/身旺细分
+  let selfSupportN = 0
+  for (const g of ganSs) if (isSelfOrYin(SHI_SHEN_CAT[g])) selfSupportN++
+  for (let i = 0; i < 4; i++) if (isSelfOrYin(SHI_SHEN_CAT[mainZhi[i]])) selfSupportN++
+
   return {
     pillars,
     dayGan,
@@ -286,9 +298,12 @@ function buildCtx(pillars: Pillar[]): Ctx {
     yearZhi: yearP.zhi as Zhi,
     dayWx,
     season,
+    dayYang,
     tou, touCat, zang, has, hasCat, mainAt, strong, strongCat,
+    countOf, countCat,
     ganWxCount, zhiMainWxCount, touWx, rootWx,
     deLing, deDi, deShi, shenWang, shenRuo,
+    selfSupportN,
     adjacentTou,
     monthCat,
   }
@@ -296,16 +311,35 @@ function buildCtx(pillars: Pillar[]): Ctx {
 
 // ——————————————————————— 正格 ———————————————————————
 
-/** 建禄格：月支为日主之禄。 */
+/**
+ * 建禄格：月支本气为日主之禄 + 原局有官/财/食伤作为泄克出口。
+ * 依《子平真诠》："禄格用官，干头透出为奇；其次财生官，其次伤官佩印……
+ *   日元既旺，则宜泄宜克"。无泄克出口者只是"空身强"，不入贵格。
+ */
 export function isJianLuGe(ctx: Ctx): GejuDraft | null {
   if (ctx.monthZhi !== LU[ctx.dayGan]) return null
-  return { name: '建禄格', note: `月令 ${ctx.monthZhi} 为日主 ${ctx.dayGan} 之禄` }
+  const hasOutlet =
+    ctx.touCat('官杀') || ctx.touCat('财') || ctx.touCat('食伤')
+  if (!hasOutlet) return null
+  return {
+    name: '建禄格',
+    note: `月令 ${ctx.monthZhi} 临日主 ${ctx.dayGan} 之禄，带官杀/财/食伤为用`,
+  }
 }
 
-/** 魁罡格：日柱为庚辰/庚戌/壬辰/戊戌。 */
+/**
+ * 魁罡格：日柱为四魁罡 + 身旺 + 原局无财透紧贴日柱。
+ * 《三命通会》"身强遇之转荣华，运见财官禄科尽丧"。身弱或财紧贴者破格。
+ */
 export function isKuiGangGe(ctx: Ctx): GejuDraft | null {
   if (!KUIGANG_DAY.has(ctx.dayGz)) return null
-  return { name: '魁罡格', note: `日柱 ${ctx.dayGz} 为魁罡` }
+  if (ctx.shenRuo) return null
+  // 月干/时干有财透 = 财紧贴日柱
+  const adjCai =
+    SHI_SHEN_CAT[ctx.pillars[1].shishen] === '财' ||
+    SHI_SHEN_CAT[ctx.pillars[3].shishen] === '财'
+  if (adjCai) return null
+  return { name: '魁罡格', note: `日柱 ${ctx.dayGz} 魁罡，身强不犯财官` }
 }
 
 /** 壬骑龙背：日柱壬辰。 */
@@ -324,34 +358,46 @@ export function isGuanShaHunZa(ctx: Ctx): GejuDraft | null {
   return { name: '官杀混杂', note: `正官 + 七杀 ${form}` }
 }
 
-/** 官印相生：正官存在 + 无七杀(否则为混杂) + 印透干 + 无伤官透 + 身不弱。 */
+/**
+ * 官印相生：正官透干 + 印透干 + 无七杀透（藏支可容） + 无伤官透 + 无财紧贴破印。
+ */
 export function isGuanYinXiangSheng(ctx: Ctx): GejuDraft | null {
-  if (!ctx.has('正官')) return null
-  if (ctx.has('七杀')) return null
+  if (!ctx.tou('正官')) return null
+  if (ctx.tou('七杀')) return null        // 放宽：允许七杀藏支
   if (!ctx.touCat('印')) return null
   if (ctx.tou('伤官')) return null
-  if (ctx.shenRuo) return null
-  return { name: '官印相生', note: '正官配印，无伤官混迹' }
+  // 财紧贴印则破印
+  if (ctx.adjacentTou('正财', '正印') || ctx.adjacentTou('正财', '偏印') ||
+      ctx.adjacentTou('偏财', '正印') || ctx.adjacentTou('偏财', '偏印')) return null
+  return { name: '官印相生', note: '正官透印透，无伤官与紧贴财破格' }
 }
 
-/** 杀印相生：七杀存在 + 无正官(否则为混杂) + 印透干 + 身不弱。 */
+/**
+ * 杀印相生：七杀透干或月令七杀 + 印透干通根。
+ * 允许正官藏支（不透则不算混杂）。
+ */
 export function isShaYinXiangSheng(ctx: Ctx): GejuDraft | null {
-  if (!ctx.has('七杀')) return null
-  if (ctx.has('正官')) return null
+  const shaPresent = ctx.tou('七杀') || ctx.monthCat === '官杀'
+  if (!shaPresent) return null
+  if (ctx.tou('正官')) return null          // 放宽：允许正官藏支
   if (!ctx.touCat('印')) return null
-  if (ctx.shenRuo) return null
-  return { name: '杀印相生', note: '七杀配印，身不弱' }
+  return { name: '杀印相生', note: '七杀配印，化杀生身' }
 }
 
 // ——————————————————————— 食伤 ———————————————————————
 
-/** 食神制杀：食神透 + 七杀存在 + **无偏印透干**(枭印夺食) + 身不弱。 */
+/**
+ * 食神制杀：月令七杀或七杀透干通根 + 食神透干通根 + 无枭印夺食。
+ * 放宽：不再强求身不弱（食杀两停即可），但偏印透则破。
+ */
 export function isShiShenZhiSha(ctx: Ctx): GejuDraft | null {
+  const shaPresent = ctx.tou('七杀') || ctx.monthCat === '官杀' || ctx.zang('七杀')
+  if (!shaPresent) return null
   if (!ctx.tou('食神')) return null
-  if (!ctx.has('七杀')) return null
+  // 食神需通根 (主气或藏干)
+  if (!ctx.zang('食神')) return null
   if (ctx.tou('偏印')) return null
-  if (ctx.shenRuo) return null
-  return { name: '食神制杀', note: '食神透干制七杀' }
+  return { name: '食神制杀', note: '食神透干通根，制七杀' }
 }
 
 /** 枭神夺食：偏印透 + 食神存在 + 无财救(财不透)。 */
@@ -371,10 +417,14 @@ export function isShangGuanJianGuan(ctx: Ctx): GejuDraft | null {
   return { name: '伤官见官', note: '伤官正官紧贴且无救' }
 }
 
-/** 伤官合杀：伤官与七杀并存。 */
+/**
+ * 伤官合杀：日主为阴干（乙/丁/己/辛/癸）+ 伤官与七杀**都透干**。
+ * 《渊海子平》：五合只在天干，阳干无此结构。
+ */
 export function isShangGuanHeSha(ctx: Ctx): GejuDraft | null {
-  if (!ctx.has('伤官') || !ctx.has('七杀')) return null
-  return { name: '伤官合杀', note: '伤官 + 七杀共存' }
+  if (ctx.dayYang) return null              // 只有阴日主的伤官与七杀构成五合
+  if (!ctx.tou('伤官') || !ctx.tou('七杀')) return null
+  return { name: '伤官合杀', note: `阴日主 ${ctx.dayGan} 伤官七杀双透五合` }
 }
 
 /** 伤官生财：伤官透 + 财有力 + 身不弱 + 印不透(以免克伤)。 */
@@ -386,13 +436,17 @@ export function isShangGuanShengCai(ctx: Ctx): GejuDraft | null {
   return { name: '伤官生财', note: '伤官透生财，无印阻' }
 }
 
-/** 伤官佩印：伤官透 + 印透 + 身不弱 + 财不透(以免破印)。 */
+/**
+ * 伤官佩印：伤官透干通根 + 印透干通根 + **身弱**（专为身弱用印） + 财不透破印。
+ * 《子平真诠》"伤官用印，身弱有力"。身旺用财，身弱用印 —— 这里限身弱。
+ */
 export function isShangGuanPeiYin(ctx: Ctx): GejuDraft | null {
   if (!ctx.tou('伤官')) return null
+  if (!ctx.zang('伤官')) return null                 // 伤官通根
   if (!ctx.touCat('印')) return null
-  if (ctx.touCat('财')) return null
-  if (ctx.shenRuo) return null
-  return { name: '伤官佩印', note: '伤官佩印，无财破印' }
+  if (ctx.touCat('财')) return null                  // 财透破印
+  if (ctx.shenWang) return null                      // 身旺则不用印而应用财
+  return { name: '伤官佩印', note: '身弱伤官透，印透制伤化气' }
 }
 
 /** 食伤混杂：食神与伤官同时透干。 */
@@ -411,20 +465,31 @@ export function isShiShangXieXiu(ctx: Ctx): GejuDraft | null {
 
 // ——————————————————————— 羊刃 ———————————————————————
 
-/** 羊刃驾杀：月支为日主羊刃 + 七杀存在。 */
+/**
+ * 羊刃驾杀：日主阳干 + 刃位见于月/日/时支 + 七杀透干通根。
+ * 《子平真诠》"羊刃无杀不足为贵；七杀无刃不足为威"。刃杀势均方成贵格。
+ */
 export function isYangRenJiaSha(ctx: Ctx): GejuDraft | null {
+  if (!ctx.dayYang) return null
   const yr = YANG_REN[ctx.dayGan]
-  if (!yr || ctx.monthZhi !== yr) return null
-  if (!ctx.has('七杀')) return null
-  return { name: '羊刃驾杀', note: `月令羊刃 ${yr} 驾七杀` }
+  if (!yr) return null
+  const yrPos = [ctx.pillars[1].zhi, ctx.pillars[2].zhi, ctx.pillars[3].zhi].includes(yr)
+  if (!yrPos) return null
+  if (!ctx.tou('七杀')) return null
+  return { name: '羊刃驾杀', note: `阳刃 ${yr} 见于支 + 七杀透干` }
 }
 
-/** 羊刃劫财：月支为日主羊刃 + 劫财透干。 */
+/**
+ * 羊刃劫财：阳干 + 刃位见于月/日/时支 + 劫财透或通根多位。
+ */
 export function isYangRenJieCai(ctx: Ctx): GejuDraft | null {
+  if (!ctx.dayYang) return null
   const yr = YANG_REN[ctx.dayGan]
-  if (!yr || ctx.monthZhi !== yr) return null
-  if (!ctx.tou('劫财')) return null
-  return { name: '羊刃劫财', note: `月令羊刃 + 劫财透干` }
+  if (!yr) return null
+  const yrPos = [ctx.pillars[1].zhi, ctx.pillars[2].zhi, ctx.pillars[3].zhi].includes(yr)
+  if (!yrPos) return null
+  if (!ctx.has('劫财')) return null
+  return { name: '羊刃劫财', note: `阳刃 ${yr} 见于支 + 劫财并显` }
 }
 
 // ——————————————————————— 总量 ———————————————————————
@@ -462,12 +527,17 @@ export function isLuMaTongXiang(ctx: Ctx): GejuDraft | null {
   return null
 }
 
-/** 以财破印：身弱 + 印透干 + 财透干 (财克印)。 */
+/**
+ * 以财破印：印过旺成病（印≥3位）+ 财透干通根 + 日主有其他比劫/禄刃可承担。
+ * 《子平真诠》"印太多而无财以制，其人多懒惰无成"——用在印盛时，不用在身弱时。
+ */
 export function isYiCaiPoYin(ctx: Ctx): GejuDraft | null {
-  if (!ctx.shenRuo) return null
-  if (!ctx.touCat('印')) return null
+  if (ctx.countCat('印') < 3) return null            // 印需成病 (≥3位)
   if (!ctx.touCat('财')) return null
-  return { name: '以财破印', note: '身弱印被财克' }
+  if (!ctx.zang('正财') && !ctx.zang('偏财')) return null  // 财通根
+  // 身弱且无比劫支撑 → 破印反损身
+  if (ctx.shenRuo && ctx.countCat('比劫') === 0) return null
+  return { name: '以财破印', note: `印 ${ctx.countCat('印')} 位成病，财透破印` }
 }
 
 /** 财多身弱：身弱 + 财透干 ≥ 2 或 财在地支主气 ≥ 2。 */
@@ -714,19 +784,21 @@ export function isRunXiaGe(ctx: Ctx): GejuDraft | null {
 // ——————————————————————— 从格 ———————————————————————
 
 /**
- * 从X 共用判据：
- * - 不得令 不得地 不得势 (身极弱)
- * - 月令主气为目标类别
- * - 地支主气目标类别 ≥ 3
+ * 从X 共用判据（依《滴天髓》"若有一毫印绶，即不为从"）：
+ * - 日主**无任何比劫 / 印根**（天干无比印透，四柱藏干无比印）
+ * - 月令为目标类别 OR 目标在地支主气 ≥ 3
  * - 目标类别透干
  */
 function checkCong(ctx: Ctx, target: ShishenCat, targetWx: string): { note: string } | null {
-  if (!ctx.shenRuo) return null
-  if (ctx.monthCat !== target) return null
+  if (ctx.countCat('比劫') > 0) return null
+  if (ctx.countCat('印') > 0) return null
   if (!ctx.touCat(target)) return null
+  const monthIs = ctx.monthCat === target
   const zhiSupport = ctx.zhiMainWxCount(targetWx)
-  if (zhiSupport < 3) return null
-  return { note: `身极弱，月令 ${target}，地支 ${targetWx} ${zhiSupport} 位` }
+  if (!monthIs && zhiSupport < 3) return null
+  return {
+    note: `日主无根 (0 比劫印)，${monthIs ? `月令${target}` : `地支 ${targetWx} ${zhiSupport} 位`}`,
+  }
 }
 
 /** 从财格：身极弱 + 从财。 */
@@ -743,14 +815,18 @@ export function isCongShaGe(ctx: Ctx): GejuDraft | null {
   return r ? { name: '从杀格', note: r.note } : null
 }
 
-/** 弃命从势：身极弱 + 食伤/财/官杀 三方均有透干。 */
+/**
+ * 弃命从势：日主无任何比劫/印根 + 食伤、财、官杀中至少两类并强透干。
+ * 《滴天髓·从象》任铁樵注："日主孤立无根，四柱财官食伤势均力敌"。
+ */
 export function isQiMingCongShi(ctx: Ctx): GejuDraft | null {
-  if (!ctx.shenRuo) return null
-  if (!ctx.touCat('食伤')) return null
-  if (!ctx.touCat('财')) return null
-  if (!ctx.touCat('官杀')) return null
-  // 排除单一从格 (月令偏向某一方的情况由专门 detector 处理)
-  return { name: '弃命从势', note: '身极弱，食伤财官杀三方并透' }
+  if (ctx.countCat('比劫') > 0) return null
+  if (ctx.countCat('印') > 0) return null
+  const strongCats = (['食伤', '财', '官杀'] as ShishenCat[]).filter(
+    (c) => ctx.touCat(c) && ctx.countCat(c) >= 2,
+  )
+  if (strongCats.length < 2) return null
+  return { name: '弃命从势', note: `无根 + ${strongCats.join(' ')} 并强` }
 }
 
 // ——————————————————————— 主入口 ———————————————————————

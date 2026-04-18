@@ -66,7 +66,7 @@ export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
               category="geju"
               name={h.name}
               subtitle={h.note}
-              className={`text-sm px-3 py-1 rounded-full border-2 ${QUALITY_BORDER[h.quality]} ${CATEGORY_TEXT[h.category]}`}
+              className={`text-sm px-3 py-1 rounded-full border-2 ${QUALITY_BORDER[h.quality]} ${CATEGORY_TEXT[h.category]} ${h.category === '特殊格' ? 'font-bold' : ''}`}
             >
               {h.name}
             </SkillLink>

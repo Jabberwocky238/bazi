@@ -63,10 +63,10 @@ function readQuery() {
   const params = new URLSearchParams(window.location.search)
   const sexRaw = parseIntOr(params.get('sex'), 1)
   return {
-    year: parseIntOr(params.get('year'), 2003),
-    month: parseIntOr(params.get('month'), 8),
-    day: parseIntOr(params.get('day'), 4),
-    hour: parseIntOr(params.get('hour'), 8),
+    year: parseIntOr(params.get('year'), 1893),
+    month: parseIntOr(params.get('month'), 12),
+    day: parseIntOr(params.get('day'), 26),
+    hour: parseIntOr(params.get('hour'), 7),
     sex: (sexRaw === 0 ? 0 : 1) as Sex,
   }
 }

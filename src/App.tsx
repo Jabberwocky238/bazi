@@ -33,7 +33,7 @@ function App() {
           <GejuPanel pillars={result.pillars} />
           <DaYunPanel />
           <ShishenProportion pillars={result.pillars} />
-          <BalancePanel />
+          {/* <BalancePanel /> */}
           <SkillIndex pillars={result.pillars} />
           <BasicsPanel />
         </section>

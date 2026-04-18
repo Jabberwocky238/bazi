@@ -706,39 +706,63 @@ export function isJinHuoZhuYin(ctx: Ctx): GejuHit | null {
 // ——————————————————————— 专旺 / 从格 ———————————————————————
 
 /**
- * 专旺格 (一行独旺)：日主 + 印比占比 > 0.7 + 月令得令 + 无财官食伤。
- * @see 格局/专旺格.md
+ * 共享：一行独旺判定。日主属 targetWx + 印比占比 ≥ 0.7 + 月令得令 + 财官食伤 ≤ 0.15。
  */
-export function isZhuanWangGe(ctx: Ctx): GejuHit | null {
-  const self = ctx.wxPool[ctx.dayWx] ?? 0
-  const yin = ctx.wxPool[WX_GENERATED_BY[ctx.dayWx]] ?? 0
-  const selfRatio = (self + yin) / ctx.totalWx
-  if (selfRatio < 0.7) return null
+function checkZhuanWang(ctx: Ctx, targetWx: string): { ratio: number } | null {
+  if (ctx.dayWx !== targetWx) return null
+  const zwSelf = ctx.wxPool[ctx.dayWx] ?? 0
+  const zwYin = ctx.wxPool[WX_GENERATED_BY[ctx.dayWx]] ?? 0
+  const zwRatio = (zwSelf + zwYin) / ctx.totalWx
+  if (zwRatio < 0.7) return null
   if (!ctx.deLing) return null
-  const cai = ctx.wxPool[WX_CONTROLS[ctx.dayWx]] ?? 0
-  const ks = ctx.wxPool[WX_CONTROLLED_BY[ctx.dayWx]] ?? 0
-  if ((cai + ks) / ctx.totalWx > 0.15) return null
-  const SUB: Record<string, string> = {
-    木: '曲直', 火: '炎上', 土: '稼穑', 金: '从革', 水: '润下',
-  }
-  return {
-    name: '专旺格',
-    note: `${SUB[ctx.dayWx] ?? ''}格 · 日主 ${ctx.dayWx} 独旺 ${(selfRatio * 100).toFixed(0)}%`,
-  }
+  const zwCai = ctx.wxPool[WX_CONTROLS[ctx.dayWx]] ?? 0
+  const zwKs = ctx.wxPool[WX_CONTROLLED_BY[ctx.dayWx]] ?? 0
+  if ((zwCai + zwKs) / ctx.totalWx > 0.15) return null
+  return { ratio: zwRatio }
 }
 
 /**
- * 稼穑格：戊己土日主 + 月令辰戌丑未 + 土专旺。
- * @see 格局/稼穑格.md
+ * 曲直格：甲乙木日主专旺。
+ * @see 格局/专旺格/曲直格.md
+ */
+export function isQuZhiGe(ctx: Ctx): GejuHit | null {
+  const r = checkZhuanWang(ctx, '木')
+  if (!r) return null
+  return { name: '曲直格', note: `木独旺 ${(r.ratio * 100).toFixed(0)}%` }
+}
+
+/**
+ * 炎上格：丙丁火日主专旺。
+ * @see 格局/专旺格/炎上格.md
+ */
+export function isYanShangGe(ctx: Ctx): GejuHit | null {
+  const r = checkZhuanWang(ctx, '火')
+  if (!r) return null
+  return { name: '炎上格', note: `火独旺 ${(r.ratio * 100).toFixed(0)}%` }
+}
+
+/**
+ * 润下格：壬癸水日主专旺。
+ * @see 格局/专旺格/润下格.md
+ */
+export function isRunXiaGe(ctx: Ctx): GejuHit | null {
+  const r = checkZhuanWang(ctx, '水')
+  if (!r) return null
+  return { name: '润下格', note: `水独旺 ${(r.ratio * 100).toFixed(0)}%` }
+}
+
+/**
+ * 稼穑格：戊己土日主 + 月令辰戌丑未 + 土专旺 (最严的土专旺)。
+ * @see 格局/专旺格/稼穑格.md
  */
 export function isJiaSeGe(ctx: Ctx): GejuHit | null {
   if (ctx.dayWx !== '土') return null
   if (!['辰', '戌', '丑', '未'].includes(ctx.monthZhi)) return null
-  const tu = ctx.wxPool['土']
-  if (tu / ctx.totalWx < 0.55) return null
-  if (ctx.wxPool['木'] > tu * 0.3) return null
-  if (ctx.wxPool['水'] > tu * 0.3) return null
-  return { name: '稼穑格', note: `土 ${tu.toFixed(1)} / ${ctx.totalWx.toFixed(1)}，月令 ${ctx.monthZhi}` }
+  const jsTu = ctx.wxPool['土']
+  if (jsTu / ctx.totalWx < 0.55) return null
+  if (ctx.wxPool['木'] > jsTu * 0.3) return null
+  if (ctx.wxPool['水'] > jsTu * 0.3) return null
+  return { name: '稼穑格', note: `土 ${jsTu.toFixed(1)} / ${ctx.totalWx.toFixed(1)}，月令 ${ctx.monthZhi}` }
 }
 
 /**
@@ -774,14 +798,13 @@ export function isCongShaGe(ctx: Ctx): GejuHit | null {
 }
 
 /**
- * 从革格：金日主 + 专旺金 (专旺格之金形态)。
- * @see 格局/从革格.md
+ * 从革格：庚辛金日主专旺。
+ * @see 格局/专旺格/从革格.md
  */
 export function isCongGeGe(ctx: Ctx): GejuHit | null {
-  if (ctx.dayWx !== '金') return null
-  const hit = isZhuanWangGe(ctx)
-  if (!hit) return null
-  return { name: '从革格', note: hit.note.replace(/^[^·]*·\s*/, '') }
+  const r = checkZhuanWang(ctx, '金')
+  if (!r) return null
+  return { name: '从革格', note: `金独旺 ${(r.ratio * 100).toFixed(0)}%` }
 }
 
 /**
@@ -847,12 +870,15 @@ export const DETECTORS: Record<string, (ctx: Ctx) => GejuHit | null> = {
   斧斤伐木: isFuJinFaMu,
   日照江河: isRiZhaoJiangHe,
   金火铸印: isJinHuoZhuYin,
-  // 专旺 / 从格
-  专旺格: isZhuanWangGe,
+  // 专旺 (五行分五格)
+  曲直格: isQuZhiGe,
+  炎上格: isYanShangGe,
   稼穑格: isJiaSeGe,
+  从革格: isCongGeGe,
+  润下格: isRunXiaGe,
+  // 从格
   从财格: isCongCaiGe,
   从杀格: isCongShaGe,
-  从革格: isCongGeGe,
   弃命从势: isQiMingCongShi,
 }
 

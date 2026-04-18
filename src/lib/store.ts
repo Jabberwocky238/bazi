@@ -98,7 +98,7 @@ function compute(year: number, month: number, day: number, hour: number, sex: Se
 
   return {
     solarStr: solar.toYmdHms(),
-    lunarStr: lunar.toString(),
+    lunarStr: `${lunar.toString()} ${lunar.getTimeZhi()}时`,
     pillars: base.map((p, i) => {
       const ss = shishen.十神[i]
       const hideSs = shishen.藏干十神[i]

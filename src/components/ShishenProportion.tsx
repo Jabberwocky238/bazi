@@ -1,4 +1,4 @@
-import type { Pillar } from '@/lib/store'
+import { useBaziStore, type Pillar, type ExtraPillar } from '@/lib/store'
 import { WUXING_BG_STRONG, WUXING_TEXT, shishenWuxing } from '@/lib/wuxing'
 import { SkillLink } from '@@/SkillLink'
 
@@ -15,8 +15,9 @@ interface Entry {
   wuxing: string
 }
 
-function compute(pillars: Pillar[]): Entry[] {
-  const dayGan = pillars[2]?.gan ?? ''
+type MiniPillar = Pick<Pillar, 'shishen' | 'hideShishen'> | ExtraPillar
+
+function compute(pillars: Pillar[], dayGan: string, extras: ExtraPillar[]): Entry[] {
   const map = new Map<string, Entry>()
   const ensure = (name: string): Entry => {
     let e = map.get(name)
@@ -35,13 +36,13 @@ function compute(pillars: Pillar[]): Entry[] {
     return e
   }
 
-  pillars.forEach((p, i) => {
+  const ingest = (p: MiniPillar, ganPos: number) => {
     if (p.shishen && p.shishen !== '日主') {
       const e = ensure(p.shishen)
       e.weight += GAN_WEIGHT
       e.count += 1
       e.inGan = true
-      e.ganFirstPos = Math.min(e.ganFirstPos, i)
+      e.ganFirstPos = Math.min(e.ganFirstPos, ganPos)
     }
     p.hideShishen.forEach((s, j) => {
       if (!s || s === '日主') return
@@ -49,7 +50,11 @@ function compute(pillars: Pillar[]): Entry[] {
       e.weight += HIDDEN_WEIGHTS[j] ?? 0.05
       e.count += 1
     })
-  })
+  }
+
+  pillars.forEach((p, i) => ingest(p, i))
+  // 大运/流年排在本命 4 柱后，ganFirstPos 继续累加
+  extras.forEach((p, j) => ingest(p, 100 + j))
 
   const total = Array.from(map.values()).reduce((sum, e) => sum + e.weight, 0)
   map.forEach((e) => { e.pct = total > 0 ? (e.weight / total) * 100 : 0 })
@@ -58,7 +63,11 @@ function compute(pillars: Pillar[]): Entry[] {
 }
 
 export function ShishenProportion({ pillars }: { pillars: Pillar[] }) {
-  const entries = compute(pillars)
+  const extras = useBaziStore((s) => s.extraPillars)
+  const setExtras = useBaziStore((s) => s.setExtraPillars)
+  const dayGan = pillars[2]?.gan ?? ''
+
+  const entries = compute(pillars, dayGan, extras)
   if (!entries.length) return null
 
   const inGan = entries
@@ -70,10 +79,29 @@ export function ShishenProportion({ pillars }: { pillars: Pillar[] }) {
 
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-5 shadow-sm">
-      <div className="flex items-baseline justify-between mb-4">
+      <div className="flex items-baseline justify-between mb-4 gap-2 flex-wrap">
         <h2 className="text-xs font-medium tracking-[0.25em] uppercase text-slate-500 dark:text-slate-400">
           十神占比
         </h2>
+        {extras.length > 0 && (
+          <div className="flex items-center gap-2 text-[11px]">
+            {extras.map((e) => (
+              <span
+                key={e.label + e.gz}
+                className="px-2 py-0.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+              >
+                {e.label} {e.gz}
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={() => setExtras([])}
+              className="px-2 py-0.5 rounded border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-red-500 hover:border-red-400"
+            >
+              清除大运影响
+            </button>
+          </div>
+        )}
       </div>
 
       {inGan.length > 0 && <Group title="透干" entries={inGan} />}

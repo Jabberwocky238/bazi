@@ -46,6 +46,21 @@ export interface SkillFocus {
   subtitle?: string
 }
 
+/** 大运/流年挂进命盘计算的临时"柱" */
+export interface ExtraPillar {
+  label: '大运' | '流年'
+  gan: string
+  zhi: string
+  /** 天干对应的十神 */
+  shishen: string
+  /** 地支藏干对应的十神（按藏干顺序） */
+  hideShishen: string[]
+  /** 显示用，如 "甲子" */
+  gz: string
+  /** 描述，如 "2024 · 40 岁" 或 "大运 2020-2029" */
+  desc?: string
+}
+
 interface BaziState {
   year: number
   month: number
@@ -55,6 +70,7 @@ interface BaziState {
   sex: Sex
   result: BaziResult
   focused: SkillFocus | null
+  extraPillars: ExtraPillar[]
   setDate: (d: {
     year: number
     month: number
@@ -64,6 +80,7 @@ interface BaziState {
     sex: Sex
   }) => void
   setFocused: (f: SkillFocus | null) => void
+  setExtraPillars: (p: ExtraPillar[]) => void
   syncToUrl: () => void
 }
 
@@ -181,13 +198,16 @@ export const useBaziStore = create<BaziState>((set, get) => ({
   ...initial,
   result: compute(initial.year, initial.month, initial.day, initial.hour, initial.minute, initial.sex),
   focused: null,
+  extraPillars: [],
   setDate: ({ year, month, day, hour, minute, sex }) => {
     set({
       year, month, day, hour, minute, sex,
       result: compute(year, month, day, hour, minute, sex),
+      extraPillars: [],
     })
   },
   setFocused: (f) => set({ focused: f }),
+  setExtraPillars: (p) => set({ extraPillars: p }),
   syncToUrl: () => {
     const { year, month, day, hour, minute, sex } = get()
     const q = new URLSearchParams({

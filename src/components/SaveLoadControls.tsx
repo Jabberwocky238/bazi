@@ -36,7 +36,6 @@ function saveAll(entries: SavedEntry[]) {
 const PRESETS: SavedEntry[] = [
   { name: '毛泽东', year: 1893, month: 12, day: 26, hour: 7, sex: 1, savedAt: 0 },
   { name: '周恩来', year: 1898, month: 3, day: 5, hour: 6, sex: 1, savedAt: 0 },
-  { name: '雷锋', year: 1940, month: 12, day: 18, hour: 2, sex: 1, savedAt: 0 },
   { name: '袁隆平', year: 1930, month: 9, day: 7, hour: 0, sex: 1, savedAt: 0 },
   { name: '慈禧', year: 1835, month: 11, day: 29, hour: 5, sex: 0, savedAt: 0 },
   { name: '溥仪', year: 1906, month: 2, day: 7, hour: 12, sex: 1, savedAt: 0 },

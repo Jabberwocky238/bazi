@@ -40,6 +40,7 @@ const PRESETS: SavedEntry[] = [
   { name: '慈禧', year: 1835, month: 11, day: 29, hour: 5, sex: 0, savedAt: 0 },
   { name: '溥仪', year: 1906, month: 2, day: 7, hour: 12, sex: 1, savedAt: 0 },
   { name: '武则天', year: 625, month: 3, day: 7, hour: 0, sex: 0, savedAt: 0 },
+  { name: 'XXX', year: 1953, month: 6, day: 15, hour: 12, sex: 1, savedAt: 0 },
 ]
 
 function seedIfAbsent() {

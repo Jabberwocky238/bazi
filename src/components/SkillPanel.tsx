@@ -12,6 +12,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   dizhi: '地支',
   gongwei: '宫位',
   geju: '格局',
+  jichu: '基础',
 }
 
 function useSkillBody(focused: SkillFocus | null) {

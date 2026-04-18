@@ -5,6 +5,7 @@ export type SkillCategory =
   | 'dizhi'
   | 'gongwei'
   | 'geju'
+  | 'jichu'
 
 const PATHS: Record<SkillCategory, Record<string, string>> = {
   shishen: {
@@ -110,6 +111,24 @@ const PATHS: Record<SkillCategory, Record<string, string>> = {
     稼穑格: '格局/专旺格/稼穑格.md',
     从革格: '格局/专旺格/从革格.md',
     润下格: '格局/专旺格/润下格.md',
+  },
+  jichu: {
+    喜忌: '基础/喜忌.md',
+    用神: '基础/用神.md',
+    纳音: '基础/纳音.md',
+    月令: '基础/月令.md',
+    调候: '基础/调候.md',
+    通关: '基础/通关.md',
+    救应: '基础/救应.md',
+    流通: '基础/流通.md',
+    库: '基础/库.md',
+    燥湿土: '基础/燥湿土.md',
+    盖头截脚: '基础/盖头截脚.md',
+    断人品: '基础/断人品.md',
+    身弱自救: '基础/身弱自救.md',
+    身弱财多: '基础/身弱财多.md',
+    女命看法: '基础/女命看法.md',
+    同八字不同命: '基础/同八字不同命.md',
   },
 }
 

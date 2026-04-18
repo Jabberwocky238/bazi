@@ -4,6 +4,7 @@ import { BaziMeta } from '@@/BaziMeta'
 import { BaziChart } from '@@/chart/BaziChart'
 import { SkillIndex } from '@@/SkillIndex'
 import { SkillPanel } from '@@/SkillPanel'
+import { BasicsPanel } from '@@/BasicsPanel'
 import { ShishenProportion } from '@@/ShishenProportion'
 import { DayMasterRelations } from '@@/DayMasterRelations'
 import { GejuPanel } from '@@/GejuPanel'
@@ -30,6 +31,7 @@ function App() {
           <GejuPanel pillars={result.pillars} />
           <ShishenProportion pillars={result.pillars} />
           <SkillIndex pillars={result.pillars} />
+          <BasicsPanel />
         </section>
 
         <section className="min-w-0">

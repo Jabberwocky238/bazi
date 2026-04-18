@@ -31,6 +31,7 @@ export function BaziForm() {
 
   return (
     <form
+      key={`${year}-${month}-${day}-${hour}-${sex}`}
       onSubmit={onSubmit}
       className="relative z-30 mb-5 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 md:p-5 shadow-sm"
     >

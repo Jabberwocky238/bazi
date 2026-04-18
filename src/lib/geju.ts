@@ -342,10 +342,26 @@ export function isKuiGangGe(ctx: Ctx): GejuDraft | null {
   return { name: '魁罡格', note: `日柱 ${ctx.dayGz} 魁罡，身强不犯财官` }
 }
 
-/** 壬骑龙背：日柱壬辰。 */
+/**
+ * 壬骑龙背：日柱壬辰 + 再见壬或辰（多壬多辰为贵）+ 辰不被戌冲。
+ * 《三命通会》"壬骑龙背，所喜者多壬、多辰"；md 条件 2 要求其他柱再见壬或辰，
+ * 仅日柱壬辰降为"一般壬坐辰"不入真格。
+ */
 export function isRenQiLongBei(ctx: Ctx): GejuDraft | null {
   if (ctx.dayGz !== '壬辰') return null
-  return { name: '壬骑龙背', note: '日柱壬辰' }
+  // 条件 2：年/月/时 再见壬 或 再见辰
+  const otherRen = [ctx.pillars[0], ctx.pillars[1], ctx.pillars[3]]
+    .some((p) => p.gan === '壬')
+  const otherChen = [ctx.pillars[0].zhi, ctx.pillars[1].zhi, ctx.pillars[3].zhi]
+    .includes('辰')
+  if (!otherRen && !otherChen) return null
+  // 条件 3：辰不被戌冲
+  const hasXu = ctx.pillars.some((p) => p.zhi === '戌')
+  if (hasXu) return null
+  return {
+    name: '壬骑龙背',
+    note: `日柱壬辰${otherRen ? '，再透壬' : ''}${otherChen ? '，再见辰' : ''}`,
+  }
 }
 
 // ——————————————————————— 官杀 ———————————————————————

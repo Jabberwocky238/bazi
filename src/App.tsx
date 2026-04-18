@@ -9,6 +9,7 @@ import { ShishenProportion } from '@@/ShishenProportion'
 import { DayMasterRelations } from '@@/DayMasterRelations'
 import { GejuPanel } from '@@/GejuPanel'
 import { DaYunPanel } from '@@/DaYunPanel'
+import { BalancePanel } from '@@/BalancePanel'
 import { Footer } from '@@/Footer'
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
           <GejuPanel pillars={result.pillars} />
           <DaYunPanel />
           <ShishenProportion pillars={result.pillars} />
+          <BalancePanel />
           <SkillIndex pillars={result.pillars} />
           <BasicsPanel />
         </section>

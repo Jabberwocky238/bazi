@@ -10,6 +10,8 @@ interface SavedEntry {
   month: number
   day: number
   hour: number
+  /** 可选，老存档没有就当 0 */
+  minute?: number
   sex: 0 | 1
   savedAt: number
 }
@@ -34,17 +36,18 @@ function saveAll(entries: SavedEntry[]) {
 }
 
 const PRESETS: SavedEntry[] = [
-  { name: '毛泽东', year: 1893, month: 12, day: 26, hour: 7, sex: 1, savedAt: 0 },
-  { name: '周恩来', year: 1898, month: 3, day: 5, hour: 6, sex: 1, savedAt: 0 },
-  { name: '袁隆平', year: 1930, month: 9, day: 7, hour: 0, sex: 1, savedAt: 0 },
-  { name: '慈禧', year: 1835, month: 11, day: 29, hour: 5, sex: 0, savedAt: 0 },
-  { name: '溥仪', year: 1906, month: 2, day: 7, hour: 12, sex: 1, savedAt: 0 },
-  { name: '武则天', year: 625, month: 3, day: 7, hour: 0, sex: 0, savedAt: 0 },
-  { name: 'XXX', year: 1953, month: 6, day: 15, hour: 12, sex: 1, savedAt: 0 },
-  { name: '张雪峰', year: 1984, month: 5, day: 18, hour: HOUR_UNKNOWN, sex: 1, savedAt: 0 },
-  { name: '许家印', year: 1958, month: 10, day: 9, hour: 1, sex: 1, savedAt: 0 },
-  { name: '雷军', year: 1969, month: 12, day: 16, hour: 8, sex: 1, savedAt: 0 },
-  { name: '马化腾', year: 1971, month: 10, day: 29, hour: 8, sex: 1, savedAt: 0 },
+  { name: '毛泽东', year: 1893, month: 12, day: 26, hour: 7, minute: 0, sex: 1, savedAt: 0 },
+  { name: '周恩来', year: 1898, month: 3, day: 5, hour: 6, minute: 0, sex: 1, savedAt: 0 },
+  { name: '袁隆平', year: 1930, month: 9, day: 7, hour: 0, minute: 0, sex: 1, savedAt: 0 },
+  { name: '慈禧', year: 1835, month: 11, day: 29, hour: 5, minute: 0, sex: 0, savedAt: 0 },
+  { name: '溥仪', year: 1906, month: 2, day: 7, hour: 12, minute: 0, sex: 1, savedAt: 0 },
+  { name: '武则天', year: 625, month: 3, day: 7, hour: 0, minute: 0, sex: 0, savedAt: 0 },
+  { name: 'XXX', year: 1953, month: 6, day: 15, hour: 12, minute: 0, sex: 1, savedAt: 0 },
+  { name: '张雪峰', year: 1984, month: 5, day: 18, hour: HOUR_UNKNOWN, minute: 0, sex: 1, savedAt: 0 },
+  { name: '许家印', year: 1958, month: 10, day: 9, hour: 1, minute: 0, sex: 1, savedAt: 0 },
+  { name: '雷锋', year: 1940, month: 12, day: 18, hour: 2, minute: 13, sex: 1, savedAt: 0 },
+  { name: '雷军', year: 1969, month: 12, day: 16, hour: 8, minute: 0, sex: 1, savedAt: 0 },
+  { name: '马化腾', year: 1971, month: 10, day: 29, hour: 8, minute: 0, sex: 1, savedAt: 0 },
 ]
 
 function seedIfAbsent() {
@@ -75,6 +78,7 @@ export function SaveLoadControls() {
   const month = useBaziStore((s) => s.month)
   const day = useBaziStore((s) => s.day)
   const hour = useBaziStore((s) => s.hour)
+  const minute = useBaziStore((s) => s.minute)
   const sex = useBaziStore((s) => s.sex)
   const setDate = useBaziStore((s) => s.setDate)
   const syncToUrl = useBaziStore((s) => s.syncToUrl)
@@ -99,13 +103,20 @@ export function SaveLoadControls() {
     const name = raw.trim()
     if (!name) return
     const list = loadAll().filter((e) => e.name !== name)
-    list.unshift({ name, year, month, day, hour, sex, savedAt: Date.now() })
+    list.unshift({ name, year, month, day, hour, minute, sex, savedAt: Date.now() })
     saveAll(list)
     setEntries(list)
   }
 
   const onPick = (e: SavedEntry) => {
-    setDate({ year: e.year, month: e.month, day: e.day, hour: e.hour, sex: e.sex })
+    setDate({
+      year: e.year,
+      month: e.month,
+      day: e.day,
+      hour: e.hour,
+      minute: e.minute ?? 0,
+      sex: e.sex,
+    })
     syncToUrl()
     closeDialog()
   }
@@ -186,7 +197,7 @@ export function SaveLoadControls() {
                     {e.year}-{String(e.month).padStart(2, '0')}-{String(e.day).padStart(2, '0')}{' '}
                     {e.hour === HOUR_UNKNOWN
                       ? '时辰未知'
-                      : `${String(e.hour).padStart(2, '0')}:00`}{' '}
+                      : `${String(e.hour).padStart(2, '0')}:${String(e.minute ?? 0).padStart(2, '0')}`}{' '}
                     · {e.sex === 1 ? '男' : '女'}
                   </div>
                 </button>

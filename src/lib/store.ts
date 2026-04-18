@@ -51,10 +51,18 @@ interface BaziState {
   month: number
   day: number
   hour: number
+  minute: number
   sex: Sex
   result: BaziResult
   focused: SkillFocus | null
-  setDate: (d: { year: number; month: number; day: number; hour: number; sex: Sex }) => void
+  setDate: (d: {
+    year: number
+    month: number
+    day: number
+    hour: number
+    minute: number
+    sex: Sex
+  }) => void
   setFocused: (f: SkillFocus | null) => void
   syncToUrl: () => void
 }
@@ -78,6 +86,7 @@ function readQuery() {
     month: parseIntOr(params.get('month'), 12),
     day: parseIntOr(params.get('day'), 26),
     hour,
+    minute: parseIntOr(params.get('minute'), 0),
     sex: (sexRaw === 0 ? 0 : 1) as Sex,
   }
 }
@@ -100,13 +109,17 @@ const EMPTY_PILLAR: Pillar = {
   zizuo: '',
 }
 
-function compute(year: number, month: number, day: number, hour: number, sex: Sex): BaziResult {
+function compute(year: number, month: number, day: number, hour: number, minute: number, sex: Sex): BaziResult {
   const hourKnown = hour >= 0 && hour < 24
   // 调用 Solar 需要合法 hour；未知时借 0 点作为占位，后续丢弃时柱
   const safeHour = hourKnown ? hour : 0
-  const solar = Solar.fromYmdHms(year, month, day, safeHour, 0, 0)
+  const safeMinute = hourKnown && minute >= 0 && minute < 60 ? minute : 0
+  const solar = Solar.fromYmdHms(year, month, day, safeHour, safeMinute, 0)
   const lunar = solar.getLunar()
   const ec = lunar.getEightChar()
+  // sect=1：23:00 即换日 (子时起新日)。默认 sect=2 为晚子说（23-24 点仍属当日），
+  // 和多数现代子平习惯相反，这里强制采用早子换日派。
+  ec.setSect(1)
 
   const input: BaziInput = {
     year: { gan: ec.getYearGan() as Gan, zhi: ec.getYearZhi() as Zhi },
@@ -166,19 +179,23 @@ const initial = readQuery()
 
 export const useBaziStore = create<BaziState>((set, get) => ({
   ...initial,
-  result: compute(initial.year, initial.month, initial.day, initial.hour, initial.sex),
+  result: compute(initial.year, initial.month, initial.day, initial.hour, initial.minute, initial.sex),
   focused: null,
-  setDate: ({ year, month, day, hour, sex }) => {
-    set({ year, month, day, hour, sex, result: compute(year, month, day, hour, sex) })
+  setDate: ({ year, month, day, hour, minute, sex }) => {
+    set({
+      year, month, day, hour, minute, sex,
+      result: compute(year, month, day, hour, minute, sex),
+    })
   },
   setFocused: (f) => set({ focused: f }),
   syncToUrl: () => {
-    const { year, month, day, hour, sex } = get()
+    const { year, month, day, hour, minute, sex } = get()
     const q = new URLSearchParams({
       year: String(year),
       month: String(month),
       day: String(day),
       hour: String(hour),
+      minute: String(minute),
       sex: String(sex),
     })
     const next = `${window.location.pathname}?${q.toString()}`

@@ -85,3 +85,49 @@ export function zhiWuxing(zhi: string): string {
 export function isInauspicious(name: string): boolean {
   return /煞|刃|空亡|孤辰|寡宿/.test(name)
 }
+
+export type ShenshaQuality = 'good' | 'bad' | 'neutral'
+
+/** 明确吉神（精简为传统中无争议的核心贵神）。*/
+const GOOD_SHENSHA = new Set<string>([
+  '天乙贵人',
+  '天德贵人', '天德合',
+  '月德贵人', '月德合',
+  '文昌贵人',
+  '国印贵人',
+  '太极贵人',
+  '三奇贵人',
+  '学堂', '词馆', '正学堂', '正词馆',
+  '禄神',
+  '拱禄',
+  '红鸾',
+  '天喜',
+  '将星',
+  '天赦日',
+])
+
+/** 明确凶神 —— 只留真正伤灾/破格类（精简）。*/
+const BAD_SHENSHA = new Set<string>([
+  // 刃类 (真伤)
+  '羊刃', '飞刃', '血刃',
+  // 硬凶
+  '白虎', '十恶大败', '童子煞', '勾绞煞',
+  '亡神', '灾煞',
+  // 丧葬 (硬凶)
+  '丧门', '吊客',
+  // 婚姻硬破
+  '孤鸾煞',
+])
+
+/**
+ * 神煞吉凶分类：
+ *  - 吉：核心贵神 (绿)
+ *  - 凶：刃/煞/丧葬/破格 (红)
+ *  - 中性：其他 (黄)  ——驿马、桃花、魁罡、华盖、金舆、德秀贵人、福星贵人、天医贵人、
+ *    日德六秀日、十灵日、天罗地网 等都归中性
+ */
+export function shenshaQuality(name: string): ShenshaQuality {
+  if (GOOD_SHENSHA.has(name)) return 'good'
+  if (BAD_SHENSHA.has(name)) return 'bad'
+  return 'neutral'
+}

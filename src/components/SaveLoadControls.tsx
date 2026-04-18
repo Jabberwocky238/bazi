@@ -29,7 +29,7 @@ function saveAll(entries: SavedEntry[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
   } catch {
-    /* quota exceeded or storage disabled — ignore */
+    /* ignore */
   }
 }
 
@@ -46,7 +46,7 @@ const PRESETS: SavedEntry[] = [
 function seedIfAbsent() {
   try {
     const seeded = new Set<string>(
-      JSON.parse(localStorage.getItem(SEEDED_KEY) ?? '[]') as string[]
+      JSON.parse(localStorage.getItem(SEEDED_KEY) ?? '[]') as string[],
     )
     const toAdd = PRESETS.filter((p) => !seeded.has(p.name))
     if (!toAdd.length) return
@@ -76,86 +76,34 @@ export function SaveLoadControls() {
   const syncToUrl = useBaziStore((s) => s.syncToUrl)
 
   const [entries, setEntries] = useState<SavedEntry[]>([])
-  const [open, setOpen] = useState(false)
-  const [popStyle, setPopStyle] = useState<React.CSSProperties>({})
-  const wrapRef = useRef<HTMLDivElement>(null)
-  const loadBtnRef = useRef<HTMLButtonElement>(null)
-  const popRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
     seedIfAbsent()
     setEntries(loadAll())
   }, [])
 
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      const t = e.target as Node
-      if (wrapRef.current?.contains(t)) return
-      if (popRef.current?.contains(t)) return
-      setOpen(false)
-    }
-    const onEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onEsc)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onEsc)
-    }
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const compute = () => {
-      const btn = loadBtnRef.current
-      if (!btn) return
-      const rect = btn.getBoundingClientRect()
-      const margin = 8
-      const width = Math.min(352, window.innerWidth - margin * 2)
-      let left = rect.left
-      if (left + width > window.innerWidth - margin) {
-        left = window.innerWidth - width - margin
-      }
-      if (left < margin) left = margin
-      setPopStyle({
-        position: 'fixed',
-        top: rect.bottom + margin,
-        left,
-        width,
-      })
-    }
-    compute()
-    window.addEventListener('resize', compute)
-    window.addEventListener('scroll', compute, true)
-    return () => {
-      window.removeEventListener('resize', compute)
-      window.removeEventListener('scroll', compute, true)
-    }
-  }, [open])
+  const openDialog = () => {
+    setEntries(loadAll())
+    dialogRef.current?.showModal()
+  }
+  const closeDialog = () => dialogRef.current?.close()
 
   const onSave = () => {
     const raw = window.prompt('保存当前排盘，输入名称：', '')
     if (raw === null) return
     const name = raw.trim()
     if (!name) return
-    const next: SavedEntry = { name, year, month, day, hour, sex, savedAt: Date.now() }
     const list = loadAll().filter((e) => e.name !== name)
-    list.unshift(next)
+    list.unshift({ name, year, month, day, hour, sex, savedAt: Date.now() })
     saveAll(list)
     setEntries(list)
-  }
-
-  const onToggleLoad = () => {
-    setEntries(loadAll())
-    setOpen((o) => !o)
   }
 
   const onPick = (e: SavedEntry) => {
     setDate({ year: e.year, month: e.month, day: e.day, hour: e.hour, sex: e.sex })
     syncToUrl()
-    setOpen(false)
+    closeDialog()
   }
 
   const onDelete = (name: string, ev: React.MouseEvent) => {
@@ -176,41 +124,56 @@ export function SaveLoadControls() {
     }
     seedIfAbsent()
     setEntries(loadAll())
-    setOpen(false)
+  }
+
+  // 点击背景关闭
+  const onDialogClick = (e: React.MouseEvent<HTMLDialogElement>) => {
+    if (e.target === dialogRef.current) closeDialog()
   }
 
   return (
-    <div className="relative flex items-center gap-2" ref={wrapRef}>
-      <button type="button" onClick={onSave} className={btnCls}>保存</button>
-      <button ref={loadBtnRef} type="button" onClick={onToggleLoad} className={btnCls}>
-        加载 <span className="text-xs">▾</span>
-      </button>
-      <button
-        type="button"
-        onClick={onReset}
-        className={btnCls + ' text-slate-500 hover:text-red-600 hover:border-red-400 dark:hover:border-red-500'}
-      >
-        恢复出厂设置
-      </button>
-
-      {open && (
-        <div
-          ref={popRef}
-          style={popStyle}
-          className="z-50 max-h-80 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl"
+    <>
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={onSave} className={btnCls}>保存</button>
+        <button type="button" onClick={openDialog} className={btnCls}>加载</button>
+        <button
+          type="button"
+          onClick={onReset}
+          className={btnCls + ' text-slate-500 hover:text-red-600 hover:border-red-400 dark:hover:border-red-500'}
         >
+          恢复出厂设置
+        </button>
+      </div>
+
+      <dialog
+        ref={dialogRef}
+        onClick={onDialogClick}
+        className="m-auto w-[min(24rem,calc(100vw-1.5rem))] max-h-[80vh] rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm"
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">已保存命例</h3>
+          <button
+            type="button"
+            onClick={closeDialog}
+            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xl leading-none"
+            aria-label="关闭"
+          >
+            ×
+          </button>
+        </div>
+        <div className="max-h-[60vh] overflow-y-auto">
           {entries.length === 0 ? (
-            <div className="px-3 py-4 text-sm text-slate-500">暂无保存记录</div>
+            <div className="px-4 py-6 text-sm text-slate-500 text-center">暂无保存记录</div>
           ) : (
             entries.map((e) => (
               <div
                 key={e.name}
-                className="group flex items-stretch border-b last:border-b-0 border-slate-100 dark:border-slate-800"
+                className="flex items-stretch border-b last:border-b-0 border-slate-100 dark:border-slate-800"
               >
                 <button
                   type="button"
                   onClick={() => onPick(e)}
-                  className="flex-1 min-w-0 px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  className="flex-1 min-w-0 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <div className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
                     {e.name}
@@ -224,7 +187,7 @@ export function SaveLoadControls() {
                   type="button"
                   onClick={(ev) => onDelete(e.name, ev)}
                   aria-label={`删除 ${e.name}`}
-                  className="px-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                  className="px-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
                 >
                   ×
                 </button>
@@ -232,7 +195,7 @@ export function SaveLoadControls() {
             ))
           )}
         </div>
-      )}
-    </div>
+      </dialog>
+    </>
   )
 }

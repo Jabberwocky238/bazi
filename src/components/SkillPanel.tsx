@@ -147,7 +147,7 @@ function MobileDialog({
     <dialog
       ref={dialogRef}
       onClick={onBackdropClick}
-      className="m-0 mt-auto mb-0 w-full max-w-full h-[92vh] max-h-[92vh] rounded-t-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm fixed inset-x-0 bottom-0 top-auto"
+      className="m-0 w-full max-w-full h-[85dvh] max-h-[85dvh] rounded-t-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm fixed inset-x-0 bottom-0 top-auto"
     >
       <div className="flex flex-col h-full">
         <Header focused={focused} onClose={onClose} />

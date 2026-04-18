@@ -88,15 +88,11 @@ export function isInauspicious(name: string): boolean {
 
 export type ShenshaQuality = 'good' | 'bad' | 'neutral'
 
-/** 明确吉神（精简为传统中无争议的核心贵神）。*/
+/**
+ * 明确吉神（核心，非"贵人"类）。
+ * 所有"X贵人"默认归中性（黄），不入本集合——贵人需实战看组合，不宜一律判吉。
+ */
 const GOOD_SHENSHA = new Set<string>([
-  '天乙贵人',
-  '天德贵人', '天德合',
-  '月德贵人', '月德合',
-  '文昌贵人',
-  '国印贵人',
-  '太极贵人',
-  '三奇贵人',
   '学堂', '词馆', '正学堂', '正词馆',
   '禄神',
   '拱禄',

@@ -77,6 +77,9 @@ const META: Record<string, { quality: GejuQuality; category: GejuCategory }> = {
   // 从格
   从财格: { quality: 'good', category: '从格' },
   从杀格: { quality: 'good', category: '从格' },
+  从儿格: { quality: 'good', category: '从格' },
+  从官格: { quality: 'good', category: '从格' },
+  从旺格: { quality: 'good', category: '从格' },
   弃命从势: { quality: 'good', category: '从格' },
 
   // 五行格 (吉)
@@ -167,6 +170,8 @@ interface Ctx {
   zhiMainWxCount(wx: string): number
   touWx(wx: string): boolean
   rootWx(wx: string): boolean
+  /** 本气 或 中气 含此五行 (如寅中丙、戌中丁算火根)。 */
+  rootExt(wx: string): boolean
 
   // —— 日主强弱 ——
   deLing: boolean
@@ -266,6 +271,13 @@ function buildCtx(pillars: Pillar[]): Ctx {
   const touWx = (wx: string) =>
     pillars.some((p, i) => i !== 2 && ganWuxing(p.gan) === wx)
   const rootWx = (wx: string) => zhiMainWxCount(wx) > 0
+  /** 扩展根：本气 **或** 中气含此五行（如寅中丙、戌中丁算火根）。 */
+  const rootExt = (wx: string) =>
+    pillars.some((p) => {
+      const b = p.hideGans[0]
+      const m = p.hideGans[1]
+      return (b && ganWuxing(b) === wx) || (m && ganWuxing(m) === wx)
+    })
 
   // 天干位置 (0=年 1=月 3=时) — 不含日柱
   const ganPosOf = (s: string): number[] => {
@@ -301,7 +313,7 @@ function buildCtx(pillars: Pillar[]): Ctx {
     dayYang,
     tou, touCat, zang, has, hasCat, mainAt, strong, strongCat,
     countOf, countCat,
-    ganWxCount, zhiMainWxCount, touWx, rootWx,
+    ganWxCount, zhiMainWxCount, touWx, rootWx, rootExt,
     deLing, deDi, deShi, shenWang, shenRuo,
     selfSupportN,
     adjacentTou,
@@ -608,7 +620,7 @@ export function judgeShuiHuo(ctx: Ctx): GejuDraft | null {
 
 /** 木火对：
  *  - 木日主 + 火过旺 + 木无重根 + 无水救 → 木火相煎
- *  - 木日主 + 火透 + 木有根 + 无金克 → 木火通明
+ *  - 木日主 + 火透且火有根 + 木有根 + 无金克 + 无重水灭火 → 木火通明
  *  - 火日主 + 地支木 ≥ 3 + 火无重根 → 木多火塞
  */
 export function judgeMuHuo(ctx: Ctx): GejuDraft | null {
@@ -619,8 +631,20 @@ export function judgeMuHuo(ctx: Ctx): GejuDraft | null {
     if (huoMany && muRootCount <= 1 && !hasShui) {
       return { name: '木火相煎', note: '火过旺而木根虚，无水润' }
     }
-    if (ctx.touWx('火') && ctx.rootWx('木') && !ctx.touWx('金')) {
-      return { name: '木火通明', note: '木生火且火透，无金克木' }
+    // 木火通明：火透 + 火有根(含中气) + 木有根 + 无金克 + 水不过旺
+    // 放宽：火根允许中气；水 2 透但无根 (浮水) 不算破
+    // 互斥：水透且有根 → 让位水木清华
+    const shuiOver = ctx.ganWxCount('水') >= 2 && ctx.rootWx('水')
+    const shuiRooted = ctx.touWx('水') && ctx.rootWx('水')
+    if (
+      ctx.touWx('火') &&
+      ctx.rootExt('火') &&
+      ctx.rootWx('木') &&
+      !ctx.touWx('金') &&
+      !shuiOver &&
+      !shuiRooted
+    ) {
+      return { name: '木火通明', note: '木生火，火透有根 (含中气)' }
     }
   }
   if (ctx.dayWx === '火') {
@@ -716,6 +740,8 @@ export function judgeShuiMu(ctx: Ctx): GejuDraft | null {
   if (!ctx.touWx('水') || !ctx.touWx('木')) return null
   if (ctx.touWx('金')) return null
   if (ctx.zhiMainWxCount('土') >= 2) return null
+  // 互斥：火透且有根 (含中气) → 让位木火通明
+  if (ctx.touWx('火') && ctx.rootExt('火')) return null
   return { name: '水木清华', note: '水生木且木透，无金克' }
 }
 
@@ -770,19 +796,35 @@ export function judgeJinMu(ctx: Ctx): GejuDraft | null {
   return { name: '斧斤伐木', note: '金旺克木' }
 }
 
-/** 调候：冬月木日主 + 火透 → 寒木向阳。*/
+/**
+ * 寒木向阳：冬月木日主 + 火透 + 火不过烈 + 水不过多。
+ * md: 火过旺蒸干水反木无根；水过多则"水多木漂"非本格。
+ */
 export function judgeHanMu(ctx: Ctx): GejuDraft | null {
   if (ctx.dayWx !== '木') return null
   if (ctx.season !== '冬') return null
   if (!ctx.touWx('火')) return null
-  return { name: '寒木向阳', note: '冬木见火调候' }
+  // 火不过烈: 火透 ≤ 2
+  if (ctx.ganWxCount('火') >= 3) return null
+  // 水不过多: 地支水主气 < 3
+  if (ctx.zhiMainWxCount('水') >= 3) return null
+  return { name: '寒木向阳', note: '冬木见火调候，水火适度' }
 }
 
-/** 特殊：丙日主 + 水透 → 日照江河。*/
+/**
+ * 日照江河：丙日主 + 丙火有根 + 水旺流通 + 无厚土拦水。
+ * md: "丙火坐地支火根"；"水气有进有出"；"无土拦水"。
+ */
 export function judgeRiZhao(ctx: Ctx): GejuDraft | null {
   if (ctx.dayGan !== '丙') return null
   if (!ctx.touWx('水')) return null
-  return { name: '日照江河', note: '丙火照水' }
+  // 丙火有根 (寅午巳) — 放宽到中气 (寅中丙算)
+  if (!ctx.rootExt('火')) return null
+  const waterStrong = ctx.zhiMainWxCount('水') >= 2 || ctx.ganWxCount('水') >= 2
+  if (!waterStrong) return null
+  // 无厚土塞水: 土透 ≤ 1
+  if (ctx.ganWxCount('土') >= 2) return null
+  return { name: '日照江河', note: '丙火有根 (含寅中丙)，水旺流通' }
 }
 
 // ——————————————————————— 专旺 ———————————————————————
@@ -881,6 +923,65 @@ export function isCongShaGe(ctx: Ctx): GejuDraft | null {
 }
 
 /**
+ * 从儿格：日主无根 + 食伤成势 + 无印 + 无官杀 + 无比劫帮身。
+ * 《滴天髓·从儿》"从儿不管身强弱，只要吾儿又遇儿"；"从儿最忌官杀，次忌印绶"。
+ */
+export function isCongErGe(ctx: Ctx): GejuDraft | null {
+  if (ctx.countCat('比劫') > 0) return null
+  if (ctx.countCat('印') > 0) return null
+  if (ctx.countCat('官杀') > 0) return null
+  if (!ctx.touCat('食伤')) return null
+  const ssWx = WX_GENERATED_BY[ctx.dayWx] // 我生之五行
+  // 需要食伤成势：月令食伤 或 地支食伤主气 ≥ 3
+  const monthIs = ctx.monthCat === '食伤'
+  const zhiN = ctx.zhiMainWxCount(ssWx)
+  if (!monthIs && zhiN < 3) return null
+  return {
+    name: '从儿格',
+    note: `无比劫印官，食伤成势 (${monthIs ? '月令食伤' : `地支 ${ssWx} ${zhiN} 位`})`,
+  }
+}
+
+/**
+ * 从官格：身无根 + 正官成势 + 无印化官 + 无食伤克官 + 无七杀混杂。
+ * 《滴天髓·从象》；《子平真诠》"正官须清纯不杂七杀"。
+ */
+export function isCongGuanGe(ctx: Ctx): GejuDraft | null {
+  if (ctx.countCat('比劫') > 0) return null
+  if (ctx.countCat('印') > 0) return null
+  if (ctx.countCat('食伤') > 0) return null
+  if (!ctx.tou('正官')) return null
+  if (ctx.tou('七杀')) return null   // 不混杂
+  // 正官通根
+  const gwWx = WX_CONTROLLED_BY[ctx.dayWx]
+  if (ctx.zhiMainWxCount(gwWx) < 2) return null
+  return { name: '从官格', note: `无比印食伤，正官纯清且通根 (${gwWx} ≥ 2 位)` }
+}
+
+/**
+ * 从旺格：比劫+印主导全局 + 无官杀 + 无财破印 (若有食伤仅微泄)。
+ * 《滴天髓·从旺》"四柱皆比劫，无官杀制，有印生之"。
+ */
+export function isCongWangGe(ctx: Ctx): GejuDraft | null {
+  // 月令必须 比劫或印
+  if (!ctx.deLing) return null
+  // 比劫 + 印 位数占大半 (≥ 5)
+  const support = ctx.countCat('比劫') + ctx.countCat('印')
+  if (support < 5) return null
+  // 无官杀
+  if (ctx.countCat('官杀') > 0) return null
+  // 财若透，需不紧贴印 (简化：财透位数 ≤ 1 且未克印)
+  if (ctx.touCat('财')) {
+    // 财透即紧贴风险：保守拒绝
+    return null
+  }
+  return {
+    name: '从旺格',
+    note: `比印合 ${support} 位主导，无官杀无财破`,
+  }
+}
+
+/**
  * 弃命从势：日主无任何比劫/印根 + 食伤、财、官杀中至少两类并强透干。
  * 《滴天髓·从象》任铁樵注："日主孤立无根，四柱财官食伤势均力敌"。
  */
@@ -944,6 +1045,9 @@ export const DETECTORS: Record<string, (ctx: Ctx) => GejuDraft | null> = {
   // 从格
   从财格: isCongCaiGe,
   从杀格: isCongShaGe,
+  从儿格: isCongErGe,
+  从官格: isCongGuanGe,
+  从旺格: isCongWangGe,
   弃命从势: isQiMingCongShi,
 }
 

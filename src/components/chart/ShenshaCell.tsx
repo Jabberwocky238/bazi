@@ -2,9 +2,8 @@ import { SkillLink } from '@@/SkillLink'
 import { shenshaQuality, type ShenshaQuality } from '@/lib/wuxing'
 
 const CHIP_CLS: Record<ShenshaQuality, string> = {
-  good: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/40',
+  good: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/40',
   bad: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30',
-  neutral: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/40',
 }
 
 function chipCls(name: string): string {

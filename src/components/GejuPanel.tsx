@@ -13,15 +13,15 @@ const QUALITY_BORDER: Record<GejuQuality, string> = {
 
 /** 字体颜色：表示所属类别 */
 const CATEGORY_TEXT: Record<GejuCategory, string> = {
-  正格: 'text-purple-700 dark:text-purple-400',
-  从格: 'text-indigo-700 dark:text-indigo-400',
-  十神格: 'text-amber-700 dark:text-amber-400',
-  五行格: 'text-sky-700 dark:text-sky-400',
-  专旺格: 'text-emerald-700 dark:text-emerald-400',
-  特殊格: 'text-red-700 dark:text-red-400',
+  正格: 'text-sky-700 dark:text-sky-400',
+  从格: 'text-red-700 dark:text-red-400',
+  十神格: 'text-emerald-700 dark:text-emerald-400',
+  五行格: 'text-slate-500 dark:text-white',
+  专旺格: 'text-purple-700 dark:text-purple-400',
+  特殊格: 'text-amber-700 dark:text-amber-400',
 }
 
-const CATEGORY_ORDER: GejuCategory[] = ['正格', '十神格', '五行格', '专旺格', '从格', '特殊格']
+const CATEGORY_ORDER: GejuCategory[] = ['五行格', '十神格', '正格', '专旺格', '特殊格', '从格']
 
 export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
   const hits = detectGeju(pillars)
@@ -66,7 +66,7 @@ export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
               category="geju"
               name={h.name}
               subtitle={h.note}
-              className={`text-sm px-3 py-1 rounded-full border-2 ${QUALITY_BORDER[h.quality]} ${CATEGORY_TEXT[h.category]} ${h.category === '特殊格' ? 'font-bold' : ''}`}
+              className={`text-sm px-3 py-1 rounded-full border-2 ${QUALITY_BORDER[h.quality]} ${CATEGORY_TEXT[h.category]}`}
             >
               {h.name}
             </SkillLink>
@@ -99,7 +99,7 @@ export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
       </div>
 
       <div className="mt-3 text-[10px] text-slate-400 dark:text-slate-600 text-right">
-        算法版本 v2，大部分有古籍背书，成格条件更苛刻，仅供参考
+        算法版本 v3，引入身强弱合干支计算，极为复杂和严苛，大幅降低成格概率，但由于格局变多，有所抵消
       </div>
     </section>
   )

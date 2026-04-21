@@ -28,7 +28,11 @@ export function checkZhuanWang(
   const caiTouN =
     (ctx.tou('正财') ? 1 : 0) + (ctx.tou('偏财') ? 1 : 0)
   if (caiTouN > maxCaiTou) return null
-  if (maxCaiTou <= 1 && ctx.countCat('财') >= 2) return null     // 稼穑: 水多冲土
+  if (maxCaiTou <= 1) {
+    // 稼穑：忌水冲土 —— 透 + 地支主气 (不计余气/中气) 合计 < 2 才放行
+    const caiMainZhi = ctx.mainZhiArr.filter((s) => s === '正财' || s === '偏财').length
+    if (caiTouN + caiMainZhi >= 2) return null
+  }
   return {
     note: `地支 ${selfWx}+${yinWx} ${supportZhi} 位 · ${selfWx} 透 ${ctx.ganWxCount(targetWx as WuXing)} 位${caiTouN ? `，财透${caiTouN}` : '，无官杀'}`,
   }

@@ -83,9 +83,9 @@ export const DETECTORS: Record<string, [Detector, GejuQuality, GejuCategory]> = 
   // 从格 (名称以 bazi-skills md 目录名为准)
   弃命从财: [congge.isCongCaiGe, 'good', '从格'],
   弃命从煞: [congge.isCongShaGe, 'good', '从格'],
+  弃命从势: [congge.isCongShiGe, 'good', '从格'],
   从儿格: [congge.isCongErGe, 'good', '从格'],
-  // 以下 detector 无 md 文档，已在 congge/index.ts 注释导出：
-  // 从势格: [congge.isCongShiGe, 'good', '从格'],
+  // 以下 detector 无 md 文档 (2025-1 从格重组时已删)：
   // 从官格: [congge.isCongGuanGe, 'good', '从格'],
   // 从旺格: [congge.isCongWangGe, 'good', '从格'],
   // 从强格: [congge.isCongQiangGe, 'good', '从格'],

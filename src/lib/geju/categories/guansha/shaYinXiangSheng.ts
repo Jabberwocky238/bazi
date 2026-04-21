@@ -11,10 +11,10 @@ import type { GejuHit } from '../../types'
  * 合后杀已不独立存在，不能再论相生。
  */
 export function isShaYinXiangSheng(ctx: Ctx): GejuHit | null {
-  // md 条件 1: 七杀透通根 OR 月令**本气**七杀
+  // md 条件 1: 七杀存在于命局 (月令本气 OR 透 OR 任一位藏)
   const monthMainSha = ctx.pillars.month.hideShishen[0] === '七杀'
-  const shaTouRoot = ctx.tou('七杀') && ctx.zang('七杀')
-  if (!monthMainSha && !shaTouRoot) return null
+  const shaPresent = ctx.tou('七杀') || ctx.zang('七杀')
+  if (!monthMainSha && !shaPresent) return null
   if (ctx.tou('正官')) return null
   // md 条件 2: 印透通根
   if (!ctx.touCat('印')) return null

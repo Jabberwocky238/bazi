@@ -5,8 +5,10 @@ import {
   ganWuxing,
   zhiWuxing,
   zizuoState,
+  nayinOf,
   wuxingRelations,
   ShishenMap,
+  CANG_GAN,
   type BaziInput,
   type Gan,
   type Zhi,
@@ -15,7 +17,10 @@ import {
   type WuXing,
 } from '@jabberwocky238/bazi-engine'
 
-import type { Pillar, BaziResult } from './store'
+import type { Pillar, PillarType, BaziResult } from './store'
+
+/** 四柱干支字符串元组 (年/月/日/时)，如 `['甲子','己巳','壬子','乙巳']`。 */
+export type Bazi = [string, string, string, string]
 
 export const HOUR_UNKNOWN = -1
 
@@ -139,4 +144,49 @@ export function computeBazi(
     pillars,
     hourKnown,
   }
+}
+
+// ———— 直接由四柱干支构造 Pillar[] (不需要生日) ————
+
+const PILLAR_LABELS: PillarType[] = ['年柱', '月柱', '日柱', '时柱']
+const SS_KEYS = ['year', 'month', 'day', 'hour'] as const
+
+function parseGz(gz: string): { gan: Gan; zhi: Zhi } {
+  if (gz.length !== 2) throw new Error(`bad ganzhi: ${gz}`)
+  return { gan: gz[0] as Gan, zhi: gz[1] as Zhi }
+}
+
+/**
+ * 直接由四柱干支 + 性别构造 Pillar[]，跳过公历/农历计算。
+ * 用于测试或已知八字直接喂进 detector 等场景；神煞依赖四柱干支 + 性别，不依赖具体日期。
+ */
+export function baziToPillars(bazi: Bazi, sex: Sex): Pillar[] {
+  const parsed = bazi.map(parseGz) as [
+    { gan: Gan; zhi: Zhi }, { gan: Gan; zhi: Zhi },
+    { gan: Gan; zhi: Zhi }, { gan: Gan; zhi: Zhi },
+  ]
+  const [y, m, d, h] = parsed
+  const input: BaziInput = { year: y, month: m, day: d, hour: h, sex }
+  const shishen = computeShishen(input)
+  const shensha = computeShensha(input)
+  const dayGan = d.gan
+  return parsed.map((p, i): Pillar => {
+    const ss = shishen.十神[i]
+    const hideSs = shishen.藏干十神[i]
+    return {
+      label: PILLAR_LABELS[i],
+      gan: p.gan,
+      zhi: p.zhi,
+      ganWuxing: ganWuxing(p.gan),
+      zhiWuxing: zhiWuxing(p.zhi),
+      nayin: nayinOf(p.gan, p.zhi),
+      hideGans: [...CANG_GAN[p.zhi]] as Gan[],
+      shishen: ss as Shishen,
+      shishenWuxing: shishenWuxing(dayGan, ss) as WuXing,
+      hideShishen: hideSs,
+      hideShishenWuxings: hideSs.map((s) => shishenWuxing(dayGan, s)) as WuXing[],
+      shensha: shensha[SS_KEYS[i]],
+      zizuo: zizuoState(p.gan, p.zhi),
+    }
+  })
 }

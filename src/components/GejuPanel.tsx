@@ -51,15 +51,15 @@ function GejuChip({ hit }: { hit: GejuOutput }) {
 
 /** 字体颜色：表示所属类别 */
 const CATEGORY_TEXT: Record<GejuCategory, string> = {
-  正格: 'text-sky-700 dark:text-sky-400',
+  正格: 'text-emerald-700 dark:text-emerald-400',
   从格: 'text-red-700 dark:text-red-400',
-  十神格: 'text-emerald-700 dark:text-emerald-400',
+  十神格: 'text-sky-700 dark:text-sky-400',
   五行格: 'text-slate-500 dark:text-white',
-  专旺格: 'text-purple-700 dark:text-purple-400',
-  特殊格: 'text-amber-700 dark:text-amber-400',
+  专旺格: 'text-amber-700 dark:text-amber-400',
+  特殊格: 'text-purple-700 dark:text-purple-400',
 }
 
-const CATEGORY_ORDER: GejuCategory[] = ['五行格', '十神格', '正格', '专旺格', '特殊格', '从格']
+const CATEGORY_ORDER: GejuCategory[] = ['五行格', '正格', '十神格', '特殊格', '专旺格', '从格']
 
 /** 把 ExtraPillar 补齐成一个可喂给 detectGeju 的 Pillar。
  *  只补齐格局判定会用到的字段，其它（nayin/shensha）给空值。 */

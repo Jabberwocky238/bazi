@@ -16,6 +16,8 @@ export interface GejuHit {
   suiyunDefaultTrigger?: boolean
   // **岁运冲害 */
   suiyunConquer?: boolean
+  // 贵格变体
+  guigeVariant?: string
 }
 
 export type Detector = (ctx: Ctx) => GejuHit | null

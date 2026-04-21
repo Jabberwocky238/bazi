@@ -3,6 +3,7 @@
  *
  * 表驱动：每条 case 给 (四柱干支 + 必须命中的格局名列表 + 必须不命中的格局名列表)。
  *  - include 中任一格局没被 detectGeju 检出 → fail
+ *  - include 项可用 "名字@变体" 语法断言变体 (如 '稼穑格@稼穑毓秀')
  *  - exclude 中任一格局被 detectGeju 检出   → fail
  */
 
@@ -78,7 +79,8 @@ const CASES: Case[] = [
   {
     bazi: ['癸未', '己未', '己酉', '戊辰'],
     sex: 1,
-    include: ['稼穑格'],
+    include: ['稼穑格@稼穑毓秀'],
+    desc: 'zq',
   },
   {
     bazi: ['癸卯', '甲寅', '辛卯', '戊戌'],
@@ -96,7 +98,7 @@ const CASES: Case[] = [
     bazi: ['癸未', '丁巳', '己亥', '甲戌'],
     sex: 1,
     include: ['阳刃格'],
-    exclude: ['正官格'],
+    exclude: ['正印格'],
     desc: 'zzt',
   },
   {
@@ -122,10 +124,23 @@ for (const c of CASES) {
     console.log(`\n${label}`)
     console.log(`  命中 [${hitLabels.join(', ') || '无'}]`)
 
-    const missing = (c.include ?? []).filter((n) => !hitSet.has(n))
+    const missing: string[] = []
+    const variantMismatch: string[] = []
+    for (const entry of c.include ?? []) {
+      const [name, expectedVariant] = entry.split('@')
+      if (!hitSet.has(name)) { missing.push(entry); continue }
+      if (expectedVariant !== undefined) {
+        const hit = hits.find((h) => h.name === name)
+        const actual = hit?.guigeVariant ?? ''
+        if (actual !== expectedVariant) {
+          variantMismatch.push(`${name}(期望变体 ${expectedVariant}，实际 ${actual || '无'})`)
+        }
+      }
+    }
     const forbidden = (c.exclude ?? []).filter((n) => hitSet.has(n))
     if (missing.length > 0) console.log(`  缺失 [${missing.join(', ')}]`)
+    if (variantMismatch.length > 0) console.log(`  变体不符 [${variantMismatch.join(', ')}]`)
     if (forbidden.length > 0) console.log(`  误命中 [${forbidden.join(', ')}]`)
-    expect({ missing, forbidden }).toEqual({ missing: [], forbidden: [] })
+    expect({ missing, variantMismatch, forbidden }).toEqual({ missing: [], variantMismatch: [], forbidden: [] })
   })
 }

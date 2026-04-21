@@ -51,8 +51,9 @@ export function judgeHanMu(ctx: Ctx): GejuHit | null {
       : ''
   return {
     name: '寒木向阳',
-    note: `冬木有根 · 火透调候 · 水${allShuiN}<火${allHuoN}${tag}`,
+    note: `冬木有根 · 火透调候 · 水${allShuiN}≤火${allHuoN}${tag}`,
     suiyunSpecific: true,
+    ...(natOk ? { suiyunDefaultTrigger: true } : {}),
     ...(suiyunTrigger ? { suiyunTrigger: true } : {}),
     ...(suiyunBreak ? { suiyunBreak: true } : {}),
   }

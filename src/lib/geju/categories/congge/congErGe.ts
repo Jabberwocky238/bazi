@@ -11,14 +11,19 @@ export function isCongErGe(ctx: Ctx): GejuHit | null {
   if (ctx.countCat('印') > 0) return null
   if (ctx.countCat('官杀') > 0) return null
   if (!ctx.touCat('食伤')) return null
+  // 月令必须非印比 (_check.ts 同口径)
+  if (ctx.monthCat === '比劫' || ctx.monthCat === '印') return null
   const ssWx = WX_GENERATED_BY[ctx.dayWx] as WuXing
-  const monthIs = ctx.monthCat === '食伤'
   const zhiN = ctx.zhiMainWxCount(ssWx)
-  if (!monthIs && zhiN < 3) return null
+  // 地支本气食伤 ≥ 3 位 (无论月令是否食伤)
+  if (zhiN < 3) return null
+  const ssN = ctx.countCat('食伤')
+  // 食伤总量 ≥ 5 位
+  if (ssN < 5) return null
   // md 条件 4: 食伤 > 财 (财多则变从势)
-  if (ctx.countCat('食伤') <= ctx.countCat('财')) return null
+  if (ssN <= ctx.countCat('财')) return null
   return {
     name: '从儿格',
-    note: `无比劫印官，食伤成势 (${monthIs ? '月令食伤' : `地支 ${ssWx} ${zhiN} 位`}) · 食伤 > 财`,
+    note: `无比劫印官，食伤 ${ssN} 位成势 (地支 ${ssWx} ${zhiN} 位) · 食伤 > 财`,
   }
 }

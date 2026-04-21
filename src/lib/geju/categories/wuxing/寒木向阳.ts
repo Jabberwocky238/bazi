@@ -7,7 +7,7 @@ import type { GejuHit } from '../../types'
  *  2. 月令为冬（亥/子/丑）。
  *  3. 天干透火（丙或丁），仅地支巳午为根不够。
  *  4. 火不过烈（火透 < 3）。
- *  5. 水的数量 ≥ 1 且 < 火的数量（无水则火燥、水重则寒凝）。
+ *  5. 水的数量 ≥ 1 且 ≤ 火的数量（无水则火燥、水过火则寒凝；等量允许，调候仍可成）。
  *  6. 木有根（含中气）。
  *  **岁运特定**：火/木运向阳发力；金/水运寒景加深。
  *    - 原局不成 + 岁运补火/补水达标 → suiyunTrigger
@@ -24,7 +24,7 @@ export function judgeHanMu(ctx: Ctx): GejuHit | null {
   const natHuoN = natHuoGan + ctx.zhiMainWxCount('火')
   const natTouHuo = ctx.touWx('火')
   const natOk =
-    natTouHuo && natHuoGan < 3 && natShuiN >= 1 && natShuiN < natHuoN
+    natTouHuo && natHuoGan < 3 && natShuiN >= 1 && natShuiN <= natHuoN
 
   // —— 含岁运（大运/流年）的合并计数 ——
   const exHuoGan = ctx.extraGanWxCount('火')
@@ -36,7 +36,7 @@ export function judgeHanMu(ctx: Ctx): GejuHit | null {
   const allShuiN = natShuiN + exShuiGan + exShuiZhi
   const allTouHuo = natTouHuo || exHuoGan > 0
   const allOk =
-    allTouHuo && allHuoGan < 3 && allShuiN >= 1 && allShuiN < allHuoN
+    allTouHuo && allHuoGan < 3 && allShuiN >= 1 && allShuiN <= allHuoN
 
   if (!natOk && !allOk) return null
 

@@ -37,6 +37,7 @@ function hitBorderClass(h: GejuOutput): string {
 }
 
 function GejuChip({ hit }: { hit: GejuOutput }) {
+  const display = hit.guigeVariant ?? hit.name
   return (
     <SkillLink
       category="geju"
@@ -44,7 +45,7 @@ function GejuChip({ hit }: { hit: GejuOutput }) {
       subtitle={hit.note}
       className={`text-sm px-3 py-1 rounded-full border-2 ${hitBorderClass(hit)} ${CATEGORY_TEXT[hit.category]}`}
     >
-      {hit.name}
+      {display}
     </SkillLink>
   )
 }

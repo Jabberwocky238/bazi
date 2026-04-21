@@ -17,10 +17,11 @@ export function isDiWangMingZao(ctx: Ctx): GejuHit | null {
   if (isGuanShaHunZa(ctx) !== null) return null
   if (isShangGuanJianGuan(ctx) !== null) return null
   if (isXiaoShenDuoShi(ctx) !== null) return null
-  // md 条件 4: "大运顺行且与命局深度配合" → 岁运敏感
+  // md 条件 4: "大运顺行且与命局深度配合" → 岁运敏感加重，但不作为成格必要条件
   return {
     name: '帝王命造',
     note: '格局清纯 · 流通或专旺 · 日主立得住',
     suiyunSpecific: true,
+    suiyunDefaultTrigger: true,
   }
 }

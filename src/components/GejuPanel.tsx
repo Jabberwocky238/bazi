@@ -14,6 +14,7 @@ import {
   shishenWuxing,
   type GejuQuality,
   type GejuCategory,
+  type GejuOutput,
   skillNames,
 } from '@/lib'
 import { useBaziStore, type ExtraPillar } from '@@/stores'
@@ -24,6 +25,27 @@ const QUALITY_BORDER: Record<GejuQuality, string> = {
   good: 'border-emerald-500/60 bg-emerald-500/5 [--glow-color:#10b981]',
   bad: 'border-rose-500/60 bg-rose-500/5 [--glow-color:#f43f5e]',
   neutral: 'border-slate-400/50 bg-slate-400/5 [--glow-color:#94a3b8]',
+}
+
+/** 岁运破格 → 红 / 岁运激发(吉) → 绿 / 否则沿用 QUALITY_BORDER。 */
+function hitBorderClass(h: GejuOutput): string {
+  if (h.suiyunBreak) return 'border-red-500 bg-red-500/10 [--glow-color:#ef4444]'
+  if (h.suiyunTrigger && h.quality === 'good')
+    return 'border-emerald-500 bg-emerald-500/10 [--glow-color:#10b981]'
+  return QUALITY_BORDER[h.quality]
+}
+
+function GejuChip({ hit }: { hit: GejuOutput }) {
+  return (
+    <SkillLink
+      category="geju"
+      name={hit.name}
+      subtitle={hit.note}
+      className={`text-sm px-3 py-1 rounded-full border-2 ${hitBorderClass(hit)} ${CATEGORY_TEXT[hit.category]}`}
+    >
+      {hit.name}
+    </SkillLink>
+  )
 }
 
 /** 字体颜色：表示所属类别 */
@@ -119,8 +141,9 @@ export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
       </div>
 
       {(() => {
-        const natalHits = hits.filter((h) => !h.suiyunSpecific)
-        const suiyunHits = hits.filter((h) => h.suiyunSpecific)
+        // 激发的岁运特定格局 → 算作"已成格"和原局归在一起
+        const activeHits = hits.filter((h) => !h.suiyunSpecific || h.suiyunTrigger)
+        const potentialHits = hits.filter((h) => h.suiyunSpecific && !h.suiyunTrigger)
         if (hits.length === 0) {
           return <p className="text-sm text-slate-500 dark:text-slate-400">未识别到明显格局</p>
         }
@@ -130,18 +153,10 @@ export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
               <div className="mb-2 text-[10px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400">
                 原局
               </div>
-              {natalHits.length > 0 ? (
+              {activeHits.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {natalHits.map((h) => (
-                    <SkillLink
-                      key={h.name}
-                      category="geju"
-                      name={h.name}
-                      subtitle={h.note}
-                      className={`text-sm px-3 py-1 rounded-full border-2 ${QUALITY_BORDER[h.quality]} ${CATEGORY_TEXT[h.category]}`}
-                    >
-                      {h.name}
-                    </SkillLink>
+                  {activeHits.map((h) => (
+                    <GejuChip key={h.name} hit={h} />
                   ))}
                 </div>
               ) : (
@@ -173,18 +188,10 @@ export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
                   </span>
                 )}
               </div>
-              {suiyunHits.length > 0 ? (
-                <div className={`flex flex-wrap gap-1.5 ${hasSuiyun ? '' : 'opacity-60'}`}>
-                  {suiyunHits.map((h) => (
-                    <SkillLink
-                      key={h.name}
-                      category="geju"
-                      name={h.name}
-                      subtitle={h.note}
-                      className={`text-xs px-2.5 py-0.5 rounded-full border ${QUALITY_BORDER[h.quality]} ${CATEGORY_TEXT[h.category]}`}
-                    >
-                      {h.name}
-                    </SkillLink>
+              {potentialHits.length > 0 ? (
+                <div className="flex flex-wrap gap-2 opacity-60">
+                  {potentialHits.map((h) => (
+                    <GejuChip key={h.name} hit={h} />
                   ))}
                 </div>
               ) : (

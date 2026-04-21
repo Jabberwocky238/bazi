@@ -12,9 +12,15 @@
  */
 
 import type { Pillar } from './store'
-import { ganWuxing, zhiWuxing } from './wuxing'
+import { ganWuxing, zhiWuxing } from '@jabberwocky238/bazi-engine'
 import { analyzeStrength } from './strength'
 import { detectGeju } from './geju'
+import {
+  GENERATES as GEN,
+  CONTROLS as CON,
+  GENERATED_BY as GEN_BY,
+  CONTROLLED_BY as CON_BY,
+} from '@jabberwocky238/bazi-engine'
 
 export type WuXing = '木' | '火' | '土' | '金' | '水'
 export type Cat = '比劫' | '印' | '食伤' | '财' | '官杀'
@@ -27,11 +33,6 @@ const CAT_OF_SHISHEN: Record<string, Cat> = {
   正财: '财', 偏财: '财',
   正官: '官杀', 七杀: '官杀',
 }
-
-const GEN: Record<WuXing, WuXing> = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' }
-const CON: Record<WuXing, WuXing> = { 木: '土', 火: '金', 土: '水', 金: '木', 水: '火' }
-const GEN_BY: Record<WuXing, WuXing> = { 木: '水', 火: '木', 土: '火', 金: '土', 水: '金' }
-const CON_BY: Record<WuXing, WuXing> = { 木: '金', 火: '水', 土: '木', 金: '火', 水: '土' }
 
 function catToWx(dayWx: WuXing, cat: Cat): WuXing {
   switch (cat) {

@@ -1,6 +1,7 @@
 import { CHONG_PAIR, type Ctx } from '../ctx'
 import type { GejuHit } from '../types'
-import { ganWuxing } from '../../wuxing'
+import { ganWuxing, GENERATES } from '@jabberwocky238/bazi-engine'
+import type { WuXing } from '@jabberwocky238/bazi-engine'
 import { isCaiGuanYinQuan } from './zongliang'
 import { isGuanShaHunZa } from './guansha'
 import { isShangGuanJianGuan, isXiaoShenDuoShi } from './shishang'
@@ -54,8 +55,7 @@ export function isLiangQiChengXiang(ctx: Ctx): GejuHit | null {
   }
   if (wxSet.size !== 2) return null
   const [a, b] = [...wxSet]
-  const GEN: Record<string, string> = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' }
-  if (GEN[a] !== b && GEN[b] !== a) return null
+  if (GENERATES[a as WuXing] !== b && GENERATES[b as WuXing] !== a) return null
   const aN = ctx.ganWxCount(a) + ctx.zhiMainWxCount(a)
   const bN = ctx.ganWxCount(b) + ctx.zhiMainWxCount(b)
   if (Math.abs(aN - bN) > 2) return null

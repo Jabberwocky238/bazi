@@ -1,20 +1,23 @@
 import type { SkillCategory } from './skills'
+import type { Gan, Zhi, WuXing, Shishen } from '@jabberwocky238/bazi-engine'
+
+export type PillarType = '年柱' | '月柱' | '日柱' | '时柱' | '大运' | '流年'
 
 export interface Pillar {
-  label: string
+  label: PillarType
 
-  gan: string
-  zhi: string
-  shishen: string // 十神
-  hideGans: string[] // 藏干
-  hideShishen: string[] // 藏干十神
+  gan: Gan
+  zhi: Zhi
+  shishen: Shishen // 十神
+  hideGans: Gan[] // 藏干
+  hideShishen: Shishen[] // 藏干十神
   
   nayin: string
   
-  ganWuxing: string
-  zhiWuxing: string
-  shishenWuxing: string // 十神五行
-  hideShishenWuxings: string[] // 藏干十神五行
+  ganWuxing: WuXing
+  zhiWuxing: WuXing
+  shishenWuxing: WuXing // 十神五行
+  hideShishenWuxings: WuXing[] // 藏干十神五行
 
   shensha: string[]
   zizuo: string
@@ -35,13 +38,4 @@ export interface SkillFocus {
   subtitle?: string
 }
 
-/** 大运/流年挂进命盘计算的临时"柱" */
-export interface ExtraPillar {
-  label: '大运' | '流年'
-  gan: string
-  zhi: string
-  shishen: string
-  hideShishen: string[]
-  gz: string
-  desc?: string
-}
+

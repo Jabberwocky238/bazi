@@ -1,4 +1,5 @@
-import { WUXING_TEXT, ganWuxing } from '@/lib'
+import { ganWuxing, type Gan } from '@jabberwocky238/bazi-engine'
+import { WUXING_TEXT } from '@/lib'
 import { SkillLink } from '@@/SkillLink'
 
 export function CangGanCell({
@@ -21,7 +22,7 @@ export function CangGanCell({
             return (
               <div key={i} className="flex items-center justify-center gap-1.5 md:gap-2">
                 <SkillLink category="tiangan" name={g}>
-                  <span className={`font-bold ${WUXING_TEXT[ganWuxing(g)] ?? ''}`}>{g}</span>
+                  <span className={`font-bold ${WUXING_TEXT[ganWuxing(g as Gan)] ?? ''}`}>{g}</span>
                 </SkillLink>
                 <SkillLink category="shishen" name={shishens[i] ?? ''}>
                   <span className={`text-[11px] md:text-xs ${WUXING_TEXT[sWx] ?? 'text-slate-500 dark:text-slate-400'}`}>

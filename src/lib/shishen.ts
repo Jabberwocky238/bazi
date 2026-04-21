@@ -2,16 +2,34 @@ import { Solar } from 'lunar-typescript'
 import {
   computeShensha,
   computeShishen,
+  ganWuxing,
+  zhiWuxing,
+  zizuoState,
+  wuxingRelations,
+  ShishenMap,
   type BaziInput,
   type Gan,
   type Zhi,
   type Sex,
+  type Shishen,
+  type WuXing,
 } from '@jabberwocky238/bazi-engine'
-import { ganWuxing, zhiWuxing, shishenWuxing } from './wuxing'
-import { zizuoState } from './zizuo'
-import { HOUR_UNKNOWN } from './bazi'
+
 import { toTrueSolarDate, formatTrueSolar } from './truesolar'
 import type { Pillar, BaziResult } from './store'
+
+export const HOUR_UNKNOWN = -1
+
+/** 十神五行 (依日主) — 通过 engine 的 ShishenMap + wuxingRelations 派生。 */
+export function shishenWuxing(dayGan: string, shishen: string): WuXing | '' {
+  const def = ShishenMap[shishen as Shishen]
+  if (!def) return ''
+  try {
+    return wuxingRelations(dayGan as Gan)[def.relation] ?? ''
+  } catch {
+    return ''
+  }
+}
 
 const EMPTY_PILLAR: Pillar = {
   label: '时柱',

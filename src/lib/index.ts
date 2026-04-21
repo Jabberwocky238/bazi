@@ -1,12 +1,9 @@
-export * from './bazi'
 export * from './shishen'
 export * from './store'
 export * from './dayun'
 export * from './truesolar'
-export * from './wuxing'
 export * from './skills'
 export * from './strength'
 export * from './xiyong'
-export * from './ganzhi'
-export * from './zizuo'
 export * from './geju'
+

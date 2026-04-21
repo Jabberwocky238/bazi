@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { type Pillar, WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER, ganWuxing } from '@/lib'
+import { type Pillar, WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@/lib'
 import { useShiShen } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
-import { wuxingRelations, isYangGan, type Gan } from '@jabberwocky238/bazi-engine'
+import { ganWuxing, wuxingRelations, isYangGan, type Gan } from '@jabberwocky238/bazi-engine'
 
 type Cat = '比劫' | '印' | '食伤' | '财' | '官杀'
 

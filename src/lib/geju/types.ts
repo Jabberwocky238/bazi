@@ -12,16 +12,9 @@ export interface GejuHit {
   suiyunTrigger?: boolean
   /** 原局成格，**岁运破格**（大运/流年冲散）。 */
   suiyunBreak?: boolean
+  // **岁运冲害 */
+  suiyunConquer?: boolean
 }
 
 export type Detector = (ctx: Ctx) => GejuHit | null
 
-export type ShishenCat = '比劫' | '印' | '食伤' | '财' | '官杀'
-
-export const SHI_SHEN_CAT: Record<string, ShishenCat> = {
-  比肩: '比劫', 劫财: '比劫',
-  正印: '印', 偏印: '印',
-  食神: '食伤', 伤官: '食伤',
-  正财: '财', 偏财: '财',
-  正官: '官杀', 七杀: '官杀',
-}

@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import {
   shishenOf,
+  ganWuxing,
+  zhiWuxing,
   CANG_GAN,
   type Gan,
   type Zhi,
@@ -11,8 +13,6 @@ import {
   WUXING_TEXT,
   WUXING_BORDER,
   WUXING_FROM,
-  ganWuxing,
-  zhiWuxing,
   shishenWuxing,
   computeDaYun,
   type DaYunStep,
@@ -39,8 +39,8 @@ function analyzeGz(dayGan: string, gz: string): GzCell {
   const zhiSs = cang && dayGan ? safeShishen(dayGan, cang) : ''
   return {
     gan, zhi,
-    ganWx: ganWuxing(gan),
-    zhiWx: zhiWuxing(zhi),
+    ganWx: gan ? ganWuxing(gan as Gan) ?? '' : '',
+    zhiWx: zhi ? zhiWuxing(zhi as Zhi) ?? '' : '',
     ganSs,
     zhiSs,
     ganSsWx: shishenWuxing(dayGan, ganSs),

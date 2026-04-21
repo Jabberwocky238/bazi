@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { analyzeGanZhi, type Finding, type FindingKind } from '@/lib'
+import { analyzeGanZhi, type Finding, type FindingKind } from '@jabberwocky238/bazi-engine'
 import { useShiShen } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
@@ -10,19 +10,19 @@ const KIND_TONE: Record<FindingKind, string> = {
   天干五合: 'border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
   地支六合: 'border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
   地支三合: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-  半三合: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
-  拱合: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
   地支三会: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+  地支暗合: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
   天干相冲: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
-  地支六冲: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
-  地支三刑: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
-  自刑: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
+  地支相冲: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
+  地支相刑: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
   天干相克: 'border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-400',
   地支相害: 'border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-400',
   地支相破: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400',
-  地支相绝: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400',
   争合: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
   妒合: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
+  盖头: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400',
+  截脚: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400',
+  覆载: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
   墓库: 'border-indigo-500/40 bg-indigo-500/5 text-indigo-700 dark:text-indigo-400',
 }
 
@@ -32,9 +32,11 @@ export function GanZhiPanel() {
   const a = analyzeGanZhi(pillars)
   if (!a) return null
 
-  const hetotal = a.tianganHe.length + a.liuhe.length + a.sanhe.length + a.sanhui.length
-  const chongtotal = a.tianganChong.length + a.chong.length
-  const xinghaiototal = a.xing.length + a.hai.length + a.po.length + a.jue.length
+  const hetotal =
+    a.天干五合.length + a.地支六合.length + a.地支三合.length + a.地支三会.length + a.地支暗合.length
+  const chongtotal = a.天干相冲.length + a.地支相冲.length
+  const xinghaiototal = a.地支相刑.length + a.地支相害.length + a.地支相破.length
+  const zhuTotal = a.盖头.length + a.截脚.length + a.覆载.length
 
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 md:p-5 shadow-sm">
@@ -57,47 +59,53 @@ export function GanZhiPanel() {
           <span className="text-emerald-700 dark:text-emerald-400">合 {hetotal}</span>
           <span className="text-rose-700 dark:text-rose-400">冲 {chongtotal}</span>
           <span className="text-amber-700 dark:text-amber-400">刑害破 {xinghaiototal}</span>
-          <span className="text-indigo-700 dark:text-indigo-400">库 {a.muku.length}</span>
+          <span className="text-indigo-700 dark:text-indigo-400">库 {a.墓库.length}</span>
+          <span className="text-slate-500 dark:text-slate-400">柱 {zhuTotal}</span>
         </div>
       </button>
 
       {open && (
         <div className="space-y-5 text-sm">
           {/* 合 */}
-          <Section label="① 合 · 天干五合 / 地支六合 / 三合 / 三会">
-            <FindingList list={[...a.tianganHe, ...a.liuhe, ...a.sanhe, ...a.sanhui]} />
+          <Section label="① 合 · 天干五合 / 地支六合 / 三合 / 三会 / 暗合">
+            <FindingList list={[...a.天干五合, ...a.地支六合, ...a.地支三合, ...a.地支三会, ...a.地支暗合]} />
           </Section>
 
           {/* 冲 */}
-          <Section label="② 冲 · 天干相冲 / 地支六冲">
-            <FindingList list={[...a.tianganChong, ...a.chong]} />
+          <Section label="② 冲 · 天干相冲 / 地支相冲">
+            <FindingList list={[...a.天干相冲, ...a.地支相冲]} />
           </Section>
 
           {/* 刑 */}
-          <Section label="③ 刑 · 三刑 / 自刑">
-            <FindingList list={a.xing} />
+          <Section label="③ 刑 · 地支相刑 / 自刑">
+            <FindingList list={a.地支相刑} />
           </Section>
 
           {/* 害 */}
           <Section label="④ 害 (穿) · 六害">
-            <FindingList list={a.hai} />
+            <FindingList list={a.地支相害} />
           </Section>
 
-          {/* 克 / 破 / 绝 */}
-          <Section label="⑤ 克 / 破 / 绝">
-            <FindingList list={[...a.tianganKe, ...a.po, ...a.jue]} />
+          {/* 克 / 破 */}
+          <Section label="⑤ 克 / 破">
+            <FindingList list={[...a.天干相克, ...a.地支相破]} />
           </Section>
 
           {/* 墓库 */}
           <Section label="⑥ 墓库 · 开 / 闭 / 静">
-            <FindingList list={a.muku} />
+            <FindingList list={a.墓库} />
+          </Section>
+
+          {/* 柱内干支作用 */}
+          <Section label="⑦ 柱内 · 盖头 / 截脚 / 覆载">
+            <FindingList list={[...a.盖头, ...a.截脚, ...a.覆载]} />
           </Section>
 
           {/* 来源 */}
           <div className="text-[10px] text-slate-400 dark:text-slate-600 text-right leading-5 pt-2 border-t border-slate-100 dark:border-slate-800">
-            依 天干地支/合 · 冲 · 克 · 刑 · 会 · 墓库 md · 定性判断，不加权打分
+            依 @jabberwocky238/bazi-engine analyzeGanZhi · 定性判断，不加权打分
             <br />
-            md 明文：三会 &gt; 三合 &gt; 六合 &gt; 六冲 &gt; 三刑 &gt; 六害 &gt; 六破 &gt; 相绝 · 合冲同现需人工裁断
+            md 明文：三会 &gt; 三合 &gt; 六合 &gt; 六冲 &gt; 三刑 &gt; 六害 &gt; 六破 · 合冲同现需人工裁断
           </div>
         </div>
       )}

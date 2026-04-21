@@ -7,7 +7,7 @@
  */
 
 import type { Pillar } from './store'
-import { ganWuxing, zhiWuxing } from './wuxing'
+import { ganWuxing, zhiWuxing } from '@jabberwocky238/bazi-engine'
 
 // ————————————————————————————————————————————————————————
 // 1. 基础表格（全部来自 md 原文）

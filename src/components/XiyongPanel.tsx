@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useShiShen, analyzeXiyong, type Cat, type GanZhiType, type WuXing, WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@/lib'
+import { analyzeXiyong, type Cat, type GanZhiType, type WuXing, WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@/lib'
+import { useShiShen } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
 const CAT_TO_SHISHENS: Record<Cat, [string, string]> = {

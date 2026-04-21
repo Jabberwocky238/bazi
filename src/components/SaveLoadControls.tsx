@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useBazi, HOUR_UNKNOWN } from '@/lib'
+import { HOUR_UNKNOWN } from '@/lib'
+import { useBazi } from '@@/stores'
 
 const STORAGE_KEY = 'bazi.saved.v1'
 const SEEDED_KEY = 'bazi.saved.seeded'

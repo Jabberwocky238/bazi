@@ -1,17 +1,15 @@
 /**
- * 五行象法 —— 按"两五行对关系"分组。每对 judge 函数返回**至多一个**名号,
- * 同一对内的不同子格天然互斥 (定性分支决定落在哪个子格)。
- *
- * `judgeHanMu` / `judgeRiZhao` 不属成对判定，但同属五行象法一并归在此目录。
+ * 五行象法 —— 按"两五行对"分组，每对拆成 1-3 个 per-pattern detector。
+ * 另含不成对的特殊象法：寒木向阳 / 日照江河 / 壬骑龙背（壬骑龙背放 zhengge.ts）。
  */
-export { judgeShuiHuo } from './shuihuo'
-export { judgeMuHuo } from './muhuo'
-export { judgeTuJin } from './tujin'
-export { judgeHuoJin } from './huojin'
-export { judgeHuoTu } from './huotu'
-export { judgeShuiMu } from './shuimu'
-export { judgeJinShui } from './jinshui'
-export { judgeMuTu } from './mutu'
-export { judgeJinMu } from './jinmu'
-export { judgeHanMu } from './hanmu'
+export { isShuiHuoJiJi, isShuiHuoXiangZhan } from './shuihuo'
+export { isMuHuoXiangJian, isMuHuoTongMing, isMuDuoHuoSai } from './muhuo'
+export { isTuJinYuXiu, isTuZhongJinMai } from './tujin'
+export { isHuoDuoJinRong, isHuoWangJinShuai, isJinHuoZhuYin } from './huojin'
+export { isHuoTuJiaDai, isHuoYanTuZao } from './huotu'
+export { isShuiDuoMuPiao, isShuiLengMuHan, isShuiMuQingHua } from './shuimu'
+export { isJinHanShuiLeng, isJinBaiShuiQing } from './jinshui'
+export { isMuShuHouTu } from './mutu'
+export { isFuJinFaMu } from './jinmu'
+export { judgeHanMu } from './寒木向阳'
 export { judgeRiZhao } from './rizhao'

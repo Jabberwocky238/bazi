@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { useBaziStore, type SkillFocus, loadSkill, skillUrl } from '@/lib'
+import { type SkillFocus, loadSkill, skillUrl } from '@/lib'
+import { useBaziStore } from '@@/stores'
 import { useMediaQuery } from '@@/hooks/useMediaQuery'
 
 const CATEGORY_LABEL: Record<string, string> = {

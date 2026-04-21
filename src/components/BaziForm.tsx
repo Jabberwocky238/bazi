@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useBazi, HOUR_UNKNOWN } from '@/lib'
+import { HOUR_UNKNOWN } from '@/lib'
+import { useBazi } from '@@/stores'
 import { inputCls, labelCls, primaryBtn } from '@@/css'
 import { SaveLoadControls } from '@@/SaveLoadControls'
 

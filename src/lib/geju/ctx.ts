@@ -7,8 +7,8 @@ import {
   type Gan,
   type Zhi,
 } from '@jabberwocky238/bazi-engine'
-import type { Pillar } from '../store'
-import { ganWuxing } from '../wuxing'
+import type { Pillar, ExtraPillar } from '../store'
+import { ganWuxing, zhiWuxing } from '../wuxing'
 import { analyzeStrength, type StrengthLevel } from '../strength'
 import { SHI_SHEN_CAT, type ShishenCat } from './types'
 
@@ -89,9 +89,21 @@ export interface Ctx {
   // —— 月令 ——
   monthCat: ShishenCat | ''
   monthZhiBeingChong: boolean
+
+  // —— 岁运（大运/流年）附加柱 ——
+  /** 当前挂入的额外柱，通常由 UI 点击大运/流年时通过 store 传入。空数组 = 纯原局判定。 */
+  extraPillars: ExtraPillar[]
+  /** 仅大运柱（label === '大运'）。 */
+  dayunPillar?: ExtraPillar
+  /** 仅流年柱（label === '流年'）。 */
+  liunianPillar?: ExtraPillar
+  /** 岁运柱（含大运+流年）天干五行计数。 */
+  extraGanWxCount(wx: string): number
+  /** 岁运柱地支五行计数（按地支本气/主气）。 */
+  extraZhiMainWxCount(wx: string): number
 }
 
-export function buildCtx(pillars: Pillar[]): Ctx {
+export function buildCtx(pillars: Pillar[], extraPillars: ExtraPillar[] = []): Ctx {
   const [yearP, monthP, dayP, hourP] = pillars
   const dayGan = dayP.gan as Gan
   const dayWx = WU_XING[dayGan] ?? ganWuxing(dayGan)
@@ -190,11 +202,19 @@ export function buildCtx(pillars: Pillar[]): Ctx {
     ? [yearP.zhi, dayP.zhi, hourP.zhi].includes(mzChong)
     : false
 
+  // —— 岁运柱 ——
+  const dayunPillar = extraPillars.find((p) => p.label === '大运')
+  const liunianPillar = extraPillars.find((p) => p.label === '流年')
+  const extraGanWxCount = (wx: string) =>
+    extraPillars.filter((p) => ganWuxing(p.gan) === wx).length
+  const extraZhiMainWxCount = (wx: string) =>
+    extraPillars.filter((p) => zhiWuxing(p.zhi) === wx).length
+
   return {
     pillars,
     dayGan,
     dayZhi: dayP.zhi as Zhi,
-    dayGz: dayP.gz,
+    dayGz: dayP.gan + dayP.zhi,
     monthZhi: monthP.zhi as Zhi,
     yearZhi: yearP.zhi as Zhi,
     dayWx,
@@ -208,5 +228,10 @@ export function buildCtx(pillars: Pillar[]): Ctx {
     adjacentTou,
     monthCat,
     monthZhiBeingChong,
+    extraPillars,
+    dayunPillar,
+    liunianPillar,
+    extraGanWxCount,
+    extraZhiMainWxCount,
   }
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { wuxingRelations, isYangGan, type Gan } from '@jabberwocky238/bazi-engine'
-import { useShiShen, WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER, ganWuxing } from '@/lib'
+import { WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER, ganWuxing } from '@/lib'
+import { useShiShen } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
 type RelationKey = '同类' | '我生' | '我克' | '克我' | '生我'

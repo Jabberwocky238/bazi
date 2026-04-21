@@ -1,13 +1,8 @@
 import type { Ctx } from '../../ctx'
-import type { GejuDraft } from '../../types'
+import type { GejuHit } from '../../types'
 
-/** 木土对 (日主土)：土极厚 + 木有根能疏 + 木不过旺 + 无重金克木。
- *  md: 「土极为厚实：天干戊己透出且多、地支辰戌丑未见两个以上」
- *      「木有力疏土：甲乙透干、有根能真的扎进土里」
- *      「木不过旺：理想比例 土 3 木 1-2」
- *      「无重金克木：金若过多 → 克断木」
- */
-export function judgeMuTu(ctx: Ctx): GejuDraft | null {
+/** 木疏厚土：土日主 + 土极厚 + 木有根能疏 + 木不过旺 + 无重金克木。 */
+export function isMuShuHouTu(ctx: Ctx): GejuHit | null {
   if (ctx.dayWx !== '土') return null
   if (ctx.zhiMainWxCount('土') < 2) return null
   if (ctx.ganWxCount('土') < 1) return null

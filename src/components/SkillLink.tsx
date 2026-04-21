@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { useBaziStore, skillUrl, type SkillCategory } from '@/lib'
+import { skillUrl, type SkillCategory } from '@/lib'
+import { useBaziStore } from '@@/stores'
 
 interface Props {
   category: SkillCategory

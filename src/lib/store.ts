@@ -1,27 +1,29 @@
-import { create } from 'zustand'
 import type { SkillCategory } from './skills'
-import { useBazi } from './bazi'
 
 export interface Pillar {
   label: string
-  gz: string
+
   gan: string
   zhi: string
+  shishen: string // 十神
+  hideGans: string[] // 藏干
+  hideShishen: string[] // 藏干十神
+  
+  nayin: string
+  
   ganWuxing: string
   zhiWuxing: string
-  wuxing: string
-  nayin: string
-  hideGans: string[]
-  shishen: string
-  shishenWuxing: string
-  hideShishen: string[]
-  hideShishenWuxings: string[]
+  shishenWuxing: string // 十神五行
+  hideShishenWuxings: string[] // 藏干十神五行
+
   shensha: string[]
   zizuo: string
 }
 
 export interface BaziResult {
   solarStr: string
+  /** 真太阳时（仅均时差修正；时辰未知时为空串）。 */
+  trueSolarStr: string
   lunarStr: string
   pillars: Pillar[]
   hourKnown: boolean
@@ -43,30 +45,3 @@ export interface ExtraPillar {
   gz: string
   desc?: string
 }
-
-interface UiState {
-  focused: SkillFocus | null
-  extraPillars: ExtraPillar[]
-  setFocused: (f: SkillFocus | null) => void
-  setExtraPillars: (p: ExtraPillar[]) => void
-}
-
-export const useBaziStore = create<UiState>((set) => ({
-  focused: null,
-  extraPillars: [],
-  setFocused: (f) => set({ focused: f }),
-  setExtraPillars: (p) => set({ extraPillars: p }),
-}))
-
-// 输入变化 → 清空大运/流年叠加
-useBazi.subscribe((s, prev) => {
-  if (
-    s.year === prev.year &&
-    s.month === prev.month &&
-    s.day === prev.day &&
-    s.hour === prev.hour &&
-    s.minute === prev.minute &&
-    s.sex === prev.sex
-  ) return
-  useBaziStore.setState({ extraPillars: [] })
-})

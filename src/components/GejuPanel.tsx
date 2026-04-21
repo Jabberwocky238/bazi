@@ -54,23 +54,62 @@ export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
         </div>
       </div>
 
-      {hits.length === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">未识别到明显格局</p>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {hits.map((h) => (
-            <SkillLink
-              key={h.name}
-              category="geju"
-              name={h.name}
-              subtitle={h.note}
-              className={`text-sm px-3 py-1 rounded-full border-2 ${QUALITY_BORDER[h.quality]} ${CATEGORY_TEXT[h.category]}`}
-            >
-              {h.name}
-            </SkillLink>
-          ))}
-        </div>
-      )}
+      {(() => {
+        const natalHits = hits.filter((h) => !h.suiyunSpecific)
+        const suiyunHits = hits.filter((h) => h.suiyunSpecific)
+        if (hits.length === 0) {
+          return <p className="text-sm text-slate-500 dark:text-slate-400">未识别到明显格局</p>
+        }
+        return (
+          <>
+            <div>
+              <div className="mb-2 text-[10px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400">
+                原局
+              </div>
+              {natalHits.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {natalHits.map((h) => (
+                    <SkillLink
+                      key={h.name}
+                      category="geju"
+                      name={h.name}
+                      subtitle={h.note}
+                      className={`text-sm px-3 py-1 rounded-full border-2 ${QUALITY_BORDER[h.quality]} ${CATEGORY_TEXT[h.category]}`}
+                    >
+                      {h.name}
+                    </SkillLink>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 dark:text-slate-600">—</p>
+              )}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="mb-2 text-[10px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400">
+                需要岁运
+              </div>
+              {suiyunHits.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 opacity-60">
+                  {suiyunHits.map((h) => (
+                    <SkillLink
+                      key={h.name}
+                      category="geju"
+                      name={h.name}
+                      subtitle={h.note}
+                      className={`text-xs px-2.5 py-0.5 rounded-full border ${QUALITY_BORDER[h.quality]} ${CATEGORY_TEXT[h.category]}`}
+                    >
+                      {h.name}
+                    </SkillLink>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 dark:text-slate-600">—</p>
+              )}
+            </div>
+          </>
+        )
+      })()}
 
       <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
         <button

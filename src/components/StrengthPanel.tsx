@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useShiShen, analyzeStrength, type StrengthLevel, WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@/lib'
+import { analyzeStrength, type StrengthLevel, WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@/lib'
+import { useShiShen } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
 const LEVEL_COLOR: Record<StrengthLevel, string> = {

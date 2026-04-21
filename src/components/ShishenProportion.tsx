@@ -1,4 +1,6 @@
-import { useBaziStore, type Pillar, type ExtraPillar, WUXING_BG_STRONG, WUXING_TEXT, shishenWuxing } from '@/lib'
+import { useState } from 'react'
+import { type Pillar, type ExtraPillar, WUXING_BG_STRONG, WUXING_TEXT, shishenWuxing } from '@/lib'
+import { useBaziStore } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
 const GAN_WEIGHT = 1.0
@@ -65,6 +67,7 @@ export function ShishenProportion({ pillars }: { pillars: Pillar[] }) {
   const extras = useBaziStore((s) => s.extraPillars)
   const setExtras = useBaziStore((s) => s.setExtraPillars)
   const dayGan = pillars[2]?.gan ?? ''
+  const [open, setOpen] = useState(true)
 
   const entries = compute(pillars, dayGan, extras)
   if (!entries.length) return null
@@ -78,12 +81,27 @@ export function ShishenProportion({ pillars }: { pillars: Pillar[] }) {
 
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-5 shadow-sm">
-      <div className="flex items-baseline justify-between mb-4 gap-2 flex-wrap">
-        <h2 className="text-xs font-medium tracking-[0.25em] uppercase text-slate-500 dark:text-slate-400">
-          十神占比
-        </h2>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className={`w-full flex items-center justify-between gap-2 flex-wrap text-left ${open ? 'mb-4' : ''}`}
+      >
+        <span className="flex items-baseline gap-2">
+          <span className={`text-[11px] inline-block transition-transform ${open ? 'rotate-90' : ''}`}>▸</span>
+          <h2 className="text-xs font-medium tracking-[0.25em] uppercase text-slate-500 dark:text-slate-400">
+            十神占比
+          </h2>
+          <span className="text-[10px] text-slate-400 dark:text-slate-600">
+            {open ? '点击收起' : '点击展开'}
+          </span>
+        </span>
         {extras.length > 0 && (
-          <div className="flex items-center gap-2 text-[11px]">
+          <span
+            role="group"
+            className="flex items-center gap-2 text-[11px]"
+            onClick={(e) => e.stopPropagation()}
+          >
             {extras.map((e) => (
               <span
                 key={e.label + e.gz}
@@ -92,20 +110,32 @@ export function ShishenProportion({ pillars }: { pillars: Pillar[] }) {
                 {e.label} {e.gz}
               </span>
             ))}
-            <button
-              type="button"
-              onClick={() => setExtras([])}
-              className="px-2 py-0.5 rounded border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-red-500 hover:border-red-400"
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(ev) => { ev.stopPropagation(); setExtras([]) }}
+              onKeyDown={(ev) => {
+                if (ev.key === 'Enter' || ev.key === ' ') {
+                  ev.preventDefault()
+                  ev.stopPropagation()
+                  setExtras([])
+                }
+              }}
+              className="px-2 py-0.5 rounded border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-red-500 hover:border-red-400 cursor-pointer"
             >
               清除大运影响
-            </button>
-          </div>
+            </span>
+          </span>
         )}
-      </div>
+      </button>
 
-      {inGan.length > 0 && <Group title="透干" entries={inGan} />}
-      {hiddenOnly.length > 0 && (
-        <Group title="仅藏干" entries={hiddenOnly} dimmed className={inGan.length ? 'mt-5' : ''} />
+      {open && (
+        <>
+          {inGan.length > 0 && <Group title="透干" entries={inGan} />}
+          {hiddenOnly.length > 0 && (
+            <Group title="仅藏干" entries={hiddenOnly} dimmed className={inGan.length ? 'mt-5' : ''} />
+          )}
+        </>
       )}
     </section>
   )

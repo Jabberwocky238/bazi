@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Solar } from 'lunar-typescript'
 import {
   shishenOf,
   CANG_GAN,
@@ -7,18 +6,19 @@ import {
   type Zhi,
 } from '@jabberwocky238/bazi-engine'
 import {
-  useBaziStore,
   type ExtraPillar,
-  useBazi,
   HOUR_UNKNOWN,
-  useShiShen,
   WUXING_TEXT,
   WUXING_BORDER,
   WUXING_FROM,
   ganWuxing,
   zhiWuxing,
   shishenWuxing,
+  computeDaYun,
+  type DaYunStep,
+  type LiuNianEntry,
 } from '@/lib'
+import { useBaziStore, useBazi, useShiShen } from '@@/stores'
 
 interface GzCell {
   gan: string
@@ -63,22 +63,8 @@ function buildHideShishen(dayGan: string, zhi: string): string[] {
   return cangs.map((g) => safeShishen(dayGan, g))
 }
 
-interface DaYunStep {
-  index: number
-  startAge: number
-  endAge: number
-  startYear: number
-  endYear: number
-  gz: string
-  cell: GzCell | null
-}
-
-interface LiuNianEntry {
-  age: number
-  year: number
-  gz: string
-  cell: GzCell
-}
+type DaYunStepView = DaYunStep & { cell: GzCell | null }
+type LiuNianEntryView = LiuNianEntry & { cell: GzCell }
 
 export function DaYunPanel() {
   const year = useBazi((s) => s.year)
@@ -91,51 +77,29 @@ export function DaYunPanel() {
   const extras = useBaziStore((s) => s.extraPillars)
   const setExtras = useBaziStore((s) => s.setExtraPillars)
 
+  const raw = useMemo(
+    () => computeDaYun(year, month, day, hour, minute, sex),
+    [year, month, day, hour, minute, sex],
+  )
+
   const data = useMemo(() => {
-    if (hour === HOUR_UNKNOWN) return null
-    try {
-      const solar = Solar.fromYmdHms(year, month, day, hour, minute, 0)
-      const ec = solar.getLunar().getEightChar()
-      ec.setSect(1)
-      const yun = ec.getYun(sex, 1)
-      const rawSteps = yun.getDaYun(10)
-      const steps: DaYunStep[] = rawSteps.map((dy) => {
-        const gz = dy.getGanZhi()
-        return {
-          index: dy.getIndex(),
-          startAge: dy.getStartAge(),
-          endAge: dy.getEndAge(),
-          startYear: dy.getStartYear(),
-          endYear: dy.getEndYear(),
-          gz,
-          cell: gz ? analyzeGz(dayGan, gz) : null,
-        }
-      })
-      const getLiuNian = (stepIndex: number): LiuNianEntry[] => {
-        const step = rawSteps[stepIndex]
-        if (!step) return []
-        return step.getLiuNian(10).map((ln) => {
-          const gz = ln.getGanZhi()
-          return {
-            age: ln.getAge(),
-            year: ln.getYear(),
-            gz,
-            cell: analyzeGz(dayGan, gz),
-          }
-        })
-      }
-      return {
-        forward: yun.isForward(),
-        startYear: yun.getStartYear(),
-        startMonth: yun.getStartMonth(),
-        startDay: yun.getStartDay(),
-        steps,
-        getLiuNian,
-      }
-    } catch {
-      return null
+    if (!raw) return null
+    const steps: DaYunStepView[] = raw.steps.map((s) => ({
+      ...s,
+      cell: s.gz ? analyzeGz(dayGan, s.gz) : null,
+    }))
+    const liunian: LiuNianEntryView[][] = raw.liunian.map((list) =>
+      list.map((ln) => ({ ...ln, cell: analyzeGz(dayGan, ln.gz) })),
+    )
+    return {
+      forward: raw.forward,
+      startYear: raw.startYear,
+      startMonth: raw.startMonth,
+      startDay: raw.startDay,
+      steps,
+      liunian,
     }
-  }, [year, month, day, hour, minute, sex, dayGan])
+  }, [raw, dayGan])
 
   const [activeIdx, setActiveIdx] = useState<number | null>(null)
 
@@ -152,12 +116,12 @@ export function DaYunPanel() {
     )
   }
 
-  const liuNian = activeIdx !== null ? data.getLiuNian(activeIdx) : []
+  const liuNian = activeIdx !== null ? data.liunian[activeIdx] ?? [] : []
   const activeStep = activeIdx !== null ? data.steps[activeIdx] : null
   const activeExtraYear =
     extras.find((e) => e.label === '流年')?.gz ?? null
 
-  const daYunExtra = (step: DaYunStep): ExtraPillar | null => {
+  const daYunExtra = (step: DaYunStepView): ExtraPillar | null => {
     if (!step.cell) return null
     return {
       label: '大运',
@@ -170,19 +134,18 @@ export function DaYunPanel() {
     }
   }
 
-  const liuNianExtra = (ln: LiuNianEntry): ExtraPillar => ({
+  const liuNianExtra = (ln: LiuNianEntryView): ExtraPillar => ({
     label: '流年',
     gan: ln.cell.gan,
     zhi: ln.cell.zhi,
     gz: ln.gz,
     shishen: ln.cell.ganSs,
-    hideShishen: buildHideShishen(dayGan, ln.cell.zhi),
+    hideShishen: buildHideShishen(dayGan, ln.gz),
     desc: `${ln.year} · ${ln.age} 岁`,
   })
 
   const onPickDaYun = (i: number) => {
     if (activeIdx === i) {
-      // 再次点击同一大运：收起 + 清空影响
       setActiveIdx(null)
       setExtras([])
       return
@@ -193,12 +156,11 @@ export function DaYunPanel() {
     setExtras(extra ? [extra] : [])
   }
 
-  const onPickLiuNian = (ln: LiuNianEntry) => {
+  const onPickLiuNian = (ln: LiuNianEntryView) => {
     if (!activeStep) return
     const dyE = daYunExtra(activeStep)
     const next: ExtraPillar[] = []
     if (dyE) next.push(dyE)
-    // 再次点同一流年：仅保留大运
     if (activeExtraYear !== ln.gz) next.push(liuNianExtra(ln))
     setExtras(next)
   }
@@ -253,7 +215,7 @@ export function DaYunPanel() {
 
 function DaYunCard({
   step, active, onClick,
-}: { step: DaYunStep; active: boolean; onClick: () => void }) {
+}: { step: DaYunStepView; active: boolean; onClick: () => void }) {
   const c = step.cell
   return (
     <button
@@ -299,7 +261,7 @@ function DaYunCard({
 
 function LiuNianCard({
   entry, active, onClick,
-}: { entry: LiuNianEntry; active: boolean; onClick: () => void }) {
+}: { entry: LiuNianEntryView; active: boolean; onClick: () => void }) {
   const c = entry.cell
   return (
     <button

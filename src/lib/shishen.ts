@@ -1,4 +1,3 @@
-import { create } from 'zustand'
 import { Solar } from 'lunar-typescript'
 import {
   computeShensha,
@@ -10,7 +9,8 @@ import {
 } from '@jabberwocky238/bazi-engine'
 import { ganWuxing, zhiWuxing, shishenWuxing } from './wuxing'
 import { zizuoState } from './zizuo'
-import { useBazi, HOUR_UNKNOWN } from './bazi'
+import { HOUR_UNKNOWN } from './bazi'
+import { toTrueSolarDate, formatTrueSolar } from './truesolar'
 import type { Pillar, BaziResult } from './store'
 
 const EMPTY_PILLAR: Pillar = {
@@ -31,7 +31,7 @@ const EMPTY_PILLAR: Pillar = {
   zizuo: '',
 }
 
-function compute(
+export function computeBazi(
   year: number,
   month: number,
   day: number,
@@ -96,6 +96,9 @@ function compute(
     solarStr: hourKnown
       ? solar.toYmdHms()
       : `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} 时辰未知`,
+    trueSolarStr: hourKnown
+      ? formatTrueSolar(toTrueSolarDate(year, month, day, hour, minute))
+      : '',
     lunarStr: hourKnown
       ? `${lunar.toString()} ${lunar.getTimeZhi()}时`
       : `${lunar.toString()} 时辰未知`,
@@ -103,31 +106,3 @@ function compute(
     hourKnown,
   }
 }
-
-interface ShiShenState {
-  result: BaziResult
-}
-
-function computeFromBazi(): BaziResult {
-  const { year, month, day, hour, minute, sex } = useBazi.getState()
-  return compute(year, month, day, hour, minute, sex)
-}
-
-export const useShiShen = create<ShiShenState>(() => ({
-  result: computeFromBazi(),
-}))
-
-// 订阅 useBazi 6 个输入字段变化 → 自动重算
-useBazi.subscribe((s, prev) => {
-  if (
-    s.year === prev.year &&
-    s.month === prev.month &&
-    s.day === prev.day &&
-    s.hour === prev.hour &&
-    s.minute === prev.minute &&
-    s.sex === prev.sex
-  ) return
-  useShiShen.setState({
-    result: compute(s.year, s.month, s.day, s.hour, s.minute, s.sex),
-  })
-})

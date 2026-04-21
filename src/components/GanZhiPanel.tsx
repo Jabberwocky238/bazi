@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useShiShen, analyzeGanZhi, type Finding, type FindingKind } from '@/lib'
+import { analyzeGanZhi, type Finding, type FindingKind } from '@/lib'
+import { useShiShen } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
 const SECTION_LABEL = 'text-[11px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400 uppercase'

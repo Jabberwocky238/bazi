@@ -1,38 +1,38 @@
 import type { Ctx } from '../../ctx'
-import type { GejuDraft } from '../../types'
+import type { GejuHit } from '../../types'
 
-/** 木火对：
- *  - 木日主 + 火过旺 + 木无重根 + 无水救 → 木火相煎
- *  - 木日主 + 火透且火有根 + 木有根 + 无金克 + 无重水灭火 → 木火通明
- *  - 火日主 + 地支木 ≥ 3 + 火无重根 → 木多火塞
+/** 木火相煎：木日主 + 火过旺 + 木根虚 + 无水。 */
+export function isMuHuoXiangJian(ctx: Ctx): GejuHit | null {
+  if (ctx.dayWx !== '木') return null
+  const huoMany = ctx.ganWxCount('火') >= 2 || ctx.zhiMainWxCount('火') >= 2
+  if (!huoMany) return null
+  if (ctx.zhiMainWxCount('木') > 1) return null
+  if (ctx.touWx('水') || ctx.rootWx('水')) return null
+  return { name: '木火相煎', note: '火过旺而木根虚，无水润' }
+}
+
+/**
+ * 木火通明：木日主 + 火透+火根 + 木根(含中气) + 无重金 + 无重水。
+ * 互斥：水透+水有根 → 水木清华。
  */
-export function judgeMuHuo(ctx: Ctx): GejuDraft | null {
-  if (ctx.dayWx === '木') {
-    const huoMany = ctx.ganWxCount('火') >= 2 || ctx.zhiMainWxCount('火') >= 2
-    const muRootCount = ctx.zhiMainWxCount('木')
-    const hasShui = ctx.touWx('水') || ctx.rootWx('水')
-    if (huoMany && muRootCount <= 1 && !hasShui) {
-      return { name: '木火相煎', note: '火过旺而木根虚，无水润' }
-    }
-    // 互斥：水透且有根 → 让位水木清华
-    const shuiRooted = ctx.touWx('水') && ctx.rootWx('水')
-    if (
-      ctx.touWx('火') &&
-      ctx.rootWx('火') &&               // md 条件 4: 巳午本气火根
-      ctx.rootExt('木') &&              // md 条件 3: 寅卯本气 或 亥中甲
-      !ctx.touWx('金') &&               // md 条件 5
-      !shuiRooted                        // md 条件 6: 水过旺 (透+有根)
-    ) {
-      return { name: '木火通明', note: '木生火，火透坐巳午本气根' }
-    }
-  }
-  if (ctx.dayWx === '火') {
-    const muMany = ctx.zhiMainWxCount('木') >= 3
-    const huoWeak = !ctx.rootWx('火') || ctx.zhiMainWxCount('火') < 2
-    const wuJin = !ctx.touWx('金') || ctx.ganWxCount('金') < 2
-    if (muMany && huoWeak && wuJin) {
-      return { name: '木多火塞', note: '木多压火 · 火弱无根 · 无金疏通' }
-    }
-  }
-  return null
+export function isMuHuoTongMing(ctx: Ctx): GejuHit | null {
+  if (ctx.dayWx !== '木') return null
+  const shuiRooted = ctx.touWx('水') && ctx.rootWx('水')
+  if (shuiRooted) return null
+  if (!ctx.touWx('火')) return null
+  if (!ctx.rootWx('火')) return null
+  if (!ctx.rootExt('木')) return null
+  if (ctx.ganWxCount('金') >= 2) return null
+  return { name: '木火通明', note: '木生火，火透坐巳午本气根，无重金重水' }
+}
+
+/** 木多火塞：火日主 + 地支木≥3 + 火无根/弱 + 无金疏通。 */
+export function isMuDuoHuoSai(ctx: Ctx): GejuHit | null {
+  if (ctx.dayWx !== '火') return null
+  if (ctx.zhiMainWxCount('木') < 3) return null
+  const huoWeak = !ctx.rootWx('火') || ctx.zhiMainWxCount('火') < 2
+  if (!huoWeak) return null
+  const wuJin = !ctx.touWx('金') || ctx.ganWxCount('金') < 2
+  if (!wuJin) return null
+  return { name: '木多火塞', note: '木多压火 · 火弱无根 · 无金疏通' }
 }

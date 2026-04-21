@@ -1,4 +1,4 @@
-import { useShiShen } from '@/lib'
+import { useShiShen } from '@@/stores'
 import { BaziForm } from '@@/BaziForm'
 import { BaziMeta } from '@@/BaziMeta'
 import { BaziChart } from '@@/chart/BaziChart'
@@ -32,7 +32,7 @@ function App() {
         <div className="grid gap-5 md:gap-6 md:grid-cols-[minmax(0,6fr)_minmax(0,4fr)]">
           <section className="min-w-0">
             <ErrorBoundary name="BaziForm"><BaziForm /></ErrorBoundary>
-            <ErrorBoundary name="BaziMeta"><BaziMeta solar={result.solarStr} lunar={result.lunarStr} /></ErrorBoundary>
+            <ErrorBoundary name="BaziMeta"><BaziMeta solar={result.solarStr} trueSolar={result.trueSolarStr} lunar={result.lunarStr} /></ErrorBoundary>
             <ErrorBoundary name="BaziChart"><BaziChart pillars={result.pillars} /></ErrorBoundary>
             <ErrorBoundary name="DayMasterRelations"><DayMasterRelations /></ErrorBoundary>
             <ErrorBoundary name="GejuPanel"><GejuPanel pillars={result.pillars} /></ErrorBoundary>

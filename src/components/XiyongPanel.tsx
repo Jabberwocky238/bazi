@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { analyzeXiyong, type Cat, type GanZhiType, type WuXing, WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@/lib'
+import { analyzeXiyong, type Cat, type GanZhiType, type WuXing } from '@/lib'
+import { WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@@/css'
 import { useShiShen } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 

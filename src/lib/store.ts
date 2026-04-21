@@ -1,7 +1,7 @@
 import type { SkillCategory } from './skills'
 import type { Gan, Zhi, WuXing, Shishen } from '@jabberwocky238/bazi-engine'
 
-export type PillarType = '年柱' | '月柱' | '日柱' | '时柱' | '大运' | '流年'
+export type PillarType = '年柱' | '月柱' | '日柱' | '时柱' | '大运' | '流年' | '流月' | '流日' | '流时'
 
 export interface Pillar {
   label: PillarType

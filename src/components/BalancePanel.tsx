@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { type Pillar, WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@/lib'
+import { type Pillar } from '@/lib'
+import { WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@@/css'
 import { useShiShen } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 import { ganWuxing, wuxingRelations, isYangGan, type Gan } from '@jabberwocky238/bazi-engine'
@@ -78,7 +79,7 @@ function analyze(pillars: Pillar[]): Analysis | null {
   // 比劫 + 印 支持位统计
   const counts: CountsByCat = { 比劫: 0, 印: 0, 食伤: 0, 财: 0, 官杀: 0 }
   const ganSs = [pillars[0].shishen, pillars[1].shishen, pillars[3].shishen].filter(
-    (s) => s && s !== '日主',
+    (s) => s && (s as string) !== '日主',
   )
   const allHide = pillars.flatMap((p) => p.hideShishen)
 

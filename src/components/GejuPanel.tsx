@@ -1,5 +1,22 @@
-import { useState } from 'react'
-import { type Pillar, detectGeju, type GejuQuality, type GejuCategory, skillNames } from '@/lib'
+import { useMemo, useState } from 'react'
+import {
+  CANG_GAN,
+  ganWuxing,
+  zhiWuxing,
+  zizuoState,
+  type Gan,
+  type WuXing,
+} from '@jabberwocky238/bazi-engine'
+import {
+  type Pillar,
+  type PillarType,
+  detectGeju,
+  shishenWuxing,
+  type GejuQuality,
+  type GejuCategory,
+  skillNames,
+} from '@/lib'
+import { useBaziStore, type ExtraPillar } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
 /** 边框 + 底色 + 发光色：表示吉凶。`--glow-color` 覆盖 SkillLink 的 hover 圆边光 */
@@ -21,11 +38,58 @@ const CATEGORY_TEXT: Record<GejuCategory, string> = {
 
 const CATEGORY_ORDER: GejuCategory[] = ['五行格', '十神格', '正格', '专旺格', '特殊格', '从格']
 
+/** 把 ExtraPillar 补齐成一个可喂给 detectGeju 的 Pillar。
+ *  只补齐格局判定会用到的字段，其它（nayin/shensha）给空值。 */
+function extraToPillar(e: ExtraPillar, dayGan: Gan): Pillar {
+  const hideGans = (CANG_GAN[e.zhi] ?? []) as Gan[]
+  const fallbackWx = ganWuxing(dayGan)
+  return {
+    label: e.label as PillarType,
+    gan: e.gan,
+    zhi: e.zhi,
+    shishen: e.shishen,
+    hideGans,
+    hideShishen: e.hideShishen,
+    nayin: '',
+    ganWuxing: ganWuxing(e.gan),
+    zhiWuxing: zhiWuxing(e.zhi),
+    shishenWuxing: (shishenWuxing(dayGan, e.shishen) || fallbackWx) as WuXing,
+    hideShishenWuxings: e.hideShishen.map(
+      (s) => (shishenWuxing(dayGan, s) || fallbackWx) as WuXing,
+    ),
+    shensha: [],
+    zizuo: zizuoState(e.gan, e.zhi),
+  }
+}
+
 export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
-  const hits = detectGeju(pillars)
+  const extras = useBaziStore((s) => s.extraPillars)
+  const dayGan = pillars[2]?.gan as Gan | undefined
+
+  const { hits, activeDaYun, activeLiuNian } = useMemo(() => {
+    const dy = extras.find((e) => e.label === '大运')
+    const ln = extras.find((e) => e.label === '流年')
+    if (!dayGan) {
+      return {
+        hits: detectGeju(pillars),
+        activeDaYun: null as ExtraPillar | null,
+        activeLiuNian: null as ExtraPillar | null,
+      }
+    }
+    return {
+      hits: detectGeju(pillars, {
+        dayun: dy ? extraToPillar(dy, dayGan) : undefined,
+        liunian: ln ? extraToPillar(ln, dayGan) : undefined,
+      }),
+      activeDaYun: dy ?? null,
+      activeLiuNian: ln ?? null,
+    }
+  }, [pillars, extras, dayGan])
+
   const hitSet = new Set(hits.map((h) => h.name))
   const others = skillNames('geju').filter((n) => !hitSet.has(n))
   const [showAll, setShowAll] = useState(false)
+  const hasSuiyun = !!(activeDaYun || activeLiuNian)
 
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 md:p-5 shadow-sm">
@@ -86,11 +150,31 @@ export function GejuPanel({ pillars }: { pillars: Pillar[] }) {
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <div className="mb-2 text-[10px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400">
-                需要岁运
+              <div className="mb-2 flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400">
+                  需要岁运
+                </span>
+                {hasSuiyun ? (
+                  <span className="flex items-center gap-1 text-[10px]">
+                    {activeDaYun && (
+                      <span className="px-1.5 py-0.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                        大运 {activeDaYun.gz}
+                      </span>
+                    )}
+                    {activeLiuNian && (
+                      <span className="px-1.5 py-0.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                        流年 {activeLiuNian.gz}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-400 dark:text-slate-600">
+                    未选岁运 · 以下仅为原局推断的潜在格局
+                  </span>
+                )}
               </div>
               {suiyunHits.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5 opacity-60">
+                <div className={`flex flex-wrap gap-1.5 ${hasSuiyun ? '' : 'opacity-60'}`}>
                   {suiyunHits.map((h) => (
                     <SkillLink
                       key={h.name}

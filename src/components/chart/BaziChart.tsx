@@ -51,9 +51,6 @@ export function BaziChart({ pillars }: { pillars: Pillar[] }) {
               />
             ))}
           </Row>
-          <Row label="五行">
-            {pillars.map((p) => <td key={p.label} className={cellBase}>{p.wuxing}</td>)}
-          </Row>
           <Row label="纳音">
             {pillars.map((p) => <td key={p.label} className={cellBase}>{p.nayin}</td>)}
           </Row>

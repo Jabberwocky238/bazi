@@ -1,0 +1,12 @@
+export { isSanQiGe } from './sanQiGe'
+export { isSanGengGe } from './sanGengGe'
+export { isLiangQiChengXiang } from './liangQiChengXiang'
+// 五行齐全：尚无 bazi-skills md 文档，暂不导出
+// export { isWuXingQiQuan } from './wuXingQiQuan'
+export { isHuaQiGe } from './huaQiGe'
+export { isTianYuanYiQi } from './tianYuanYiQi'
+export { isRiDeGe } from './riDeGe'
+export { isRiGuiGe } from './riGuiGe'
+export { isShenShaLiangTing } from './shenShaLiangTing'
+export { isJieCaiJianCai } from './jieCaiJianCai'
+export { isDiWangMingZao } from './diWangMingZao'

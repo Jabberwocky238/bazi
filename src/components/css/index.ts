@@ -17,3 +17,44 @@ export const thBase =
 
 export const cardCls =
   'rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm'
+
+// —— 五行 → Tailwind 色类 ——
+export const WUXING_TEXT: Record<string, string> = {
+  木: 'text-wood',
+  火: 'text-fire',
+  土: 'text-earth',
+  金: 'text-metal',
+  水: 'text-water',
+}
+
+export const WUXING_BORDER: Record<string, string> = {
+  木: 'border-wood/60',
+  火: 'border-fire/60',
+  土: 'border-earth/60',
+  金: 'border-metal/60',
+  水: 'border-water/60',
+}
+
+export const WUXING_FROM: Record<string, string> = {
+  木: 'from-wood/15',
+  火: 'from-fire/15',
+  土: 'from-earth/15',
+  金: 'from-metal/15',
+  水: 'from-water/15',
+}
+
+export const WUXING_BG_SOFT: Record<string, string> = {
+  木: 'bg-wood/10',
+  火: 'bg-fire/10',
+  土: 'bg-earth/10',
+  金: 'bg-metal/10',
+  水: 'bg-water/10',
+}
+
+export const WUXING_BG_STRONG: Record<string, string> = {
+  木: 'bg-wood',
+  火: 'bg-fire',
+  土: 'bg-earth',
+  金: 'bg-metal',
+  水: 'bg-water',
+}

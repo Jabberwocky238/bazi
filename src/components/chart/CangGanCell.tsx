@@ -1,5 +1,5 @@
 import { ganWuxing, type Gan } from '@jabberwocky238/bazi-engine'
-import { WUXING_TEXT } from '@/lib'
+import { WUXING_TEXT } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
 
 export function CangGanCell({

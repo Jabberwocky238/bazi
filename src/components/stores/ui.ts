@@ -1,6 +1,20 @@
 import { create } from 'zustand'
-import type { SkillFocus, ExtraPillar } from '@/lib'
+import type { Gan, Zhi, Shishen } from '@jabberwocky238/bazi-engine'
+import type { SkillFocus } from '@/lib'
 import { useBazi } from './bazi'
+
+/** 大运/流年/流月叠加柱 —— UI 层临时数据，不含纳音/神煞等派生字段。 */
+export interface ExtraPillar {
+  label: '大运' | '流年' | '流月'
+  gan: Gan
+  zhi: Zhi
+  shishen: Shishen
+  hideShishen: Shishen[]
+  /** 干支字符串，如 "甲子"。 */
+  gz: string
+  /** 显示描述，如 "2024 · 40 岁"。 */
+  desc?: string
+}
 
 interface UiState {
   focused: SkillFocus | null

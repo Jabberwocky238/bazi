@@ -1,8 +1,9 @@
-import type { Pillar, ExtraPillar } from '../store'
-import { buildCtx } from './ctx'
+import type { Pillar } from '../store'
 import type { GejuHit, Detector, GejuQuality, GejuCategory } from './types'
+import { Ctx } from './ctx'
 
 export type { GejuQuality, GejuCategory, GejuHit } from './types'
+export { Ctx } from './ctx'
 
 import * as zhengge from './categories/zhengge'
 import * as guansha from './categories/guansha'
@@ -11,7 +12,7 @@ import * as yangren from './categories/yangren'
 import * as zongliang from './categories/zongliang'
 import * as wuxing from './categories/wuxing'
 import * as zhuanwang from './categories/zhuanwang'
-import * as conge from './categories/congge'
+import * as congge from './categories/congge'
 import * as teshu from './categories/teshu'
 
 export const DETECTORS: Record<string, [Detector, GejuQuality, GejuCategory]> = {
@@ -79,19 +80,20 @@ export const DETECTORS: Record<string, [Detector, GejuQuality, GejuCategory]> = 
   稼穑格: [zhuanwang.isJiaSeGe, 'good', '专旺格'],
   从革格: [zhuanwang.isCongGeGe, 'good', '专旺格'],
   润下格: [zhuanwang.isRunXiaGe, 'good', '专旺格'],
-  // 从格
-  从财格: [conge.isCongCaiGe, 'good', '从格'],
-  从杀格: [conge.isCongShaGe, 'good', '从格'],
-  从儿格: [conge.isCongErGe, 'good', '从格'],
-  从官格: [conge.isCongGuanGe, 'good', '从格'],
-  从旺格: [conge.isCongWangGe, 'good', '从格'],
-  从强格: [conge.isCongQiangGe, 'good', '从格'],
-  从势格: [conge.isCongShiGe, 'good', '从格'],
+  // 从格 (名称以 bazi-skills md 目录名为准)
+  弃命从财: [congge.isCongCaiGe, 'good', '从格'],
+  弃命从煞: [congge.isCongShaGe, 'good', '从格'],
+  从儿格: [congge.isCongErGe, 'good', '从格'],
+  // 以下 detector 无 md 文档，已在 congge/index.ts 注释导出：
+  // 从势格: [congge.isCongShiGe, 'good', '从格'],
+  // 从官格: [congge.isCongGuanGe, 'good', '从格'],
+  // 从旺格: [congge.isCongWangGe, 'good', '从格'],
+  // 从强格: [congge.isCongQiangGe, 'good', '从格'],
   // 特殊格
   三奇格: [teshu.isSanQiGe, 'good', '特殊格'],
   三庚格: [teshu.isSanGengGe, 'good', '特殊格'],
   两气成象: [teshu.isLiangQiChengXiang, 'neutral', '特殊格'],
-  五行齐全: [teshu.isWuXingQiQuan, 'neutral', '特殊格'],
+  // 五行齐全: [teshu.isWuXingQiQuan, 'neutral', '特殊格'],  // 无 md 文档
   化气格: [teshu.isHuaQiGe, 'good', '特殊格'],
   天元一气: [teshu.isTianYuanYiQi, 'good', '特殊格'],
   日德格: [teshu.isRiDeGe, 'good', '特殊格'],
@@ -103,9 +105,17 @@ export const DETECTORS: Record<string, [Detector, GejuQuality, GejuCategory]> = 
 
 export type GejuOutput = GejuHit & { quality: GejuQuality, category: GejuCategory }
 
-export function detectGeju(pillars: Pillar[], extraPillars: ExtraPillar[] = []): GejuOutput[] {
+export function detectGeju(
+  pillars: Pillar[],
+  extras: { dayun?: Pillar; liunian?: Pillar } = {},
+): GejuOutput[] {
   if (pillars.length !== 4) return []
-  const ctx = buildCtx(pillars, extraPillars)
+  const [year, month, day, hour] = pillars
+  const ctx = new Ctx({
+    year, month, day, hour,
+    dayun: extras.dayun,
+    liunian: extras.liunian,
+  })
   const hits: GejuOutput[] = []
   for (const [detect, quality, category] of Object.values(DETECTORS)) {
     const h = detect(ctx)

@@ -8,17 +8,15 @@ import {
   type Zhi,
 } from '@jabberwocky238/bazi-engine'
 import {
-  type ExtraPillar,
   HOUR_UNKNOWN,
-  WUXING_TEXT,
-  WUXING_BORDER,
-  WUXING_FROM,
   shishenWuxing,
   computeDaYun,
   type DaYunStep,
   type LiuNianEntry,
+  type LiuYueEntry,
 } from '@/lib'
-import { useBaziStore, useBazi, useShiShen } from '@@/stores'
+import { WUXING_TEXT, WUXING_BORDER, WUXING_FROM } from '@@/css'
+import { useBaziStore, useBazi, useShiShen, type ExtraPillar } from '@@/stores'
 
 interface GzCell {
   gan: string
@@ -64,7 +62,8 @@ function buildHideShishen(dayGan: string, zhi: string): string[] {
 }
 
 type DaYunStepView = DaYunStep & { cell: GzCell | null }
-type LiuNianEntryView = LiuNianEntry & { cell: GzCell }
+type LiuYueEntryView = LiuYueEntry & { cell: GzCell }
+type LiuNianEntryView = LiuNianEntry & { cell: GzCell; liuyueView: LiuYueEntryView[] }
 
 export function DaYunPanel() {
   const year = useBazi((s) => s.year)
@@ -89,7 +88,11 @@ export function DaYunPanel() {
       cell: s.gz ? analyzeGz(dayGan, s.gz) : null,
     }))
     const liunian: LiuNianEntryView[][] = raw.liunian.map((list) =>
-      list.map((ln) => ({ ...ln, cell: analyzeGz(dayGan, ln.gz) })),
+      list.map((ln) => ({
+        ...ln,
+        cell: analyzeGz(dayGan, ln.gz),
+        liuyueView: ln.liuyue.map((ly) => ({ ...ly, cell: analyzeGz(dayGan, ly.gz) })),
+      })),
     )
     return {
       forward: raw.forward,
@@ -102,6 +105,7 @@ export function DaYunPanel() {
   }, [raw, dayGan])
 
   const [activeIdx, setActiveIdx] = useState<number | null>(null)
+  const [activeLnIdx, setActiveLnIdx] = useState<number | null>(null)
 
   if (!data) {
     return (
@@ -118,50 +122,82 @@ export function DaYunPanel() {
 
   const liuNian = activeIdx !== null ? data.liunian[activeIdx] ?? [] : []
   const activeStep = activeIdx !== null ? data.steps[activeIdx] : null
+  const activeLnEntry = activeLnIdx !== null ? liuNian[activeLnIdx] ?? null : null
   const activeExtraYear =
     extras.find((e) => e.label === '流年')?.gz ?? null
+  const activeExtraMonth =
+    extras.find((e) => e.label === '流月')?.gz ?? null
 
   const daYunExtra = (step: DaYunStepView): ExtraPillar | null => {
     if (!step.cell) return null
     return {
       label: '大运',
-      gan: step.cell.gan,
-      zhi: step.cell.zhi,
+      gan: step.cell.gan as ExtraPillar['gan'],
+      zhi: step.cell.zhi as ExtraPillar['zhi'],
       gz: step.gz,
-      shishen: step.cell.ganSs,
-      hideShishen: buildHideShishen(dayGan, step.cell.zhi),
+      shishen: step.cell.ganSs as ExtraPillar['shishen'],
+      hideShishen: buildHideShishen(dayGan, step.cell.zhi) as ExtraPillar['hideShishen'],
       desc: `${step.startYear}-${step.endYear}`,
     }
   }
 
   const liuNianExtra = (ln: LiuNianEntryView): ExtraPillar => ({
     label: '流年',
-    gan: ln.cell.gan,
-    zhi: ln.cell.zhi,
+    gan: ln.cell.gan as ExtraPillar['gan'],
+    zhi: ln.cell.zhi as ExtraPillar['zhi'],
     gz: ln.gz,
-    shishen: ln.cell.ganSs,
-    hideShishen: buildHideShishen(dayGan, ln.gz),
+    shishen: ln.cell.ganSs as ExtraPillar['shishen'],
+    hideShishen: buildHideShishen(dayGan, ln.cell.zhi) as ExtraPillar['hideShishen'],
     desc: `${ln.year} · ${ln.age} 岁`,
+  })
+
+  const liuYueExtra = (ly: LiuYueEntryView): ExtraPillar => ({
+    label: '流月',
+    gan: ly.cell.gan as ExtraPillar['gan'],
+    zhi: ly.cell.zhi as ExtraPillar['zhi'],
+    gz: ly.gz,
+    shishen: ly.cell.ganSs as ExtraPillar['shishen'],
+    hideShishen: buildHideShishen(dayGan, ly.cell.zhi) as ExtraPillar['hideShishen'],
+    desc: `${ly.monthName}月`,
   })
 
   const onPickDaYun = (i: number) => {
     if (activeIdx === i) {
       setActiveIdx(null)
+      setActiveLnIdx(null)
       setExtras([])
       return
     }
     setActiveIdx(i)
+    setActiveLnIdx(null)
     const step = data.steps[i]
     const extra = daYunExtra(step)
     setExtras(extra ? [extra] : [])
   }
 
-  const onPickLiuNian = (ln: LiuNianEntryView) => {
+  const onPickLiuNian = (i: number, ln: LiuNianEntryView) => {
     if (!activeStep) return
+    const sameAsActive = activeExtraYear === ln.gz
     const dyE = daYunExtra(activeStep)
     const next: ExtraPillar[] = []
     if (dyE) next.push(dyE)
-    if (activeExtraYear !== ln.gz) next.push(liuNianExtra(ln))
+    if (!sameAsActive) {
+      next.push(liuNianExtra(ln))
+      setActiveLnIdx(i)
+    } else {
+      setActiveLnIdx(null)
+    }
+    setExtras(next)
+  }
+
+  const onPickLiuYue = (ly: LiuYueEntryView) => {
+    if (!activeStep || !activeLnEntry) return
+    const sameAsActive = activeExtraMonth === ly.gz
+    const next: ExtraPillar[] = []
+    const dyE = daYunExtra(activeStep)
+    if (dyE) next.push(dyE)
+    next.push(liuNianExtra(activeLnEntry))
+    if (!sameAsActive) next.push(liuYueExtra(ly))
     setExtras(next)
   }
 
@@ -191,21 +227,44 @@ export function DaYunPanel() {
         </div>
       </div>
 
-      {/* 流年展开 */}
+      {/* 流年展开 —— 横向不折行 */}
       {activeIdx !== null && activeStep && (
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
           <div className="text-[11px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400 mb-2">
             流年 · {activeStep.gz || '起运前'} · {activeStep.startAge}-{activeStep.endAge} 岁
           </div>
-          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
-            {liuNian.map((ln, i) => (
-              <LiuNianCard
-                key={i}
-                entry={ln}
-                active={activeExtraYear === ln.gz}
-                onClick={() => onPickLiuNian(ln)}
-              />
-            ))}
+          <div className="overflow-x-auto -mx-1">
+            <div className="flex gap-1.5 px-1 pb-1 min-w-max">
+              {liuNian.map((ln, i) => (
+                <LiuNianCard
+                  key={i}
+                  entry={ln}
+                  active={activeExtraYear === ln.gz}
+                  onClick={() => onPickLiuNian(i, ln)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 流月展开 —— 横向不折行 */}
+      {activeLnEntry && (
+        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="text-[11px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400 mb-2">
+            流月 · {activeLnEntry.gz} · {activeLnEntry.year} 年
+          </div>
+          <div className="overflow-x-auto -mx-1">
+            <div className="flex gap-1.5 px-1 pb-1 min-w-max">
+              {activeLnEntry.liuyueView.map((ly, i) => (
+                <LiuYueCard
+                  key={i}
+                  entry={ly}
+                  active={activeExtraMonth === ly.gz}
+                  onClick={() => onPickLiuYue(ly)}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -268,7 +327,7 @@ function LiuNianCard({
       type="button"
       onClick={onClick}
       className={[
-        'rounded border px-1 py-1 text-center transition cursor-pointer',
+        'shrink-0 w-[4.5rem] md:w-20 rounded border px-1 py-1 text-center transition cursor-pointer',
         active
           ? 'border-amber-500 ring-2 ring-amber-500/30 bg-amber-50/60 dark:bg-amber-950/30'
           : 'border-slate-200 dark:border-slate-700 hover:border-amber-500',
@@ -278,6 +337,34 @@ function LiuNianCard({
       <div className="text-[10px] text-slate-500 dark:text-slate-400">
         {entry.age}｜{entry.year}
       </div>
+      <div className="font-bold text-sm leading-tight">
+        <span className={WUXING_TEXT[c.ganWx] ?? ''}>{c.gan}</span>
+        <span className={WUXING_TEXT[c.zhiWx] ?? ''}>{c.zhi}</span>
+      </div>
+      <div className="text-[10px] leading-tight mt-0.5">
+        <span className={WUXING_TEXT[c.ganSsWx] ?? 'text-slate-500'}>{c.ganSs}</span>
+      </div>
+    </button>
+  )
+}
+
+function LiuYueCard({
+  entry, active, onClick,
+}: { entry: LiuYueEntryView; active: boolean; onClick: () => void }) {
+  const c = entry.cell
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'shrink-0 w-[4rem] md:w-[4.5rem] rounded border px-1 py-1 text-center transition cursor-pointer',
+        active
+          ? 'border-amber-500 ring-2 ring-amber-500/30 bg-amber-50/60 dark:bg-amber-950/30'
+          : 'border-slate-200 dark:border-slate-700 hover:border-amber-500',
+        `border-t-2 ${WUXING_BORDER[c.ganWx] ?? ''}`,
+      ].join(' ')}
+    >
+      <div className="text-[10px] text-slate-500 dark:text-slate-400">{entry.monthName}月</div>
       <div className="font-bold text-sm leading-tight">
         <span className={WUXING_TEXT[c.ganWx] ?? ''}>{c.gan}</span>
         <span className={WUXING_TEXT[c.zhiWx] ?? ''}>{c.zhi}</span>

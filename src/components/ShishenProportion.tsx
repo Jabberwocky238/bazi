@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { type Pillar, type ExtraPillar, WUXING_BG_STRONG, WUXING_TEXT, shishenWuxing } from '@/lib'
-import { useBaziStore } from '@@/stores'
+import { type Pillar, shishenWuxing } from '@/lib'
+import { WUXING_BG_STRONG, WUXING_TEXT } from '@@/css'
+import { useBaziStore, type ExtraPillar } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
 const GAN_WEIGHT = 1.0
@@ -38,7 +39,7 @@ function compute(pillars: Pillar[], dayGan: string, extras: ExtraPillar[]): Entr
   }
 
   const ingest = (p: MiniPillar, ganPos: number) => {
-    if (p.shishen && p.shishen !== '日主') {
+    if (p.shishen && (p.shishen as string) !== '日主') {
       const e = ensure(p.shishen)
       e.weight += GAN_WEIGHT
       e.count += 1
@@ -46,7 +47,7 @@ function compute(pillars: Pillar[], dayGan: string, extras: ExtraPillar[]): Entr
       e.ganFirstPos = Math.min(e.ganFirstPos, ganPos)
     }
     p.hideShishen.forEach((s, j) => {
-      if (!s || s === '日主') return
+      if (!s || (s as string) === '日主') return
       const e = ensure(s)
       e.weight += HIDDEN_WEIGHTS[j] ?? 0.05
       e.count += 1

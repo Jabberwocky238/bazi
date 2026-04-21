@@ -11,7 +11,7 @@ const KIND_TONE: Record<FindingKind, string> = {
   地支六合: 'border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
   地支三合: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
   地支三会: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-  地支暗合: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
+  地支暗合: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400',
   天干相冲: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
   地支相冲: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
   地支相刑: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
@@ -33,9 +33,10 @@ export function GanZhiPanel() {
   if (!a) return null
 
   const hetotal =
-    a.天干五合.length + a.地支六合.length + a.地支三合.length + a.地支三会.length + a.地支暗合.length
+    a.天干五合.length + a.地支六合.length + a.地支三合.length + a.地支三会.length
   const chongtotal = a.天干相冲.length + a.地支相冲.length
-  const xinghaiototal = a.地支相刑.length + a.地支相害.length + a.地支相破.length
+  const xinghaiototal =
+    a.地支相刑.length + a.地支相害.length + a.地支相破.length + a.地支暗合.length
   const zhuTotal = a.盖头.length + a.截脚.length + a.覆载.length
 
   return (
@@ -67,8 +68,8 @@ export function GanZhiPanel() {
       {open && (
         <div className="space-y-5 text-sm">
           {/* 合 */}
-          <Section label="① 合 · 天干五合 / 地支六合 / 三合 / 三会 / 暗合">
-            <FindingList list={[...a.天干五合, ...a.地支六合, ...a.地支三合, ...a.地支三会, ...a.地支暗合]} />
+          <Section label="① 合 · 天干五合 / 地支六合 / 三合 / 三会">
+            <FindingList list={[...a.天干五合, ...a.地支六合, ...a.地支三合, ...a.地支三会]} />
           </Section>
 
           {/* 冲 */}
@@ -86,9 +87,9 @@ export function GanZhiPanel() {
             <FindingList list={a.地支相害} />
           </Section>
 
-          {/* 克 / 破 */}
-          <Section label="⑤ 克 / 破">
-            <FindingList list={[...a.天干相克, ...a.地支相破]} />
+          {/* 克 / 破 / 绝 */}
+          <Section label="⑤ 克 / 破 / 绝 (暗合)">
+            <FindingList list={[...a.天干相克, ...a.地支相破, ...a.地支暗合]} />
           </Section>
 
           {/* 墓库 */}

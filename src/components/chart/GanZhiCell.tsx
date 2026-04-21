@@ -1,4 +1,4 @@
-import { WUXING_TEXT, WUXING_BORDER, WUXING_FROM } from '@/lib'
+import { WUXING_TEXT, WUXING_BORDER, WUXING_FROM } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
 
 export function GanZhiCell({

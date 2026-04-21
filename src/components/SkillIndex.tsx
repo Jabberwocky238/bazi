@@ -22,7 +22,7 @@ function build(pillars: Pillar[]): IndexItem[] {
 
   pillars.forEach((p, i) => push({ category: 'tiangan', name: p.gan, sub: `${labels[i]}干` }))
   pillars.forEach((p) => {
-    if (p.shishen !== '日主') push({ category: 'shishen', name: p.shishen })
+    if ((p.shishen as string) !== '日主') push({ category: 'shishen', name: p.shishen })
   })
   pillars.forEach((p) => p.shensha.forEach((s) => push({ category: 'shensha', name: s })))
   return out

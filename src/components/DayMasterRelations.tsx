@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ganWuxing, wuxingRelations, isYangGan, type Gan } from '@jabberwocky238/bazi-engine'
-import { WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@/lib'
+import { WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@@/css'
 import { useShiShen } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 

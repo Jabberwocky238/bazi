@@ -1,5 +1,5 @@
 import { cellBase } from '@@/css'
-import { WUXING_TEXT } from '@/lib'
+import { WUXING_TEXT } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
 
 export function ShishenCell({ shishen, wuxing }: { shishen: string; wuxing: string }) {

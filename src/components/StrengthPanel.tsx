@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { analyzeStrength, type StrengthLevel, WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@/lib'
+import { analyzeStrength, type StrengthLevel } from '@/lib'
+import { WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@@/css'
 import { useShiShen } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 

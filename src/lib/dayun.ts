@@ -1,6 +1,6 @@
 import { Solar } from 'lunar-typescript'
 import type { Sex } from '@jabberwocky238/bazi-engine'
-import { HOUR_UNKNOWN } from './bazi'
+import { HOUR_UNKNOWN } from './shishen'
 
 export interface DaYunStep {
   /** lunar-typescript 的原始 index；0 表示起运前 */
@@ -13,10 +13,19 @@ export interface DaYunStep {
   gz: string
 }
 
+export interface LiuYueEntry {
+  /** 月建中文名：正/二/…/腊。 */
+  monthName: string
+  /** 干支字符串。 */
+  gz: string
+}
+
 export interface LiuNianEntry {
   age: number
   year: number
   gz: string
+  /** 12 流月。 */
+  liuyue: LiuYueEntry[]
 }
 
 export interface DaYunData {
@@ -59,6 +68,10 @@ export function computeDaYun(
         age: ln.getAge(),
         year: ln.getYear(),
         gz: ln.getGanZhi(),
+        liuyue: ln.getLiuYue().map((ly) => ({
+          monthName: ly.getMonthInChinese(),
+          gz: ly.getGanZhi(),
+        })),
       })),
     )
     return {

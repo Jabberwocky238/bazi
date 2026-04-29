@@ -11,7 +11,7 @@ import {
   zizuoState,
   nayinOf,
   CANG_GAN,
-  type BaziInput,
+  type Pillar as EnginePillar,
   type Gan,
   type Zhi,
   type Sex,
@@ -75,41 +75,42 @@ export function computeBazi(
   // sect=1：23:00 即换日（早子换日派）
   ec.setSect(1)
 
-  const input: BaziInput = {
-    year: { gan: ec.getYearGan() as Gan, zhi: ec.getYearZhi() as Zhi },
-    month: { gan: ec.getMonthGan() as Gan, zhi: ec.getMonthZhi() as Zhi },
-    day: { gan: ec.getDayGan() as Gan, zhi: ec.getDayZhi() as Zhi },
-    hour: { gan: ec.getTimeGan() as Gan, zhi: ec.getTimeZhi() as Zhi },
+  const yearP:  EnginePillar = { gan: ec.getYearGan() as Gan,  zhi: ec.getYearZhi()  as Zhi }
+  const monthP: EnginePillar = { gan: ec.getMonthGan() as Gan, zhi: ec.getMonthZhi() as Zhi }
+  const dayP:   EnginePillar = { gan: ec.getDayGan() as Gan,   zhi: ec.getDayZhi()   as Zhi }
+  const hourP:  EnginePillar = { gan: ec.getTimeGan() as Gan,  zhi: ec.getTimeZhi()  as Zhi }
+
+  const shensha = computeShensha(
+    [yearP, monthP, dayP, hourKnown ? hourP : undefined],
     sex,
-  }
-  const shensha = computeShensha(input)
-  const shishen = computeShishen(input)
-  const dayGan = input.day.gan
+  )
+  const dayGan = dayP.gan
 
   const base = [
-    { label: '年柱' as const, gan: input.year.gan, zhi: input.year.zhi, nayin: ec.getYearNaYin(), hide: ec.getYearHideGan(), ssKey: 'year' as const },
-    { label: '月柱' as const, gan: input.month.gan, zhi: input.month.zhi, nayin: ec.getMonthNaYin(), hide: ec.getMonthHideGan(), ssKey: 'month' as const },
-    { label: '日柱' as const, gan: input.day.gan, zhi: input.day.zhi, nayin: ec.getDayNaYin(), hide: ec.getDayHideGan(), ssKey: 'day' as const },
-    { label: '时柱' as const, gan: input.hour.gan, zhi: input.hour.zhi, nayin: ec.getTimeNaYin(), hide: ec.getTimeHideGan(), ssKey: 'hour' as const },
+    { label: '年柱' as const, p: yearP,  nayin: ec.getYearNaYin(),  hide: ec.getYearHideGan(),  ssKey: 'year'  as const },
+    { label: '月柱' as const, p: monthP, nayin: ec.getMonthNaYin(), hide: ec.getMonthHideGan(), ssKey: 'month' as const },
+    { label: '日柱' as const, p: dayP,   nayin: ec.getDayNaYin(),   hide: ec.getDayHideGan(),   ssKey: 'day'   as const },
+    { label: '时柱' as const, p: hourP,  nayin: ec.getTimeNaYin(),  hide: ec.getTimeHideGan(),  ssKey: 'hour'  as const },
   ]
 
-  const pillars = base.map<Pillar>((p, i) => {
-    const ss = shishen.十神[i]
-    const hideSs = shishen.藏干十神[i]
+  const pillars = base.map<Pillar>((b) => {
+    const r = computeShishen(dayP, b.p)
+    const ss = r.十神
+    const hideSs = r.藏干十神
     return {
-      label: p.label,
-      gan: p.gan,
-      zhi: p.zhi,
-      ganWuxing: ganWuxing(p.gan),
-      zhiWuxing: zhiWuxing(p.zhi),
-      nayin: p.nayin,
-      hideGans: [...p.hide] as Gan[],
+      label: b.label,
+      gan: b.p.gan,
+      zhi: b.p.zhi,
+      ganWuxing: ganWuxing(b.p.gan),
+      zhiWuxing: zhiWuxing(b.p.zhi),
+      nayin: b.nayin,
+      hideGans: [...b.hide] as Gan[],
       shishen: ss as Shishen,
       shishenWuxing: shishenWuxing(dayGan, ss) as WuXing,
       hideShishen: hideSs,
       hideShishenWuxings: hideSs.map((s) => shishenWuxing(dayGan, s)) as WuXing[],
-      shensha: shensha[p.ssKey],
-      zizuo: zizuoState(p.gan, p.zhi),
+      shensha: shensha[b.ssKey],
+      zizuo: zizuoState(b.p.gan, b.p.zhi),
     }
   })
 
@@ -137,26 +138,22 @@ export function computeBazi(
 const PILLAR_LABELS: PillarType[] = ['年柱', '月柱', '日柱', '时柱']
 const SS_KEYS = ['year', 'month', 'day', 'hour'] as const
 
-function parseGz(gz: string): { gan: Gan; zhi: Zhi } {
+function parseGz(gz: string): EnginePillar {
   if (gz.length !== 2) throw new Error(`bad ganzhi: ${gz}`)
   return { gan: gz[0] as Gan, zhi: gz[1] as Zhi }
 }
 
 export function baziToPillars(bazi: Bazi, sex: Sex): Pillar[] {
-  const parsed = bazi.map(parseGz) as [
-    { gan: Gan; zhi: Zhi }, { gan: Gan; zhi: Zhi },
-    { gan: Gan; zhi: Zhi }, { gan: Gan; zhi: Zhi },
-  ]
+  const parsed = bazi.map(parseGz) as [EnginePillar, EnginePillar, EnginePillar, EnginePillar]
   const [y, m, d, h] = parsed
-  const input: BaziInput = { year: y, month: m, day: d, hour: h, sex }
-  const shishen = computeShishen(input)
-  const shensha = computeShensha(input)
+  const shensha = computeShensha([y, m, d, h], sex)
   const dayGan = d.gan
   return parsed.map((p, i): Pillar => {
-    const ss = shishen.十神[i]
-    const hideSs = shishen.藏干十神[i]
+    const r = computeShishen(d, p)
+    const ss = r.十神
+    const hideSs = r.藏干十神
     return {
-      label: PILLAR_LABELS[i],
+      label: PILLAR_LABELS[i]!,
       gan: p.gan,
       zhi: p.zhi,
       ganWuxing: ganWuxing(p.gan),
@@ -167,7 +164,7 @@ export function baziToPillars(bazi: Bazi, sex: Sex): Pillar[] {
       shishenWuxing: shishenWuxing(dayGan, ss) as WuXing,
       hideShishen: hideSs,
       hideShishenWuxings: hideSs.map((s) => shishenWuxing(dayGan, s)) as WuXing[],
-      shensha: shensha[SS_KEYS[i]],
+      shensha: shensha[SS_KEYS[i]!],
       zizuo: zizuoState(p.gan, p.zhi),
     }
   })

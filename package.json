@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@jabberwocky238/bazi-engine": "1.0.3",
+    "@jabberwocky238/bazi-engine": "1.0.4",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-popover": "^1.1.15",
     "@tailwindcss/vite": "^4.2.2",

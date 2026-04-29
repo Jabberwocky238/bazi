@@ -1,23 +1,19 @@
 import { useMemo, useState } from 'react'
 import {
+  analyzeGanZhi,
   ganWuxing,
   zhiWuxing,
   wuxingRelations,
   isYangGan,
   CANG_GAN,
-  type Finding,
-  type FindingKind,
-  type GanZhiAnalysis,
+  type ConflictFinding,
   type Gan,
+  type GanZhiAnalysis,
+  type HeFinding,
   type Zhi,
   type WuXing,
 } from '@jabberwocky238/bazi-engine'
-import {
-  type Pillar,
-  useBazi,
-  analyzeGanZhiWithExtras,
-  type ExtraInteraction,
-} from '@/lib'
+import { type Pillar, useBazi } from '@/lib'
 import { useBaziStore, type ExtraPillar } from '@@/stores'
 import { WUXING_BG_STRONG, WUXING_BG_SOFT, WUXING_BORDER, WUXING_TEXT } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
@@ -71,26 +67,23 @@ function parseHuaWx(s: string): WuXing | null {
   return m ? (m[1] as WuXing) : null
 }
 
-function constituentsOfBase(
-  f: Finding,
-  kind: FindingKind,
+function constituents(
+  positions: string,
+  isGanKind: boolean,
   pillars: Pillar[],
 ): { wx: WuXing; ss: string }[] {
-  const isGan = kind.startsWith('天干')
   const out: { wx: WuXing; ss: string }[] = []
-  for (const ch of f.positions) {
+  for (const ch of positions) {
     const i = POS_LABELS.indexOf(ch)
     if (i < 0) continue
     const p = pillars[i]
     if (!p) continue
-    if (isGan) {
+    if (isGanKind) {
       const wx = ganWuxing(p.gan as Gan) as WuXing | undefined
-      if (!wx) continue
-      out.push({ wx, ss: p.shishen })
+      if (wx) out.push({ wx, ss: p.shishen })
     } else {
       const wx = zhiWuxing(p.zhi as Zhi) as WuXing | undefined
-      if (!wx) continue
-      out.push({ wx, ss: p.hideShishen[0] ?? '' })
+      if (wx) out.push({ wx, ss: p.hideShishen[0] ?? '' })
     }
   }
   return out
@@ -110,6 +103,16 @@ interface Computed {
   adjustments: Adjustment[]
 }
 
+const HE_KINDS = ['天干五合', '地支六合', '地支三合', '地支三会'] as const satisfies readonly (keyof GanZhiAnalysis)[]
+const CONFLICTS: { kind: keyof GanZhiAnalysis; penalty: number; cat: Adjustment['category'] }[] = [
+  { kind: '天干相冲', penalty: CHONG_PENALTY, cat: '冲' },
+  { kind: '天干相克', penalty: KE_PENALTY, cat: '克' },
+  { kind: '地支相冲', penalty: CHONG_PENALTY, cat: '冲' },
+  { kind: '地支相刑', penalty: XING_PENALTY, cat: '刑害' },
+  { kind: '地支相害', penalty: HAI_PENALTY, cat: '刑害' },
+  { kind: '地支相破', penalty: PO_PENALTY, cat: '破' },
+]
+
 function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Computed | null {
   if (!dayGan || pillars.length !== 4) return null
   const rel = wuxingRelations(dayGan as Gan)
@@ -127,12 +130,7 @@ function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Comp
       ssGroup[s] = '透干'
     }
   }
-  const ingest = (
-    gan: string,
-    hideGans: string[],
-    ganShishen: string,
-    hideShishen: string[],
-  ) => {
+  const ingest = (gan: string, hideGans: string[], ganShishen: string, hideShishen: string[]) => {
     if (gan && ganShishen && ganShishen !== '日主') {
       const wx = ganWuxing(gan as Gan) as WuXing | undefined
       if (wx) wxW[wx] += GAN_WEIGHT
@@ -175,23 +173,19 @@ function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Comp
     ssW[rep] += amount
   }
 
-  const result = analyzeGanZhiWithExtras(
+  const a = analyzeGanZhi(
     pillars,
     extras.map((e) => ({ label: e.label, gan: e.gan, zhi: e.zhi, gz: e.gz })),
   )
-  if (!result) return { wxWeight: wxW, ssWeight: ssW, ssOrder, ssGroup, adjustments }
-  const { base, extra, dissolved } = result
-  const dKey = (kind: FindingKind, name: string) => `${kind}::${name}`
-  const dissolvedSet = new Set(dissolved.map((d) => dKey(d.kind, d.name)))
+  if (!a) return { wxWeight: wxW, ssWeight: ssW, ssOrder, ssGroup, adjustments }
 
-  // —— 原局合化 ——
-  const heKinds: (keyof GanZhiAnalysis)[] = ['天干五合', '地支六合', '地支三合', '地支三会']
-  for (const k of heKinds) {
-    for (const f of (base[k] ?? []) as Finding[]) {
+  // —— 原局合化 (impacted 不影响化气计入, 只在视图上标注) ——
+  for (const k of HE_KINDS) {
+    for (const f of a[k] as HeFinding[]) {
       if (!f.transformed) continue
       const huaWx = parseHuaWx(f.state) ?? parseHuaWx(f.name)
       if (!huaWx) continue
-      const cs = constituentsOfBase(f, k as FindingKind, pillars)
+      const cs = constituents(f.positions, k.startsWith('天干'), pillars)
       if (cs.length < 2) continue
       penalize(cs, HE_TRANSFER)
       transferIn(huaWx, HE_TRANSFER * cs.length)
@@ -202,25 +196,19 @@ function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Comp
     }
   }
 
-  // —— 原局冲克刑害破 ——
-  const conflicts: { kind: keyof GanZhiAnalysis; penalty: number; cat: Adjustment['category'] }[] = [
-    { kind: '天干相冲', penalty: CHONG_PENALTY, cat: '冲' },
-    { kind: '天干相克', penalty: KE_PENALTY, cat: '克' },
-    { kind: '地支相冲', penalty: CHONG_PENALTY, cat: '冲' },
-    { kind: '地支相刑', penalty: XING_PENALTY, cat: '刑害' },
-    { kind: '地支相害', penalty: HAI_PENALTY, cat: '刑害' },
-    { kind: '地支相破', penalty: PO_PENALTY, cat: '破' },
-  ]
-  for (const { kind, penalty, cat } of conflicts) {
-    for (const f of (base[kind] ?? []) as Finding[]) {
-      if (dissolvedSet.has(dKey(kind as FindingKind, f.name))) {
+  // —— 原局冲克刑害破 (有 dissolved 视为岁运化解, 跳过扣分) ——
+  for (const { kind, penalty, cat } of CONFLICTS) {
+    for (const f of a[kind] as ConflictFinding[]) {
+      const dissolvedBy = f.dissolved ?? []
+      if (dissolvedBy.length > 0) {
+        const via = dissolvedBy.map((d) => `${d.by.label}${d.by.gz}`).join('、')
         adjustments.push({
-          source: '原局', category: '化解',
-          desc: `${f.name}（${f.positions}）— 岁运引化，效力消解`,
+          source: '岁运', category: '化解',
+          desc: `${f.name}（${f.positions}）— ${via} 引化, 效力消解`,
         })
         continue
       }
-      const cs = constituentsOfBase(f, kind as FindingKind, pillars)
+      const cs = constituents(f.positions, kind.startsWith('天干'), pillars)
       if (!cs.length) continue
       penalize(cs, penalty)
       adjustments.push({
@@ -228,54 +216,6 @@ function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Comp
         desc: `${f.name}（${f.positions}）→ -${penalty.toFixed(1)} 各方`,
       })
     }
-  }
-
-  // —— 岁运引入 ——
-  const heLike = new Set<ExtraInteraction['kind']>(['六合', '半三合', '半三会', '天干五合'])
-  const penaltyMap: Partial<Record<ExtraInteraction['kind'], { p: number; cat: Adjustment['category'] }>> = {
-    六冲: { p: CHONG_PENALTY, cat: '冲' },
-    天干相克: { p: KE_PENALTY, cat: '克' },
-    相刑: { p: XING_PENALTY, cat: '刑害' },
-    自刑: { p: XING_PENALTY, cat: '刑害' },
-    六害: { p: HAI_PENALTY, cat: '刑害' },
-    六破: { p: PO_PENALTY, cat: '破' },
-  }
-  for (const x of extra) {
-    const isGan = x.kind === '天干五合' || x.kind === '天干相克'
-    const ext = extras.find((e) => e.gz === x.source.gz && e.label === x.source.label)
-    if (!ext) continue
-    const extWx = (isGan
-      ? (ganWuxing(ext.gan as Gan) as WuXing | undefined)
-      : (zhiWuxing(ext.zhi as Zhi) as WuXing | undefined)) ?? ''
-    const extSs = isGan ? ext.shishen : (ext.hideShishen[0] ?? '')
-    const ti = POS_LABELS.indexOf(x.target)
-    const tp = ti >= 0 ? pillars[ti] : null
-    if (!tp || !extWx) continue
-    const tWx = (isGan
-      ? (ganWuxing(tp.gan as Gan) as WuXing | undefined)
-      : (zhiWuxing(tp.zhi as Zhi) as WuXing | undefined)) ?? ''
-    if (!tWx) continue
-    const tSs = isGan ? tp.shishen : (tp.hideShishen[0] ?? '')
-    const cs: { wx: WuXing; ss: string }[] = [
-      { wx: extWx as WuXing, ss: extSs },
-      { wx: tWx as WuXing, ss: tSs },
-    ]
-    if (x.huaWx && heLike.has(x.kind)) {
-      penalize(cs, HE_TRANSFER)
-      transferIn(x.huaWx, HE_TRANSFER * cs.length)
-      adjustments.push({
-        source: '岁运', category: '合化',
-        desc: `${x.source.label} ${x.source.gz} × ${x.target}柱 ${x.note}`,
-      })
-      continue
-    }
-    const m = penaltyMap[x.kind]
-    if (!m) continue
-    penalize(cs, m.p)
-    adjustments.push({
-      source: '岁运', category: m.cat,
-      desc: `${x.source.label} ${x.source.gz} × ${x.target}柱 ${x.note} → -${m.p.toFixed(1)}`,
-    })
   }
 
   return { wxWeight: wxW, ssWeight: ssW, ssOrder, ssGroup, adjustments }

@@ -1,21 +1,23 @@
-import { Solar } from 'lunar-typescript'
 import { create } from 'zustand'
-import type { Sex } from '@jabberwocky238/bazi-engine'
+import {
+  computeDaYun as engineComputeDaYun,
+  type Sex,
+} from '@jabberwocky238/bazi-engine'
 import { HOUR_UNKNOWN } from './shared'
 
 export interface DaYunStep {
-  /** lunar-typescript 的原始 index；0 表示起运前 */
+  /** lunar-typescript 的原始 index;0 表示起运前 */
   index: number
   startAge: number
   endAge: number
   startYear: number
   endYear: number
-  /** 干支，如 "甲子"；起运前可能为空串 */
+  /** 干支,如 "甲子";起运前可能为空串 */
   gz: string
 }
 
 export interface LiuYueEntry {
-  /** 月建中文名：正/二/…/腊。 */
+  /** 月建中文名:正/二/…/腊。 */
   monthName: string
   /** 干支字符串。 */
   gz: string
@@ -40,6 +42,10 @@ export interface DaYunData {
   liunian: LiuNianEntry[][]
 }
 
+function gzStr(gz: readonly [string, string] | null): string {
+  return gz ? `${gz[0]}${gz[1]}` : ''
+}
+
 export function computeDaYun(
   year: number,
   month: number,
@@ -50,36 +56,31 @@ export function computeDaYun(
 ): DaYunData | null {
   if (hour === HOUR_UNKNOWN) return null
   try {
-    const solar = Solar.fromYmdHms(year, month, day, hour, minute, 0)
-    const ec = solar.getLunar().getEightChar()
-    // sect=1：早子换日派，与 shishen.ts 一致
-    ec.setSect(1)
-    const yun = ec.getYun(sex, 1)
-    const rawSteps = yun.getDaYun(10)
-    const steps: DaYunStep[] = rawSteps.map((dy) => ({
-      index: dy.getIndex(),
-      startAge: dy.getStartAge(),
-      endAge: dy.getEndAge(),
-      startYear: dy.getStartYear(),
-      endYear: dy.getEndYear(),
-      gz: dy.getGanZhi(),
+    const dy = engineComputeDaYun(year, month, day, hour, minute, sex)
+    const steps: DaYunStep[] = dy.steps.map((s) => ({
+      index: s.index,
+      startAge: s.startAge,
+      endAge: s.endAge,
+      startYear: s.startYear,
+      endYear: s.endYear,
+      gz: gzStr(s.gz),
     }))
-    const liunian: LiuNianEntry[][] = rawSteps.map((dy) =>
-      dy.getLiuNian(10).map((ln) => ({
-        age: ln.getAge(),
-        year: ln.getYear(),
-        gz: ln.getGanZhi(),
-        liuyue: ln.getLiuYue().map((ly) => ({
-          monthName: ly.getMonthInChinese(),
-          gz: ly.getGanZhi(),
+    const liunian: LiuNianEntry[][] = dy.steps.map((s) =>
+      s.liunian.map((ln) => ({
+        age: ln.age,
+        year: ln.year,
+        gz: gzStr(ln.gz),
+        liuyue: ln.liuyue.map((ly) => ({
+          monthName: ly.monthName,
+          gz: gzStr(ly.gz),
         })),
       })),
     )
     return {
-      forward: yun.isForward(),
-      startYear: yun.getStartYear(),
-      startMonth: yun.getStartMonth(),
-      startDay: yun.getStartDay(),
+      forward: dy.forward,
+      startYear: dy.startYear,
+      startMonth: dy.startMonth,
+      startDay: dy.startDay,
       steps,
       liunian,
     }
@@ -90,7 +91,7 @@ export function computeDaYun(
 
 // ————————————————————————————————————————————————————————
 // useDayun — 大运 store。setDayun(data) 由调用方 (输入监听) 写入。
-// 不直接订阅 useBazi，因为大运需要原始日期/性别而不是 pillars。
+// 不直接订阅 useBazi,因为大运需要原始日期/性别而不是 pillars。
 // ————————————————————————————————————————————————————————
 
 interface DaYunStore {

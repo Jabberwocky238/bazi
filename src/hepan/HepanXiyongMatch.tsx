@@ -26,8 +26,11 @@ export function HepanXiyongMatch({ a, b, aName, bName }: Props) {
   const aSide = useMemo(() => analyzeSide(a), [a])
   const bSide = useMemo(() => analyzeSide(b), [b])
   const match = useMemo(
-    () => computeXiyongMatch(a, aSide?.xiyong ?? null, b, bSide?.xiyong ?? null),
-    [a, aSide, b, bSide],
+    () => computeXiyongMatch(
+      a, aSide?.xiyong ?? null, aName,
+      b, bSide?.xiyong ?? null, bName,
+    ),
+    [a, aSide, aName, b, bSide, bName],
   )
   const score = useMemo(() => scoreMatch(match), [match])
   const aDist = useMemo(() => wxDistribution(a), [a])
@@ -35,9 +38,9 @@ export function HepanXiyongMatch({ a, b, aName, bName }: Props) {
 
   if (!aSide || !bSide) return null
 
-  const scoreColor = score >= 70
+  const colorOf = (s: number) => s >= 70
     ? 'text-emerald-600 dark:text-emerald-400'
-    : score >= 50
+    : s >= 50
       ? 'text-amber-600 dark:text-amber-400'
       : 'text-rose-600 dark:text-rose-400'
 
@@ -54,7 +57,11 @@ export function HepanXiyongMatch({ a, b, aName, bName }: Props) {
             喜用神 · 双方分析 · {aName} ↔ {bName}
           </h2>
         </span>
-        <span className={`text-lg font-bold tabular-nums ${scoreColor}`}>{score}/100</span>
+        <span className="flex items-baseline gap-1 text-lg font-bold tabular-nums">
+          <span title={`${bName} 对 ${aName} 喜用程度`} className={colorOf(score.a)}>{score.a}</span>
+          <span className="text-slate-400 text-sm">/</span>
+          <span title={`${aName} 对 ${bName} 喜用程度`} className={colorOf(score.b)}>{score.b}</span>
+        </span>
       </button>
 
       {open && (
@@ -186,9 +193,10 @@ export function HepanXiyongMatch({ a, b, aName, bName }: Props) {
           </Detail>
 
           <p className="text-[10px] text-slate-400 dark:text-slate-600 leading-relaxed pt-2 border-t border-slate-100 dark:border-slate-800">
-            评分 = 50 + 双向用神供给 (主 ×12 / 喜 ×6) + 调候补足 (×8) - 忌神冲撞 (×4)，截断在 0-100。
+            头部 <b>x/y</b>: x = {bName} 对 {aName} 喜用程度, y = {aName} 对 {bName} 喜用程度. 双方各自 0-100, 不互通.
             <br />
-            高分 = 互为喜用、调候互补；低分 = 用神供给薄弱或忌神反复冲撞。仍需结合干支互动综合判断。
+            单边公式 = 50 + 主用 ×12 + 喜神 ×6 + 调候 ×8 - 忌神 ×4
+            {' '}+ 跨盘合 ×3 - 冲 ×4 - 刑害破 ×2 - 克 ×3 (跨盘项双方共享).
           </p>
         </div>
       )}

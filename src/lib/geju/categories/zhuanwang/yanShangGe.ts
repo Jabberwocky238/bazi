@@ -1,4 +1,5 @@
 import type { GejuHit } from '../../types'
+import { emitGeju } from '../../_emit'
 import { checkZhuanWang } from './_check'
 
 /**
@@ -18,5 +19,9 @@ import { checkZhuanWang } from './_check'
  */
 export function isYanShangGe(): GejuHit | null {
   const r = checkZhuanWang('火')
-  return r ? { name: '炎上格', note: r.note } : null
+  if (!r) return null
+  return emitGeju(
+    { name: '炎上格', note: r.note },
+    { baseFormed: r.baseFormed, withExtrasFormed: r.withExtrasFormed, hasExtras: r.hasExtras },
+  )
 }

@@ -7,6 +7,8 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 const root = path.dirname(fileURLToPath(import.meta.url))
 
 // —— 构建时元信息 (engine 版本 / skills 子模块 commit + 日期) ——
@@ -74,5 +76,6 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
+    cloudflare()
   ],
 })

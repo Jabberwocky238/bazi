@@ -166,10 +166,6 @@ export function GejuPanel() {
             <span className="inline-flex items-center gap-1">
               <span className="inline-block w-3 h-3 rounded-full border-2 border-slate-400/30 bg-slate-400/5" />中
             </span>
-            <span className="text-[10px] opacity-70 ml-2">岁运破格:</span>
-            <span className="inline-flex items-center gap-1">
-              <span className="inline-block w-3 h-3 rounded-full border-2 border-red-500 bg-red-500/15" />冲害
-            </span>
           </div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="text-[10px] opacity-70">类别:</span>

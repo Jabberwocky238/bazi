@@ -12,7 +12,7 @@ interface ShellProps {
 /** 共享 chrome —— header (subtitle + title + 可选关闭) + 滚动 body。 */
 function Shell({ title, subtitle, onClose, children }: ShellProps) {
   return (
-    <div className="flex flex-col h-full max-h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       <header className="shrink-0 flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-200 dark:border-slate-800">
         <div className="min-w-0">
           {subtitle && (
@@ -81,7 +81,9 @@ export function Dialog({ open, onClose, title, subtitle, children, className }: 
       ref={dialogRef}
       onClick={onBackdropClick}
       className={[
-        'm-auto w-[min(720px,92vw)] max-h-[85vh] overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm',
+        // open:flex 让 dialog 在打开时变 flex column，便于 Shell 的 flex-1 滚动正确生效
+        // (UA 样式 dialog:not([open]) 仍会隐藏关闭态)。
+        'open:flex flex-col m-auto w-[min(720px,92vw)] max-h-[85vh] overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm',
         className ?? '',
       ].join(' ')}
     >

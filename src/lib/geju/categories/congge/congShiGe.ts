@@ -1,4 +1,4 @@
-import type { Ctx } from '../../types'
+import { readBazi, readShishen } from '../../hooks'
 import type { GejuHit } from '../../types'
 
 /**
@@ -7,12 +7,19 @@ import type { GejuHit } from '../../types'
  *  2. 月令非比劫/印。
  *  3. 三党 (食伤/财/官杀) 各 ≥ 2 位。
  *  4. 三党总和 ≥ 8 (原 ≥ 6)，力量差距 ≤ 2。
+ *
+ * 【岁运】md 内容.md "大运配合时时代英雄, 不配合时大起大落":
+ *   - 岁运透比劫 / 印 → 日主复根, 破从 (suiyunBreak)。
+ *   - 岁运补三党之一令势均 → 加固从势 (suiyunTrigger)。
+ *   当前 detector 仅扫主柱, 未叠加岁运。
  */
-export function isCongShiGe(ctx: Ctx): GejuHit | null {
-  if (ctx.rootExt(ctx.dayWx)) return null
-  if (ctx.monthCat === '比劫' || ctx.monthCat === '印') return null
+export function isCongShiGe(): GejuHit | null {
+  const bazi = readBazi()
+  const shishen = readShishen()
+  if (bazi.rootExt(bazi.dayWx)) return null
+  if (bazi.monthCat === '比劫' || bazi.monthCat === '印') return null
   const categories = ['食伤', '财', '官杀'] as const
-  const counts = categories.map((c) => ctx.countCat(c))
+  const counts = categories.map((c) => shishen.countCat(c))
   if (counts.some((n) => n < 2)) return null
   const total = counts.reduce((a, b) => a + b, 0)
   if (total < 8) return null

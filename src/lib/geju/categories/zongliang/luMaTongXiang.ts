@@ -1,4 +1,5 @@
-import { LU, CHONG_PAIR, yimaFrom, type Ctx } from '../../types'
+import { readBazi, readStrength } from '../../hooks'
+import { LU, CHONG_PAIR, yimaFrom } from '../../types'
 import type { GejuHit } from '../../types'
 
 /**
@@ -9,11 +10,13 @@ import type { GejuHit } from '../../types'
  *  4. 该地支不被冲。
  *  5. 日主非极弱 ("马忌身衰")。
  */
-export function isLuMaTongXiang(ctx: Ctx): GejuHit | null {
-  const lu = LU[ctx.dayGan]
-  const ymY = yimaFrom(ctx.yearZhi)
-  const ymD = yimaFrom(ctx.dayZhi)
-  const pillars = ctx.mainArr
+export function isLuMaTongXiang(): GejuHit | null {
+  const bazi = readBazi()
+  const strength = readStrength()
+  const lu = LU[bazi.dayGan]
+  const ymY = yimaFrom(bazi.yearZhi)
+  const ymD = yimaFrom(bazi.dayZhi)
+  const pillars = bazi.mainArr
   const zhis = pillars.map((p) => p.zhi) as string[]
   for (let i = 0; i < pillars.length; i++) {
     const p = pillars[i]
@@ -22,7 +25,7 @@ export function isLuMaTongXiang(ctx: Ctx): GejuHit | null {
       const chong = CHONG_PAIR[p.zhi]
       if (chong && zhis.includes(chong)) continue
       // md 条件 5: 身非极弱
-      if (ctx.level === '身极弱' || ctx.level === '近从弱') continue
+      if (strength.level === '身极弱' || strength.level === '近从弱') continue
       return { name: '禄马同乡', note: `${['年', '月', '日', '时'][i]}柱 ${p.zhi} 禄马同位，不冲身可任` }
     }
   }

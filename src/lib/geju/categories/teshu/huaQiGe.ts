@@ -1,4 +1,4 @@
-import type { Ctx } from '../../types'
+import { readBazi } from '../../hooks'
 import type { GejuHit } from '../../types'
 import { ganWuxing, type WuXing } from '@jabberwocky238/bazi-engine'
 
@@ -15,17 +15,18 @@ const HE_MAP: Record<string, { partner: string; huaWx: string }> = {
   戊: { partner: '癸', huaWx: '火' }, 癸: { partner: '戊', huaWx: '火' },
 }
 
-export function isHuaQiGe(ctx: Ctx): GejuHit | null {
-  const info = HE_MAP[ctx.dayGan]
+export function isHuaQiGe(): GejuHit | null {
+  const bazi = readBazi()
+  const info = HE_MAP[bazi.dayGan]
   if (!info) return null
-  const monthGan = ctx.pillars.month.gan
-  const hourGan = ctx.pillars.hour.gan
+  const monthGan = bazi.pillars.month.gan
+  const hourGan = bazi.pillars.hour.gan
   if (monthGan !== info.partner && hourGan !== info.partner) return null
-  if (ctx.rootWx(ctx.dayWx)) return null
-  const monthWx = ganWuxing((ctx.pillars.month.hideGans[0] ?? '') as never)
-  const huaStrong = monthWx === info.huaWx || ctx.zhiMainWxCount(info.huaWx as WuXing) >= 2
+  if (bazi.rootWx(bazi.dayWx)) return null
+  const monthWx = ganWuxing((bazi.pillars.month.hideGans[0] ?? '') as never)
+  const huaStrong = monthWx === info.huaWx || bazi.zhiMainWxCount(info.huaWx as WuXing) >= 2
   if (!huaStrong) return null
-  const sameN = ctx.mainArr.filter((p) => p.gan === ctx.dayGan).length
+  const sameN = bazi.mainArr.filter((p) => p.gan === bazi.dayGan).length
   if (sameN > 1) return null
-  return { name: '化气格', note: `${ctx.dayGan}${info.partner} 合化${info.huaWx} · 化干无根 · 化神旺` }
+  return { name: '化气格', note: `${bazi.dayGan}${info.partner} 合化${info.huaWx} · 化干无根 · 化神旺` }
 }

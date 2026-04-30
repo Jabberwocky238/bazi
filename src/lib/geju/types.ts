@@ -118,7 +118,8 @@ export interface Ctx {
   extraZhiMainWxCount: (wx: WuXing) => number
 }
 
-export type Detector = (ctx: Ctx) => GejuHit | null
+/** Detector 不再接收 ctx 参数, 内部通过 composeCtx() 直接拉 store. */
+export type Detector = () => GejuHit | null
 
 // ————————————————————————————————————————————————————————
 // 常量（原 lib/geju/ctx.ts 提供）

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   CANG_GAN,
   ganWuxing,
@@ -10,7 +10,6 @@ import {
 import {
   type Pillar,
   type PillarType,
-  detectGeju,
   useBazi,
   useGeju,
   shishenWuxing,
@@ -19,6 +18,7 @@ import {
   type GejuOutput,
   skillNames,
 } from '@/lib'
+import { useGejuExtras } from '@/lib/geju/hooks'
 import { useBaziStore, type ExtraPillar } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
@@ -90,29 +90,24 @@ function extraToPillar(e: ExtraPillar, dayGan: Gan): Pillar {
 
 export function GejuPanel() {
   const pillars = useBazi((s) => s.pillars)
-  const baseHits = useGeju((s) => s.hits)
+  const hits = useGeju((s) => s.hits)
   const extras = useBaziStore((s) => s.extraPillars)
   const dayGan = pillars[2]?.gan as Gan | undefined
 
-  const { hits, activeDaYun, activeLiuNian } = useMemo(() => {
-    const dy = extras.find((e) => e.label === '大运')
-    const ln = extras.find((e) => e.label === '流年')
-    if ((!dy && !ln) || !dayGan) {
-      return {
-        hits: baseHits,
-        activeDaYun: dy ?? null,
-        activeLiuNian: ln ?? null,
-      }
+  const activeDaYun = extras.find((e) => e.label === '大运') ?? null
+  const activeLiuNian = extras.find((e) => e.label === '流年') ?? null
+
+  // 把 UI 选中的岁运 同步到 useGejuExtras → 触发 useGeju 重算
+  useEffect(() => {
+    if (!dayGan) {
+      useGejuExtras.getState().clearExtras()
+      return
     }
-    return {
-      hits: detectGeju({
-        dayun: dy ? extraToPillar(dy, dayGan) : undefined,
-        liunian: ln ? extraToPillar(ln, dayGan) : undefined,
-      }),
-      activeDaYun: dy ?? null,
-      activeLiuNian: ln ?? null,
-    }
-  }, [pillars, extras, dayGan, baseHits])
+    useGejuExtras.getState().setExtras({
+      dayun: activeDaYun ? extraToPillar(activeDaYun, dayGan) : null,
+      liunian: activeLiuNian ? extraToPillar(activeLiuNian, dayGan) : null,
+    })
+  }, [dayGan, activeDaYun, activeLiuNian])
 
   const hitSet = new Set(hits.map((h) => h.name))
   const others = skillNames('geju').filter((n) => !hitSet.has(n))

@@ -1,4 +1,4 @@
-import type { Ctx } from '../../types'
+import { readBazi, readShishen, readStrength } from '../../hooks'
 import type { GejuHit } from '../../types'
 
 /**
@@ -8,12 +8,15 @@ import type { GejuHit } from '../../types'
  *  3. 七杀数量 ≥ 2 (否则只是"杀微")。
  *  4. 无正官混杂。
  */
-export function isShenShaLiangTing(ctx: Ctx): GejuHit | null {
-  if (!ctx.shenWang) return null
-  if (!ctx.rootExt(ctx.dayWx)) return null
-  if (!ctx.tou('七杀')) return null
-  if (!ctx.zang('七杀')) return null
-  if (ctx.countCat('官杀') < 3) return null
-  if (ctx.tou('正官')) return null
+export function isShenShaLiangTing(): GejuHit | null {
+  const bazi = readBazi()
+  const shishen = readShishen()
+  const strength = readStrength()
+  if (!strength.shenWang) return null
+  if (!bazi.rootExt(bazi.dayWx)) return null
+  if (!shishen.tou('七杀')) return null
+  if (!shishen.zang('七杀')) return null
+  if (shishen.countCat('官杀') < 3) return null
+  if (shishen.tou('正官')) return null
   return { name: '身杀两停', note: '身旺有根 · 七杀透根数≥2 · 官杀不混' }
 }

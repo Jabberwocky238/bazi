@@ -1,13 +1,14 @@
-import type { Ctx } from '../../types'
+import { readBazi } from '../../hooks'
 import type { GejuHit } from '../../types'
 import { ganWuxing } from '@jabberwocky238/bazi-engine'
 
 /**
  * 五行齐全 —— md：「八字天干地支(含藏干)中木火土金水全部出现」。
  */
-export function isWuXingQiQuan(ctx: Ctx): GejuHit | null {
+export function isWuXingQiQuan(): GejuHit | null {
+  const bazi = readBazi()
   const wxSet = new Set<string>()
-  for (const p of ctx.mainArr) {
+  for (const p of bazi.mainArr) {
     const gw = ganWuxing(p.gan)
     if (gw) wxSet.add(gw)
     for (const h of p.hideGans) {

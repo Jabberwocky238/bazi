@@ -1,7 +1,9 @@
-import { YANG_REN, type Ctx } from '../../types'
+import { readBazi, readExtras, readShishen, readStrength } from '../../hooks'
+import { YANG_REN } from '../../types'
 import type { Gan } from '@jabberwocky238/bazi-engine'
 import type { GejuHit } from '../../types'
 import { monthGeFormed } from './_util'
+import { emitGeju } from '../../_emit'
 
 /** 天干五合：甲己/乙庚/丙辛/丁壬/戊癸。 */
 const HE_GAN: Record<Gan, Gan> = {
@@ -16,37 +18,58 @@ const ZHENG_GUAN: Record<Gan, Gan> = {
 }
 
 /** 正官透干且被日干合去 (阴日: 乙庚/丁壬/己甲/辛丙/癸戊)。 */
-function zhengGuanHeQu(ctx: Ctx): boolean {
-  const heTarget = HE_GAN[ctx.dayGan]
-  const guanGan = ZHENG_GUAN[ctx.dayGan]
+function zhengGuanHeQu(): boolean {
+  const bazi = readBazi()
+  const heTarget = HE_GAN[bazi.dayGan]
+  const guanGan = ZHENG_GUAN[bazi.dayGan]
   if (heTarget !== guanGan) return false
-  return ctx.pillars.month.gan === guanGan || ctx.pillars.hour.gan === guanGan
+  return bazi.pillars.month.gan === guanGan || bazi.pillars.hour.gan === guanGan
 }
 
 /**
- * 七杀格（依《子平真诠·论七杀》+ "合官留杀"）：
- *  1. 月令本气为七杀。
- *  2. 正官透且未被日干合去 → 官杀混杂破格。
- *  3. 日主非极弱/近从弱。
- *  (食神制 / 印化 / 阳刃敌 视为加分 note，非必要条件。)
+ * 七杀格 — md 全部铁律 + 岁运:
+ *  ① 月令本气七杀 / 月令藏 + 七杀透 (monthGeFormed 双路径)。
+ *  ② 正官透且未被日干合去 → 破 (主局 / 岁运皆判)。
+ *  ③ 必有制 (食神) 或化 (印星) — 主局 OR 岁运补。
+ *  ④ 身非极弱 / 近从弱 (极弱归从杀)。
  */
-export function isQiShaGe(ctx: Ctx): GejuHit | null {
-  if (!monthGeFormed(ctx, '七杀')) return null
-  const heQu = zhengGuanHeQu(ctx)
-  if (ctx.tou('正官') && !heQu) return null
-  if (ctx.level === '身极弱' || ctx.level === '近从弱') return null
-  const foodControl = ctx.tou('食神') && ctx.zang('食神') && ctx.adjacentTou('食神', '七杀')
-  const yinHua = ctx.touCat('印') && (ctx.zang('正印') || ctx.zang('偏印'))
-  const renDiSha = ctx.dayYang && ctx.mainArr.some(
-    (p, i) => i !== 2 && p.zhi === (YANG_REN[ctx.dayGan] ?? ''),
+export function isQiShaGe(): GejuHit | null {
+  const bazi = readBazi()
+  const shishen = readShishen()
+  const strength = readStrength()
+  const extras = readExtras()
+  if (!monthGeFormed('七杀')) return null
+  if (strength.level === '身极弱' || strength.level === '近从弱') return null
+
+  const heQu = zhengGuanHeQu()
+  const baseGuanBlock = shishen.tou('正官') && !heQu
+  const extrasGuanBlock = baseGuanBlock || (extras.tou('正官') && !heQu)
+
+  const baseHasZhi = shishen.has('食神')
+  const baseHasHua = shishen.hasCat('印')
+  const baseControl = baseHasZhi || baseHasHua
+  const withExtrasControl = baseControl || extras.has('食神') || extras.hasCat('印')
+
+  const baseFormed = !baseGuanBlock && baseControl
+  const withExtrasFormed = !extrasGuanBlock && withExtrasControl
+
+  const foodControl = shishen.tou('食神') && shishen.zang('食神') && shishen.adjacentTou('食神', '七杀')
+  const yinHua = shishen.touCat('印') && (shishen.zang('正印') || shishen.zang('偏印'))
+  const renDiSha = bazi.dayYang && bazi.mainArr.some(
+    (p, i) => i !== 2 && p.zhi === (YANG_REN[bazi.dayGan] ?? ''),
   )
   const details: string[] = []
   if (heQu) details.push('合官留杀')
   if (foodControl) details.push('食神制')
+  else if (baseHasZhi) details.push('食神制 (透/藏)')
+  else if (extras.has('食神')) details.push('岁运补食神')
   if (yinHua) details.push('印化')
+  else if (baseHasHua) details.push('印化 (透/藏)')
+  else if (extras.hasCat('印')) details.push('岁运补印')
   if (renDiSha) details.push('阳刃敌')
-  return {
-    name: '七杀格',
-    note: `月令七杀${details.length ? ' · ' + details.join(' / ') : ' · 无明显制化'}`,
-  }
+
+  return emitGeju(
+    { name: '七杀格', note: `月令七杀 · ${details.join(' / ')}` },
+    { baseFormed, withExtrasFormed, hasExtras: extras.active },
+  )
 }

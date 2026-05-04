@@ -2,15 +2,15 @@ import { Suspense, lazy } from 'react'
 import { ViteReactSSG } from 'vite-react-ssg'
 import type { RouteRecord } from 'vite-react-ssg'
 import './index.css'
-import App from './App.tsx'
+import App from './pages/main/App'
 
-const HepanApp = lazy(() => import('./hepan/HepanApp'))
+const HepanApp = lazy(() => import('./pages/hepan/HepanApp'))
 
 export const routes: RouteRecord[] = [
   {
     path: '/',
     Component: App,
-    entry: 'src/App.tsx',
+    entry: 'src/pages/main/App.tsx',
   },
   {
     path: '/hepan',
@@ -19,7 +19,7 @@ export const routes: RouteRecord[] = [
         <HepanApp />
       </Suspense>
     ),
-    entry: 'src/hepan/HepanApp.tsx',
+    entry: 'src/pages/hepan/HepanApp.tsx',
   },
 ]
 

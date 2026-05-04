@@ -55,7 +55,7 @@ export default function HepanApp() {
         合盘仅供参考 · 用神 / 互动只是其中两层 · 实际配偶 / 合伙考量仍需综合岁运、宫位、神煞与现实磨合
       </p>
 
-      <ErrorBoundary name="SkillPanel"><SkillPanel /></ErrorBoundary>
+      {/* <ErrorBoundary name="SkillPanel"><SkillPanel /></ErrorBoundary> */}
     </GenericLayout>
   )
 }

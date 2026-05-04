@@ -9,7 +9,10 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:geju": "bun test src/lib/geju/random_geju.spec.ts"
+    "test:geju": "bun test src/lib/geju/random_geju.spec.ts",
+    "cf:dev": "npm run build && wrangler dev",
+    "cf:preview": "wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@jabberwocky238/bazi-engine": "1.0.4",
@@ -27,6 +30,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
+    "@cloudflare/workers-types": "^4.20250923.0",
     "@eslint/js": "^9.39.4",
     "@rolldown/plugin-babel": "^0.2.2",
     "@types/babel__core": "^7.20.5",
@@ -42,6 +46,7 @@
     "lightningcss": "^1.32.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.0",
-    "vite": "^8.0.4"
+    "vite": "^8.0.4",
+    "wrangler": "^4.0.0"
   }
 }

@@ -53,7 +53,8 @@ function parseFloatOr(value: string | null, fallback: number): number {
 }
 
 function readQuery() {
-  const params = new URLSearchParams(window.location.search)
+  const search = typeof window === 'undefined' ? '' : window.location.search
+  const params = new URLSearchParams(search)
   const sexRaw = parseIntOr(params.get('sex'), 1)
   const hourRaw = params.get('hour')
   const hourUnknown = hourRaw === 'unknown' || hourRaw === String(HOUR_UNKNOWN)
@@ -107,6 +108,7 @@ export const useBaziInput = create<BaziInputState>((set, get) => ({
   setLongitude: (longitude) => set({ longitude }),
   setBaziGz: (bazi, sex) => set({ bazi, sex }),
   syncToUrl: () => {
+    if (typeof window === 'undefined') return
     const { mode, year, month, day, hour, minute, sex, longitude, bazi } = get()
     const q = new URLSearchParams({ sex: String(sex) })
     if (mode !== 'gregorian') q.set('mode', mode)

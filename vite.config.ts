@@ -4,6 +4,18 @@ import { execSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+
+declare module 'vite' {
+  interface UserConfig {
+    ssgOptions?: {
+      onPageRendered?: (route: string, html: string) => string | Promise<string>
+      onBeforePageRender?: (route: string, html: string) => string | Promise<string>
+      includedRoutes?: (paths: string[]) => string[] | Promise<string[]>
+      formatting?: 'minify' | 'prettify' | 'none'
+      crittersOptions?: false | Record<string, unknown>
+    }
+  }
+}
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -34,8 +46,58 @@ function buildTime(): string {
 }
 const APP_BUILD_TIME = buildTime()
 
+// —— SSG: per-route SEO meta (vite-react-ssg onPageRendered 钩子注入) ——
+const CANONICAL_ORIGIN = 'https://bazi.app238.com'
+interface RouteSeo { title: string; description: string }
+const ROUTE_SEO: Record<string, RouteSeo> = {
+  '/': {
+    title: '八字补完计划',
+    description: '八字补完计划：在线排盘 + 单/合盘干支互动评分、格局识别、通关桥梁分析。纯前端，无需注册。',
+  },
+  '/hepan': {
+    title: '八字合盘 — 八字补完计划',
+    description: '八字合盘分析：双盘干支互动评分、跨盘通关桥梁、喜用神匹配。',
+  },
+}
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+function escapeRe(s: string): string { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
+function replaceMeta(html: string, attr: 'name' | 'property', key: string, value: string): string {
+  const re = new RegExp(`<meta\\s+${attr}="${escapeRe(key)}"\\s+content="[^"]*"\\s*/?>`)
+  const tag = `<meta ${attr}="${key}" content="${escapeHtml(value)}" />`
+  return re.test(html) ? html.replace(re, tag) : upsertMeta(html, attr, key, value)
+}
+function upsertMeta(html: string, attr: 'name' | 'property', key: string, value: string): string {
+  return html.replace(/<\/head>/, `    <meta ${attr}="${key}" content="${escapeHtml(value)}" />\n</head>`)
+}
+function upsertCanonical(html: string, href: string): string {
+  const re = /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/
+  const tag = `<link rel="canonical" href="${href}" />`
+  return re.test(html) ? html.replace(re, tag) : html.replace(/<\/head>/, `    ${tag}\n</head>`)
+}
+function patchSeo(route: string, html: string): string {
+  const seo = ROUTE_SEO[route] ?? ROUTE_SEO['/']
+  const canonical = `${CANONICAL_ORIGIN}${route === '/' ? '/' : route}`
+  let out = html
+  out = out.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(seo.title)}</title>`)
+  out = replaceMeta(out, 'name', 'description', seo.description)
+  out = replaceMeta(out, 'property', 'og:title', seo.title)
+  out = replaceMeta(out, 'property', 'og:description', seo.description)
+  out = upsertMeta(out, 'property', 'og:url', canonical)
+  out = replaceMeta(out, 'name', 'twitter:title', seo.title)
+  out = replaceMeta(out, 'name', 'twitter:description', seo.description)
+  out = upsertCanonical(out, canonical)
+  return out
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  ssgOptions: {
+    onPageRendered(route: string, html: string) {
+      return patchSeo(route, html)
+    },
+  },
   define: {
     __ENGINE_VERSION__:  JSON.stringify(ENGINE_VERSION),
     __SKILLS_COMMIT__:   JSON.stringify(SKILLS_COMMIT),

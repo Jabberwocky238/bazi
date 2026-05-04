@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { ErrorBoundary } from '@@/ErrorBoundary'
 import { Footer } from '@@/Footer'
 import { formatBuildTime } from '@@/buildTime'
+import { APP_BUILD_TIME } from '@/build-meta'
 
 // ————————————————————————————————————————————————————————
 // AppBar (头部) — 被 GenericLayout 内联使用
@@ -19,7 +20,7 @@ interface AppBarProps {
 }
 
 function AppBar({ title, link, description, descriptionRight }: AppBarProps) {
-  const build = formatBuildTime(__APP_BUILD_TIME__)
+  const build = formatBuildTime(APP_BUILD_TIME)
   const hasDescRow = description !== undefined || descriptionRight !== undefined
   return (
     <header className="mb-5 md:mb-6">

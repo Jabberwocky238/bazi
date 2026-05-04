@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bunx tsc *)",
+      "Bash(bun run *)",
+      "WebSearch",
+      "WebFetch(domain:baike.baidu.com)",
+      "WebFetch(domain:www.shenjige.cn)",
+      "WebFetch(domain:www.sf280.com)",
+      "WebFetch(domain:www.sohu.com)"
+    ],
+    "deny": [
+      "Bash(bun run build)"
+    ]
+  }
+}

@@ -9,9 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@jabberwocky238/bazi-engine": "^1.0.4",
+    "lunar-typescript": "^1.8.6",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -20,6 +25,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "raw-loader": "^4.0.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

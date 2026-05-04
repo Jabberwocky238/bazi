@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { formatBuildTime } from '@@/buildTime'
+import { APP_BUILD_TIME, APP_COMMIT, ENGINE_VERSION, SKILLS_COMMIT, SKILLS_DATE } from '@/build-meta'
 
 function CloudflareIcon() {
   return (
@@ -65,7 +66,7 @@ export function Footer() {
   const linkCls = 'text-amber-700 dark:text-amber-400 underline'
   const [host, setHost] = useState<HostInfo>({ label: '加载中…', tone: 'dev' })
   useEffect(() => { setHost(detectHost()) }, [])
-  const build = formatBuildTime(__APP_BUILD_TIME__)
+  const build = formatBuildTime(APP_BUILD_TIME)
 
   return (
     <footer className="mt-10 text-xs text-slate-400 dark:text-slate-600 border-t border-slate-200 dark:border-slate-800 pt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -94,7 +95,7 @@ export function Footer() {
         </a>
         {' '}
         <span className="text-slate-500 dark:text-slate-500 tabular-nums">
-          {__SKILLS_COMMIT__} · {__SKILLS_DATE__.slice(0, 10)}
+          {SKILLS_COMMIT} · {SKILLS_DATE.slice(0, 10)}
         </span>
       </span>
       <span>
@@ -103,7 +104,7 @@ export function Footer() {
           bazi-engine
         </a>
         {' '}
-        <span className="text-slate-500 dark:text-slate-500 tabular-nums">v{__ENGINE_VERSION__}</span>
+        <span className="text-slate-500 dark:text-slate-500 tabular-nums">v{ENGINE_VERSION}</span>
       </span>
       <span>
         本项目 ·{' '}
@@ -112,7 +113,7 @@ export function Footer() {
         </a>
         {' '}
         <span className="text-slate-500 dark:text-slate-500 tabular-nums">
-          {__APP_COMMIT__} · 构建于 {build.display} · {build.label}
+          {APP_COMMIT} · 构建于 {build.display} · {build.label}
         </span>
       </span>
     </footer>

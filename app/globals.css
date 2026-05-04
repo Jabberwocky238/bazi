@@ -1,26 +1,122 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Microsoft YaHei", "HarmonyOS Sans SC", "Noto Sans SC",
+    "Hiragino Sans GB", "Source Han Sans CN", SimHei, sans-serif;
+
+  --color-wood: #15803d;
+  --color-fire: #dc2626;
+  --color-earth: #854d0e;
+  --color-metal: #ca8a04;
+  --color-water: #1d4ed8;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+  button {
+    color: inherit;
+    background-color: transparent;
+  }
+  body {
+    @apply bg-[#fafaf7] text-slate-700 antialiased dark:bg-slate-950 dark:text-slate-300;
+    font-family: var(--font-sans);
+    background-image:
+      radial-gradient(1000px 500px at 85% -10%, rgba(180, 83, 9, 0.06), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(29, 78, 216, 0.05), transparent 60%);
+  }
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-image:
+        radial-gradient(900px 500px at 85% -10%, rgba(251, 191, 36, 0.06), transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, rgba(96, 165, 250, 0.05), transparent 60%);
+    }
+  }
+  h1, h2, h3 {
+    @apply text-slate-900 font-semibold tracking-tight dark:text-slate-50;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-wood: #4ade80;
+    --color-fire: #f87171;
+    --color-earth: #d97706;
+    --color-metal: #facc15;
+    --color-water: #60a5fa;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.prose-bazi {
+  @apply text-[0.94rem] leading-[1.85] text-slate-700 dark:text-slate-300;
+}
+.prose-bazi h1, .prose-bazi h2 {
+  @apply mt-5 mb-2 text-base font-semibold text-slate-900 dark:text-slate-50;
+}
+.prose-bazi h3, .prose-bazi h4 {
+  @apply mt-4 mb-1.5 text-sm font-semibold text-slate-800 dark:text-slate-100;
+}
+.prose-bazi p { @apply my-2.5; }
+.prose-bazi ul, .prose-bazi ol { @apply my-2 pl-5 list-disc; }
+.prose-bazi ol { @apply list-decimal; }
+.prose-bazi li { @apply my-1; }
+.prose-bazi blockquote {
+  @apply border-l-2 border-amber-600/40 pl-3 my-3 text-slate-600 dark:text-slate-400 italic;
+}
+.prose-bazi code {
+  @apply rounded bg-slate-100 dark:bg-slate-800 px-1 py-0.5 text-[0.85em];
+}
+.prose-bazi strong { @apply font-semibold text-slate-900 dark:text-slate-100; }
+.prose-bazi hr { @apply my-4 border-slate-200 dark:border-slate-700; }
+.prose-bazi a { @apply text-amber-700 dark:text-amber-400 underline; }
+
+/* —— 合盘手机端紧凑 —— */
+@media (max-width: 767px) {
+  .hepan-side .min-w-0 table { font-size: 10px; }
+  .hepan-side th,
+  .hepan-side td { padding-left: 0.25rem; padding-right: 0.25rem; padding-top: 0.35rem; padding-bottom: 0.35rem; }
+  .hepan-side thead th { width: auto !important; }
+  .hepan-side thead th:first-child { width: 1.6rem !important; }
+  .hepan-side tbody th { width: 1.6rem !important; padding-right: 0.2rem; font-size: 9px; }
+  .hepan-side .text-lg { font-size: 0.95rem; line-height: 1.1; }
+  .hepan-side .text-base { font-size: 0.85rem; }
+  .hepan-side .text-sm { font-size: 0.75rem; }
+  .hepan-side .text-xs { font-size: 0.65rem; }
+  .hepan-side .gap-1 { gap: 0.1rem; }
+  .hepan-side .gap-1\.5 { gap: 0.15rem; }
+}
+
+/* —— 细滚动条（Dialog 内部使用） —— */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.45) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(148 163 184 / 0.4);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(100 116 139 / 0.6);
+}
+@media (prefers-color-scheme: dark) {
+  .scrollbar-thin {
+    scrollbar-color: rgb(71 85 105 / 0.55) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(71 85 105 / 0.55);
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(100 116 139 / 0.7);
+  }
 }

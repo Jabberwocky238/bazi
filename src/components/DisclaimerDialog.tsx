@@ -1,6 +1,6 @@
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import disclaimerMd from '@/assets/disclaimer.md?raw'
+import disclaimerMd from '@/assets/disclaimer.md'
 import { Dialog } from '@@/Dialog'
 
 export function DisclaimerDialog({

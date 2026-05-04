@@ -5,14 +5,14 @@
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "wrangler dev",
+    "react:dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:geju": "bun test src/lib/geju/random_geju.spec.ts",
-    "cf:dev": "npm run build && wrangler dev",
-    "cf:preview": "wrangler dev",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@jabberwocky238/bazi-engine": "1.0.4",

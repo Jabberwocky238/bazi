@@ -29,3 +29,4 @@ _probe
 .wrangler/
 .dev.vars
 .dev.vars.*
+worker-configuration.d.ts

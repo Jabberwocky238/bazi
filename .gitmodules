@@ -1,0 +1,3 @@
+[submodule "public/bazi-skills"]
+	path = public/bazi-skills
+	url = https://github.com/Jabberwocky238/bazi-skills.git

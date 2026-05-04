@@ -1,0 +1,6 @@
+export { checkZhuanWang } from './_check'
+export { isQuZhiGe } from './quZhiGe'
+export { isYanShangGe } from './yanShangGe'
+export { isJiaSeGe } from './jiaSeGe'
+export { isCongGeGe } from './congGeGe'
+export { isRunXiaGe } from './runXiaGe'

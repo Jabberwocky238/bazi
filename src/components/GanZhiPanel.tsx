@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import {
-  analyzeGanZhi,
   type FindingKind,
   type HeFinding,
   type ConflictFinding,
@@ -9,6 +8,7 @@ import {
   type ZhengHeFinding,
   type FindingMod,
 } from '@jabberwocky238/bazi-engine'
+import { analyzeGanZhiWithExtras, type ExtraInteraction } from '@/lib/xingchonghehai'
 import { useBazi } from '@/lib'
 import { useBaziStore, type ExtraPillar } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
@@ -16,6 +16,7 @@ import { SkillLink } from '@@/SkillLink'
 type AnyFinding = HeFinding | ConflictFinding | MuKuFinding | WholePillarFinding | ZhengHeFinding
 
 const SECTION_LABEL = 'text-[11px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400 uppercase'
+const POS_LABEL: Record<string, string> = { 年: '年柱', 月: '月柱', 日: '日柱', 时: '时柱' }
 
 /** 每类 finding 的色调 */
 const KIND_TONE: Record<FindingKind, string> = {
@@ -47,17 +48,23 @@ export function GanZhiPanel() {
   const extras = useBaziStore((s) => s.extraPillars)
   const [open, setOpen] = useState(true)
 
-  const a = useMemo(
-    () => analyzeGanZhi(pillars, toExtraInputs(extras)),
+  const analysis = useMemo(
+    () => analyzeGanZhiWithExtras(pillars, toExtraInputs(extras)),
     [pillars, extras],
   )
-  if (!a) return null
+  if (!analysis) return null
+  const a = analysis.base
+  const extraHits = analysis.extra
 
+  const extraHeTotal = extraHits.filter((h) => h.kind === '天干五合' || h.kind === '六合' || h.kind === '半三合' || h.kind === '半三会').length
+  const extraChongTotal = extraHits.filter((h) => h.kind === '六冲').length
+  const extraXinghaiTotal = extraHits.filter((h) => h.kind === '相刑' || h.kind === '自刑' || h.kind === '六害' || h.kind === '六破').length
+  const extraKeTotal = extraHits.filter((h) => h.kind === '天干相克').length
   const hetotal =
-    a.天干五合.length + a.地支六合.length + a.地支三合.length + a.地支三会.length
-  const chongtotal = a.天干相冲.length + a.地支相冲.length
+    a.天干五合.length + a.地支六合.length + a.地支三合.length + a.地支三会.length + extraHeTotal
+  const chongtotal = a.天干相冲.length + a.地支相冲.length + extraChongTotal
   const xinghaiototal =
-    a.地支相刑.length + a.地支相害.length + a.地支相破.length + a.地支暗合.length
+    a.地支相刑.length + a.地支相害.length + a.地支相破.length + a.地支暗合.length + extraXinghaiTotal
 
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 md:p-5 shadow-sm">
@@ -80,6 +87,7 @@ export function GanZhiPanel() {
           <span className="text-emerald-700 dark:text-emerald-400">合 {hetotal}</span>
           <span className="text-rose-700 dark:text-rose-400">冲 {chongtotal}</span>
           <span className="text-amber-700 dark:text-amber-400">刑害破 {xinghaiototal}</span>
+          {extraKeTotal > 0 && <span className="text-amber-700 dark:text-amber-400">克 {extraKeTotal}</span>}
           <span className="text-indigo-700 dark:text-indigo-400">库 {a.墓库.length}</span>
         </div>
       </button>
@@ -104,9 +112,14 @@ export function GanZhiPanel() {
           <Section label="⑥ 墓库 · 开 / 闭 / 静">
             <FindingList list={a.墓库} />
           </Section>
+          {extraHits.length > 0 && (
+            <Section label="⑦ 岁运引动 · 大运 / 流年 / 流月 × 原局">
+              <ExtraFindingList list={extraHits} />
+            </Section>
+          )}
 
           <div className="text-[10px] text-slate-400 dark:text-slate-600 text-right leading-5 pt-2 border-t border-slate-100 dark:border-slate-800">
-            依 @jabberwocky238/bazi-engine analyzeGanZhi · 定性判断，不加权打分
+            依 @jabberwocky238/bazi-engine analyzeGanZhi + pairwiseGan/pairwiseZhi · 定性判断，不加权打分
             <br />
             md 明文：三会 &gt; 三合 &gt; 六合 &gt; 六冲 &gt; 三刑 &gt; 六害 &gt; 六破 · 合冲同现需人工裁断
             <br />
@@ -136,6 +149,41 @@ function FindingList({ list }: { list: AnyFinding[] }) {
       {list.map((f, idx) => (
         <FindingRow key={`${f.kind}-${f.name}-${findingPositions(f)}-${idx}`} f={f} />
       ))}
+    </div>
+  )
+}
+
+function ExtraFindingList({ list }: { list: ExtraInteraction[] }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      {list.map((f, idx) => (
+        <ExtraFindingRow key={`${f.source.label}-${f.source.gz}-${f.target}-${f.kind}-${idx}`} f={f} />
+      ))}
+    </div>
+  )
+}
+
+function extraKindTone(kind: ExtraInteraction['kind']): string {
+  if (kind === '天干五合' || kind === '六合' || kind === '半三合' || kind === '半三会') return KIND_TONE.天干五合
+  if (kind === '六冲') return KIND_TONE.地支相冲
+  if (kind === '天干相克') return KIND_TONE.天干相克
+  if (kind === '六害') return KIND_TONE.地支相害
+  if (kind === '六破') return KIND_TONE.地支相破
+  if (kind === '相刑' || kind === '自刑') return KIND_TONE.地支相刑
+  return KIND_TONE.地支暗合
+}
+
+function ExtraFindingRow({ f }: { f: ExtraInteraction }) {
+  return (
+    <div className={`rounded-md border px-2.5 py-1.5 text-xs leading-relaxed ${extraKindTone(f.kind)}`}>
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <span className="inline-flex items-center gap-1 text-[10px] opacity-70 font-medium">{f.kind}</span>
+        <span className="font-bold text-sm">{f.note}</span>
+        <span className="text-[10px] opacity-80 tabular-nums">
+          [{f.source.label} {f.source.gz} × {POS_LABEL[f.target] ?? f.target} {f.targetGz}]
+        </span>
+        {f.huaWx && <span className="ml-auto text-[11px] font-medium">化{f.huaWx}</span>}
+      </div>
     </div>
   )
 }

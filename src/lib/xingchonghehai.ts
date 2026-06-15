@@ -72,7 +72,7 @@ export function analyzeGanZhiWithExtras(
 ): GanZhiWithExtras | null {
   const engineExtras: EngineExtraPillar[] = extras
   const base = analyzeGanZhi(pillars, engineExtras)
-  if (!base) throw new Error('GanZhiAnalysis failed, check pillars input')
+  if (!base) return null
 
   const extra: ExtraInteraction[] = []
   for (const e of engineExtras) {

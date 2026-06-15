@@ -18,10 +18,12 @@
     /* Linting */
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "erasableSyntaxOnly": true,
+    "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
 
     "paths": {
+      "@jabberwocky238/bazi-engine": ["./bazi-engine/src/index.ts"],
+      "@jabberwocky238/bazi-engine/*": ["./bazi-engine/src/*"],
       "@/*": ["./src/*"],
       "@@/*": ["./src/components/*"]
     }

@@ -11,6 +11,7 @@ const root = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   resolve: {
     alias: {
+      '@jabberwocky238/bazi-engine': path.resolve(root, 'bazi-engine/src/index.ts'),
       '@': path.resolve(root, 'src'),
       '@@': path.resolve(root, 'src/components'),
     },

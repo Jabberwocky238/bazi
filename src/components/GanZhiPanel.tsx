@@ -47,7 +47,7 @@ const EXTRA_KIND_TONE: Record<ExtraInteractionKind, string> = {
 }
 
 function toExtraInputs(extras: ExtraPillar[]) {
-  return extras.map((e) => ({ label: e.label, gan: e.gan, zhi: e.zhi, gz: e.gz }))
+  return extras.map((e) => ({ label: e.label, gan: e.gan, zhi: e.zhi }))
 }
 
 export function GanZhiPanel() {

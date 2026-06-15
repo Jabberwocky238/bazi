@@ -177,7 +177,7 @@ function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Comp
 
   const result = analyzeGanZhiWithExtras(
     pillars,
-    extras.map((e) => ({ label: e.label, gan: e.gan, zhi: e.zhi, gz: e.gz })),
+    extras.map((e) => ({ label: e.label, gan: e.gan, zhi: e.zhi })),
   )
   if (!result) return { wxWeight: wxW, ssWeight: ssW, ssOrder, ssGroup, adjustments }
   const { base, extra, dissolved } = result

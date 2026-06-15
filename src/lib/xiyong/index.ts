@@ -42,13 +42,21 @@ function pickCongOverride(): string | null {
   return null
 }
 
-export function analyzeXiyong(pillars: Pillar[]): XiyongAnalysis | null {
+/**
+ * @param pillars  4 柱
+ * @param injectedStrength 可选 — 显式传入身强弱分析 (合盘多盘场景需要;
+ *   不传则回 useStrength.getState().analysis 主路径行为).
+ */
+export function analyzeXiyong(
+  pillars: Pillar[],
+  injectedStrength?: import('../strength').StrengthAnalysis | null,
+): XiyongAnalysis | null {
   if (pillars.length !== 4) return null
   const dayGan = pillars[2].gan
   const dayWx = ganWuxing(dayGan) as WuXing
   if (!dayWx) return null
 
-  const strength = useStrength.getState().analysis
+  const strength = injectedStrength ?? useStrength.getState().analysis
   if (!strength) return null
   const level = strength.level
   const side = sideOf(level)
@@ -83,7 +91,9 @@ export function analyzeXiyong(pillars: Pillar[]): XiyongAnalysis | null {
     tiaohou: computeTiaohou(monthZhi, dayWx),
     tongguan: analyzeTongguan(pillars, countWxStrength(pillars)),
 
-    congOverride: pickCongOverride(),
+    // 注入 strength 时跳过 congOverride — pickCongOverride 走 detectGeju 会
+    // 读 useBazi 全局, 与传入 pillars 不一致 (合盘多盘场景下会错). 主路径不传, 走全局正常.
+    congOverride: injectedStrength ? null : pickCongOverride(),
   }
 }
 

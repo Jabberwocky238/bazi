@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { type SkillFocus, loadSkill, skillUrl } from '@/lib'
 import { useBaziStore } from '@@/stores'
 import { useMediaQuery } from '@@/hooks/useMediaQuery'
+import { Dialog, DialogPanel } from '@@/Dialog'
 
 const CATEGORY_LABEL: Record<string, string> = {
   shishen: '十神',
@@ -36,45 +37,6 @@ function useSkillBody(focused: SkillFocus | null) {
   return { md, err }
 }
 
-function Header({ focused, onClose }: { focused: SkillFocus | null; onClose: () => void }) {
-  return (
-    <header className="flex items-center justify-between gap-3 px-4 md:px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 shrink-0">
-      <div className="min-w-0">
-        {focused ? (
-          <>
-            <div className="text-[11px] tracking-[0.25em] uppercase text-slate-500 dark:text-slate-400">
-              {CATEGORY_LABEL[focused.category] ?? focused.category}
-              {focused.subtitle ? ` · ${focused.subtitle}` : ''}
-            </div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50 truncate">
-              {focused.name}
-            </h2>
-          </>
-        ) : (
-          <>
-            <div className="text-[11px] tracking-[0.25em] uppercase text-slate-500 dark:text-slate-400">
-              释义
-            </div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-              选一个词条
-            </h2>
-          </>
-        )}
-      </div>
-      {focused && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="shrink-0 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-2xl leading-none px-2"
-          aria-label="关闭释义"
-        >
-          ×
-        </button>
-      )}
-    </header>
-  )
-}
-
 function Body({ focused, md, err }: { focused: SkillFocus | null; md: string | null; err: string | null }) {
   if (!focused) {
     return (
@@ -96,66 +58,43 @@ function Body({ focused, md, err }: { focused: SkillFocus | null; md: string | n
   )
 }
 
+function titleOf(focused: SkillFocus | null): string {
+  return focused?.name ?? '选一个词条'
+}
+
+function subtitleOf(focused: SkillFocus | null): string {
+  if (!focused) return '释义'
+  return `${CATEGORY_LABEL[focused.category] ?? focused.category}${focused.subtitle ? ` · ${focused.subtitle}` : ''}`
+}
+
 export function SkillPanel() {
   const focused = useBaziStore((s) => s.focused)
   const setFocused = useBaziStore((s) => s.setFocused)
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const { md, err } = useSkillBody(focused)
 
-  if (isDesktop) return <DesktopPanel focused={focused} md={md} err={err} onClose={() => setFocused(null)} />
-  return <MobileDialog focused={focused} md={md} err={err} onClose={() => setFocused(null)} />
-}
-
-function DesktopPanel({
-  focused, md, err, onClose,
-}: { focused: SkillFocus | null; md: string | null; err: string | null; onClose: () => void }) {
-  return (
-    <aside className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm overflow-hidden flex flex-col max-h-[calc(100vh-3rem)] sticky top-6">
-      <Header focused={focused} onClose={onClose} />
-      <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
+  if (isDesktop) {
+    // 桌面端：右侧常驻 sticky 面板，仅在已选中词条时给出"关闭"按钮。
+    return (
+      <DialogPanel
+        title={titleOf(focused)}
+        subtitle={subtitleOf(focused)}
+        onClose={focused ? () => setFocused(null) : undefined}
+      >
         <Body focused={focused} md={md} err={err} />
-      </div>
-    </aside>
-  )
-}
-
-function MobileDialog({
-  focused, md, err, onClose,
-}: { focused: SkillFocus | null; md: string | null; err: string | null; onClose: () => void }) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-
-  useEffect(() => {
-    const d = dialogRef.current
-    if (!d) return
-    if (focused && !d.open) d.showModal()
-    else if (!focused && d.open) d.close()
-  }, [focused])
-
-  useEffect(() => {
-    const d = dialogRef.current
-    if (!d) return
-    const onCloseEvt = () => onClose()
-    d.addEventListener('close', onCloseEvt)
-    return () => d.removeEventListener('close', onCloseEvt)
-  }, [onClose])
-
-  const onBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
-    if (e.target === dialogRef.current) dialogRef.current?.close()
+      </DialogPanel>
+    )
   }
 
+  // 移动端：与免责声明同款 modal Dialog。
   return (
-    <dialog
-      ref={dialogRef}
-      onClick={onBackdropClick}
-      className="m-0 w-full max-w-full h-[85dvh] max-h-[85dvh] rounded-t-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm fixed inset-x-0 bottom-0 top-auto"
+    <Dialog
+      open={!!focused}
+      onClose={() => setFocused(null)}
+      title={titleOf(focused)}
+      subtitle={subtitleOf(focused)}
     >
-      <div className="flex flex-col h-full">
-        <Header focused={focused} onClose={onClose} />
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
-          <Body focused={focused} md={md} err={err} />
-        </div>
-      </div>
-    </dialog>
+      <Body focused={focused} md={md} err={err} />
+    </Dialog>
   )
 }
-

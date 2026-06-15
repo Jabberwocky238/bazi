@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { formatBuildTime } from '@@/buildTime'
 
 function CloudflareIcon() {
   return (
@@ -64,6 +65,7 @@ export function Footer() {
   const linkCls = 'text-amber-700 dark:text-amber-400 underline'
   const [host, setHost] = useState<HostInfo>({ label: '加载中…', tone: 'dev' })
   useEffect(() => { setHost(detectHost()) }, [])
+  const build = formatBuildTime(__APP_BUILD_TIME__)
 
   return (
     <footer className="mt-10 text-xs text-slate-400 dark:text-slate-600 border-t border-slate-200 dark:border-slate-800 pt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -90,18 +92,28 @@ export function Footer() {
         <a href="https://github.com/Jabberwocky238/bazi-skills" className={linkCls} target="_blank" rel="noreferrer">
           bazi-skills
         </a>
+        {' '}
+        <span className="text-slate-500 dark:text-slate-500 tabular-nums">
+          {__SKILLS_COMMIT__} · {__SKILLS_DATE__.slice(0, 10)}
+        </span>
       </span>
       <span>
         排盘计算 ·{' '}
         <a href="https://github.com/Jabberwocky238/bazi-engine" className={linkCls} target="_blank" rel="noreferrer">
           bazi-engine
         </a>
+        {' '}
+        <span className="text-slate-500 dark:text-slate-500 tabular-nums">v{__ENGINE_VERSION__}</span>
       </span>
       <span>
         本项目 ·{' '}
         <a href="https://github.com/Jabberwocky238/ultimate-bazi" className={linkCls} target="_blank" rel="noreferrer">
           ultimate-bazi
         </a>
+        {' '}
+        <span className="text-slate-500 dark:text-slate-500 tabular-nums">
+          {__APP_COMMIT__} · 构建于 {build.display} · {build.label}
+        </span>
       </span>
     </footer>
   )

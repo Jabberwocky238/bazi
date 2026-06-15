@@ -23,20 +23,48 @@ export type { ShishenCat }
 export type GejuQuality = 'good' | 'bad' | 'neutral'
 export type GejuCategory = '从格' | '十神格' | '五行格' | '专旺格' | '特殊格' | '正格'
 
-export interface GejuHit {
+/**
+ * 岁运段 — 聚合所有与大运/流年判定相关的状态。
+ * 替代旧的扁平 suiyunSpecific / suiyunTrigger / suiyunBreak / suiyunDefaultTrigger / suiyunConquer。
+ */
+export interface GejuSuiyun {
+  /** 该判定本身是否为岁运特定（旧 suiyunSpecific）。 */
+  isSuiyun: boolean
+  /** 原局不成格，岁运成格（大运/流年补齐）。 */
+  Trigger: boolean
+  /** 原局成格，岁运破格（大运/流年冲散）。 */
+  Break: boolean
+  /** 默认成格。 */
+  DefaultTrigger: boolean
+  /** 岁运冲害。 */
+  Conquer: boolean
+}
+
+export const EMPTY_SUIYUN: GejuSuiyun = {
+  isSuiyun: false,
+  Trigger: false,
+  Break: false,
+  DefaultTrigger: false,
+  Conquer: false,
+}
+
+/** 显 = 已成格当前可见；隐 = 仅潜在（岁运依赖且未默认成 / 未触发）。 */
+export type GejuVisibility = '显' | '隐'
+
+/** 由 岁运 段派生 显隐：仅 isSuiyun 而无 DefaultTrigger / Trigger 撑起时为隐。 */
+export function deriveVisibility(s: GejuSuiyun): GejuVisibility {
+  if (s.isSuiyun && !s.DefaultTrigger && !s.Trigger) return '隐'
+  return '显'
+}
+
+export type GejuHit = {
   name: string
   note: string
-  /** 是否为岁运（大运/流年）特定触发的判定（默认 undefined 为原局判定）。 */
-  suiyunSpecific?: boolean
-  /** 原局不成格，**岁运成格**（大运/流年补齐）。 */
-  suiyunTrigger?: boolean
-  /** 原局成格，**岁运破格**（大运/流年冲散）。 */
-  suiyunBreak?: boolean
-  // 默认成格
-  suiyunDefaultTrigger?: boolean
-  // **岁运冲害 */
-  suiyunConquer?: boolean
-  // 贵格变体
+  /** 岁运段（聚合 suiyun 前缀状态）。 */
+  岁运?: GejuSuiyun
+  /** 显隐：原局已成格(显) vs 仅岁运潜在/需要岁运补齐(隐)。 */
+  显隐?: GejuVisibility // 默认undefined为显
+  /** 贵格变体。 */
   guigeVariant?: string
 }
 
@@ -59,66 +87,8 @@ export interface CtxPillars {
   liunian?: Pillar
 }
 
-/**
- * 格局检测上下文 —— 由 useBazi / useShishen / useStrength 三个 store 状态加上
- * detectGeju 传入的 extras（岁运 + daYunMeta）合并而成。detectGeju 每次调用前
- * 现场拼接，detector 仍以 `(ctx) => GejuHit | null` 形式书写。
- */
-export interface Ctx {
-  // —— 来自 useBazi ——
-  pillars: CtxPillars
-  season: Season | ''
-  dayYang: boolean
-  dayGan: Gan
-  dayZhi: Zhi
-  dayGz: string
-  dayWx: WuXing
-  yearZhi: Zhi
-  monthZhi: Zhi
-  monthCat: ShishenCat | ''
-  monthZhiBeingChong: boolean
-  mainArr: Pillar[]
-  ganSet: Set<Gan>
-  ganWxCount: (wx: WuXing) => number
-  zhiMainWxCount: (wx: WuXing) => number
-  touWx: (wx: WuXing) => boolean
-  rootWx: (wx: WuXing) => boolean
-  rootExt: (wx: WuXing) => boolean
-
-  // —— 来自 useShishen ——
-  ganSs: Shishen[]
-  mainZhiArr: string[]
-  allZhiArr: Shishen[]
-  tou: (s: Shishen) => boolean
-  touCat: (c: ShishenCat) => boolean
-  zang: (s: Shishen) => boolean
-  has: (s: Shishen) => boolean
-  hasCat: (c: ShishenCat) => boolean
-  mainAt: (s: Shishen) => number[]
-  strong: (s: Shishen) => boolean
-  strongCat: (c: ShishenCat) => boolean
-  countOf: (s: Shishen) => number
-  countCat: (c: ShishenCat) => number
-  adjacentTou: (s1: Shishen, s2: Shishen) => boolean
-
-  // —— 来自 useStrength ——
-  strength: StrengthAnalysis | null
-  level: StrengthLevel | ''
-  deLing: boolean
-  deDi: boolean
-  deShi: boolean
-  shenWang: boolean
-  shenRuo: boolean
-
-  // —— 来自 detectGeju extras ——
-  extraArr: Pillar[]
-  extraPillars: Pillar[]
-  daYunMeta: DaYunMeta | null
-  extraGanWxCount: (wx: WuXing) => number
-  extraZhiMainWxCount: (wx: WuXing) => number
-}
-
-export type Detector = (ctx: Ctx) => GejuHit | null
+/** Detector 不再接收 ctx 参数, 内部通过 composeCtx() 直接拉 store. */
+export type Detector = () => GejuHit | null
 
 // ————————————————————————————————————————————————————————
 // 常量（原 lib/geju/ctx.ts 提供）

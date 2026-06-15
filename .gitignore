@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 
 _probe
+
+# Cloudflare Wrangler
+.wrangler/
+.dev.vars
+.dev.vars.*
+worker-configuration.d.ts

@@ -1,23 +1,27 @@
 import { useMemo, useState } from 'react'
 import {
-  shishenOf,
+  computeShishen,
   ganWuxing,
   zhiWuxing,
-  CANG_GAN,
   type Gan,
+  type Pillar as EnginePillar,
   type Zhi,
 } from '@jabberwocky238/bazi-engine'
 import {
   HOUR_UNKNOWN,
   shishenWuxing,
   useBazi,
+} from '@/lib'
+import { WUXING_TEXT, WUXING_BORDER, WUXING_FROM } from '@@/css'
+import {
+  useBaziStore,
+  useBaziInput,
   useDayun,
+  type ExtraPillar,
   type DaYunStep,
   type LiuNianEntry,
   type LiuYueEntry,
-} from '@/lib'
-import { WUXING_TEXT, WUXING_BORDER, WUXING_FROM } from '@@/css'
-import { useBaziStore, useBaziInput, type ExtraPillar } from '@@/stores'
+} from '@@/stores'
 
 interface GzCell {
   gan: string
@@ -28,38 +32,32 @@ interface GzCell {
   zhiSs: string
   ganSsWx: string
   zhiSsWx: string
+  /** 藏干十神 (本气在前). */
+  hideSs: string[]
 }
 
-function analyzeGz(dayGan: string, gz: string): GzCell {
+function analyzeGz(dayPillar: EnginePillar | null, gz: string): GzCell {
   const gan = gz[0] ?? ''
   const zhi = gz[1] ?? ''
-  const cang = zhi ? CANG_GAN[zhi as Zhi]?.[0] ?? '' : ''
-  const ganSs = gan && dayGan ? safeShishen(dayGan, gan) : ''
-  const zhiSs = cang && dayGan ? safeShishen(dayGan, cang) : ''
+  const empty: GzCell = {
+    gan, zhi, ganWx: '', zhiWx: '', ganSs: '', zhiSs: '',
+    ganSsWx: '', zhiSsWx: '', hideSs: [],
+  }
+  if (!gan || !zhi || !dayPillar) return empty
+  const r = computeShishen(dayPillar, { gan: gan as Gan, zhi: zhi as Zhi })
+  const ganSs = r.十神 === '日主' ? '比肩' : r.十神
+  const zhiSs = r.藏干十神[0] ?? ''
   return {
-    gan, zhi,
-    ganWx: gan ? ganWuxing(gan as Gan) ?? '' : '',
-    zhiWx: zhi ? zhiWuxing(zhi as Zhi) ?? '' : '',
+    gan,
+    zhi,
+    ganWx: ganWuxing(gan as Gan) ?? '',
+    zhiWx: zhiWuxing(zhi as Zhi) ?? '',
     ganSs,
     zhiSs,
-    ganSsWx: shishenWuxing(dayGan, ganSs),
-    zhiSsWx: shishenWuxing(dayGan, zhiSs),
+    ganSsWx: shishenWuxing(dayPillar.gan, ganSs),
+    zhiSsWx: shishenWuxing(dayPillar.gan, zhiSs),
+    hideSs: r.藏干十神,
   }
-}
-
-function safeShishen(dayGan: string, other: string): string {
-  try {
-    return other === dayGan ? '比肩' : shishenOf(dayGan as Gan, other as Gan)
-  } catch {
-    return ''
-  }
-}
-
-function buildHideShishen(dayGan: string, zhi: string): string[] {
-  if (!zhi || !dayGan) return []
-  const cangs = CANG_GAN[zhi as Zhi]
-  if (!cangs) return []
-  return cangs.map((g) => safeShishen(dayGan, g))
 }
 
 type DaYunStepView = DaYunStep & { cell: GzCell | null }
@@ -68,7 +66,10 @@ type LiuNianEntryView = LiuNianEntry & { cell: GzCell; liuyueView: LiuYueEntryVi
 
 export function DaYunPanel() {
   const hour = useBaziInput((s) => s.hour)
-  const dayGan = useBazi((s) => s.pillars[2]?.gan ?? '')
+  const dayPillarRaw = useBazi((s) => s.pillars[2])
+  const dayPillar: EnginePillar | null = dayPillarRaw && dayPillarRaw.gan && dayPillarRaw.zhi
+    ? { gan: dayPillarRaw.gan as Gan, zhi: dayPillarRaw.zhi as Zhi }
+    : null
   const raw = useDayun((s) => s.data)
   const extras = useBaziStore((s) => s.extraPillars)
   const setExtras = useBaziStore((s) => s.setExtraPillars)
@@ -77,13 +78,13 @@ export function DaYunPanel() {
     if (!raw) return null
     const steps: DaYunStepView[] = raw.steps.map((s) => ({
       ...s,
-      cell: s.gz ? analyzeGz(dayGan, s.gz) : null,
+      cell: s.gz ? analyzeGz(dayPillar, s.gz) : null,
     }))
     const liunian: LiuNianEntryView[][] = raw.liunian.map((list) =>
       list.map((ln) => ({
         ...ln,
-        cell: analyzeGz(dayGan, ln.gz),
-        liuyueView: ln.liuyue.map((ly) => ({ ...ly, cell: analyzeGz(dayGan, ly.gz) })),
+        cell: analyzeGz(dayPillar, ln.gz),
+        liuyueView: ln.liuyue.map((ly) => ({ ...ly, cell: analyzeGz(dayPillar, ly.gz) })),
       })),
     )
     return {
@@ -94,7 +95,7 @@ export function DaYunPanel() {
       steps,
       liunian,
     }
-  }, [raw, dayGan])
+  }, [raw, dayPillar])
 
   const [activeIdx, setActiveIdx] = useState<number | null>(null)
   const [activeLnIdx, setActiveLnIdx] = useState<number | null>(null)
@@ -128,7 +129,7 @@ export function DaYunPanel() {
       zhi: step.cell.zhi as ExtraPillar['zhi'],
       gz: step.gz,
       shishen: step.cell.ganSs as ExtraPillar['shishen'],
-      hideShishen: buildHideShishen(dayGan, step.cell.zhi) as ExtraPillar['hideShishen'],
+      hideShishen: step.cell.hideSs as ExtraPillar['hideShishen'],
       desc: `${step.startYear}-${step.endYear}`,
     }
   }
@@ -139,7 +140,7 @@ export function DaYunPanel() {
     zhi: ln.cell.zhi as ExtraPillar['zhi'],
     gz: ln.gz,
     shishen: ln.cell.ganSs as ExtraPillar['shishen'],
-    hideShishen: buildHideShishen(dayGan, ln.cell.zhi) as ExtraPillar['hideShishen'],
+    hideShishen: ln.cell.hideSs as ExtraPillar['hideShishen'],
     desc: `${ln.year} · ${ln.age} 岁`,
   })
 
@@ -149,7 +150,7 @@ export function DaYunPanel() {
     zhi: ly.cell.zhi as ExtraPillar['zhi'],
     gz: ly.gz,
     shishen: ly.cell.ganSs as ExtraPillar['shishen'],
-    hideShishen: buildHideShishen(dayGan, ly.cell.zhi) as ExtraPillar['hideShishen'],
+    hideShishen: ly.cell.hideSs as ExtraPillar['hideShishen'],
     desc: `${ly.monthName}月`,
   })
 
@@ -268,15 +269,21 @@ function DaYunCard({
   step, active, onClick,
 }: { step: DaYunStepView; active: boolean; onClick: () => void }) {
   const c = step.cell
+  // 起运前 (无干支) 的 block 不允许点击
+  const disabled = !c
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      aria-disabled={disabled}
       className={[
         'shrink-0 w-[5.5rem] md:w-24 rounded-lg border px-2 py-2 text-center transition',
-        active
-          ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30'
-          : 'border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:border-amber-500',
+        disabled
+          ? 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 opacity-60 cursor-not-allowed'
+          : active
+            ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30'
+            : 'border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:border-amber-500 cursor-pointer',
         c ? `border-t-2 ${WUXING_BORDER[c.ganWx] ?? ''}` : '',
         c ? `bg-gradient-to-b to-transparent ${WUXING_FROM[c.ganWx] ?? ''}` : '',
       ].join(' ')}

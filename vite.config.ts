@@ -1,4 +1,6 @@
 import path from 'node:path'
+import fs from 'node:fs'
+import { execSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
@@ -7,8 +9,40 @@ import tailwindcss from '@tailwindcss/vite'
 
 const root = path.dirname(fileURLToPath(import.meta.url))
 
+// —— 构建时元信息 (engine 版本 / skills 子模块 commit + 日期) ——
+function readEngineVersion(): string {
+  try {
+    const p = JSON.parse(
+      fs.readFileSync(path.join(root, 'node_modules/@jabberwocky238/bazi-engine/package.json'), 'utf-8'),
+    )
+    return String(p.version ?? 'unknown')
+  } catch { return 'unknown' }
+}
+function gitField(cwd: string, fmt: string): string {
+  try {
+    return execSync(`git log -1 --pretty=format:${fmt}`, { cwd }).toString().trim()
+  } catch { return 'unknown' }
+}
+const SKILLS_DIR = path.join(root, 'public/bazi-skills')
+const ENGINE_VERSION = readEngineVersion()
+const SKILLS_COMMIT  = gitField(SKILLS_DIR, '%h')
+const SKILLS_DATE    = gitField(SKILLS_DIR, '%cI')
+const APP_COMMIT     = gitField(root, '%h')
+/** ISO 8601 (UTC) — 客户端按 hostname 选时区现场格式化。 */
+function buildTime(): string {
+  return new Date().toISOString()
+}
+const APP_BUILD_TIME = buildTime()
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __ENGINE_VERSION__:  JSON.stringify(ENGINE_VERSION),
+    __SKILLS_COMMIT__:   JSON.stringify(SKILLS_COMMIT),
+    __SKILLS_DATE__:     JSON.stringify(SKILLS_DATE),
+    __APP_COMMIT__:      JSON.stringify(APP_COMMIT),
+    __APP_BUILD_TIME__:  JSON.stringify(APP_BUILD_TIME),
+  },
   resolve: {
     alias: {
       '@jabberwocky238/bazi-engine': path.resolve(root, 'bazi-engine/src/index.ts'),

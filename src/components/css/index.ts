@@ -58,3 +58,5 @@ export const WUXING_BG_STRONG: Record<string, string> = {
   金: 'bg-metal',
   水: 'bg-water',
 }
+
+export * from './tones'

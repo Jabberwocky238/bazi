@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   CANG_GAN,
   ganWuxing,
@@ -10,7 +10,6 @@ import {
 import {
   type Pillar,
   type PillarType,
-  detectGeju,
   useBazi,
   useGeju,
   shishenWuxing,
@@ -19,23 +18,41 @@ import {
   type GejuOutput,
   skillNames,
 } from '@/lib'
+import { useGejuExtras } from '@/lib/geju/hooks'
 import { useBaziStore, type ExtraPillar } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
-/** 边框 + 底色 + 发光色：表示吉凶。`--glow-color` 覆盖 SkillLink 的 hover 圆边光 */
-const QUALITY_BORDER: Record<GejuQuality, string> = {
-  good: 'border-emerald-500/60 bg-emerald-500/5 [--glow-color:#10b981]',
-  bad: 'border-rose-500/60 bg-rose-500/5 [--glow-color:#f43f5e]',
-  neutral: 'border-slate-400/50 bg-slate-400/5 [--glow-color:#94a3b8]',
+// 配色 (按"是否引化"区分颜色饱和度, 边框样式不变):
+//   已引化 吉   border-emerald-500 + bg-emerald-500/10
+//   已引化 凶   border-rose-500    + bg-rose-500/10
+//   已引化 中   border-slate-400   + bg-slate-400/10
+//   未引化      同色 30 透明 + 同色 5 底色 (仅岁运潜在格)
+//   岁运破格    border-red-500     + bg-red-500/15 (覆盖以上)
+//
+// 引化判定 (新结构 GejuHit.岁运 + GejuHit.显隐):
+//   显隐 = '显' → 已引化 (原局成格 / 岁运 DefaultTrigger / 岁运 Trigger)。
+//   显隐 = '隐' → 仅潜在 (isSuiyun 而无 DefaultTrigger / Trigger 撑起), 同色淡显。
+//   岁运.Break / 岁运.Conquer 直接覆盖为破格红, 不论显隐。
+const FORMED_BORDER: Record<GejuQuality, string> = {
+  good: 'border-emerald-500 bg-emerald-500/10 [--glow-color:#10b981]',
+  bad: 'border-rose-500 bg-rose-500/10 [--glow-color:#f43f5e]',
+  neutral: 'border-slate-400 bg-slate-400/10 [--glow-color:#94a3b8]',
+}
+const UNFORMED_BORDER: Record<GejuQuality, string> = {
+  good: 'border-emerald-500/30 bg-emerald-500/5 [--glow-color:#10b981]',
+  bad: 'border-rose-500/30 bg-rose-500/5 [--glow-color:#f43f5e]',
+  neutral: 'border-slate-400/30 bg-slate-400/5 [--glow-color:#94a3b8]',
 }
 
-/** 岁运破格/冲害 → 红 / 岁运激发(吉) → 绿 / 否则沿用 QUALITY_BORDER。 */
+/** 岁运格是否已被引化激活 (默认 undefined = 显)。 */
+function isFormed(h: GejuOutput): boolean {
+  return (h.显隐 ?? '显') === '显'
+}
+
 function hitBorderClass(h: GejuOutput): string {
-  if (h.suiyunBreak || h.suiyunConquer)
-    return 'border-red-500 bg-red-500/10 [--glow-color:#ef4444]'
-  if (h.suiyunTrigger && h.quality === 'good')
-    return 'border-emerald-500 bg-emerald-500/10 [--glow-color:#10b981]'
-  return QUALITY_BORDER[h.quality]
+  if (h.岁运?.Break || h.岁运?.Conquer)
+    return 'border-red-500 bg-red-500/15 [--glow-color:#ef4444]'
+  return (isFormed(h) ? FORMED_BORDER : UNFORMED_BORDER)[h.quality]
 }
 
 function GejuChip({ hit }: { hit: GejuOutput }) {
@@ -90,29 +107,24 @@ function extraToPillar(e: ExtraPillar, dayGan: Gan): Pillar {
 
 export function GejuPanel() {
   const pillars = useBazi((s) => s.pillars)
-  const baseHits = useGeju((s) => s.hits)
+  const hits = useGeju((s) => s.hits)
   const extras = useBaziStore((s) => s.extraPillars)
   const dayGan = pillars[2]?.gan as Gan | undefined
 
-  const { hits, activeDaYun, activeLiuNian } = useMemo(() => {
-    const dy = extras.find((e) => e.label === '大运')
-    const ln = extras.find((e) => e.label === '流年')
-    if ((!dy && !ln) || !dayGan) {
-      return {
-        hits: baseHits,
-        activeDaYun: dy ?? null,
-        activeLiuNian: ln ?? null,
-      }
+  const activeDaYun = extras.find((e) => e.label === '大运') ?? null
+  const activeLiuNian = extras.find((e) => e.label === '流年') ?? null
+
+  // 把 UI 选中的岁运 同步到 useGejuExtras → 触发 useGeju 重算
+  useEffect(() => {
+    if (!dayGan) {
+      useGejuExtras.getState().clearExtras()
+      return
     }
-    return {
-      hits: detectGeju({
-        dayun: dy ? extraToPillar(dy, dayGan) : undefined,
-        liunian: ln ? extraToPillar(ln, dayGan) : undefined,
-      }),
-      activeDaYun: dy ?? null,
-      activeLiuNian: ln ?? null,
-    }
-  }, [pillars, extras, dayGan, baseHits])
+    useGejuExtras.getState().setExtras({
+      dayun: activeDaYun ? extraToPillar(activeDaYun, dayGan) : null,
+      liunian: activeLiuNian ? extraToPillar(activeLiuNian, dayGan) : null,
+    })
+  }, [dayGan, activeDaYun, activeLiuNian])
 
   const hitSet = new Set(hits.map((h) => h.name))
   const others = skillNames('geju').filter((n) => !hitSet.has(n))
@@ -132,13 +144,31 @@ export function GejuPanel() {
         </span>
 
         {/* 图例 */}
-        <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-full border-2 border-emerald-500/70" />吉
-            <span className="inline-block w-3 h-3 rounded-full border-2 border-rose-500/70 ml-1" />凶
-            <span className="inline-block w-3 h-3 rounded-full border-2 border-slate-400/70 ml-1" />中性
+        <div className="mb-3 flex flex-col gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-[10px] opacity-70">已引化:</span>
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded-full border-2 border-emerald-500 bg-emerald-500/10" />吉
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded-full border-2 border-rose-500 bg-rose-500/10" />凶
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded-full border-2 border-slate-400 bg-slate-400/10" />中
+            </span>
+            <span className="text-[10px] opacity-70 ml-2">未引化:</span>
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded-full border-2 border-emerald-500/30 bg-emerald-500/5" />吉
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded-full border-2 border-rose-500/30 bg-rose-500/5" />凶
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded-full border-2 border-slate-400/30 bg-slate-400/5" />中
+            </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="text-[10px] opacity-70">类别:</span>
             {CATEGORY_ORDER.map((c) => (
               <span key={c} className={CATEGORY_TEXT[c]}>{c}</span>
             ))}
@@ -148,12 +178,9 @@ export function GejuPanel() {
 
       {(() => {
         // 原局段 = 非岁运特定
-        const activeHits = hits.filter((h) => !h.suiyunSpecific)
+        const activeHits = hits.filter((h) => !h.岁运?.isSuiyun)
         // 岁运有变段 = 全部岁运特定（无论是否默认成格/已激发）
-        const suiyunHits = hits.filter((h) => h.suiyunSpecific)
-        // 未激活（需淡显） = 岁运特定 && 非默认成格 && 未被岁运激发
-        const isDimmed = (h: GejuOutput) =>
-          !!h.suiyunSpecific && !h.suiyunDefaultTrigger && !h.suiyunTrigger
+        const suiyunHits = hits.filter((h) => h.岁运?.isSuiyun)
         if (hits.length === 0) {
           return <p className="text-sm text-slate-500 dark:text-slate-400">未识别到明显格局</p>
         }
@@ -201,9 +228,7 @@ export function GejuPanel() {
               {suiyunHits.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {suiyunHits.map((h) => (
-                    <span key={h.name} className={isDimmed(h) ? 'opacity-60' : ''}>
-                      <GejuChip hit={h} />
-                    </span>
+                    <GejuChip key={h.name} hit={h} />
                   ))}
                 </div>
               ) : (
@@ -238,8 +263,8 @@ export function GejuPanel() {
         )}
       </div>
 
-      <div className="mt-3 text-[10px] text-slate-400 dark:text-slate-600 text-right">
-        算法版本 v3，引入身强弱合干支计算，极为复杂和严苛，大幅降低成格概率，但由于格局变多，有所抵消
+      <div className="mt-3 text-[10px] text-slate-400 dark:text-slate-600 text-right leading-relaxed">
+        算法版本 v5 · 原局成格 = 已引化 (深色); 岁运段需 默认成格 / 大运 / 流年 引化 才显深色, 否则淡色表"潜在可能"。
       </div>
     </section>
   )

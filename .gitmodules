@@ -3,4 +3,4 @@
 	url = https://github.com/Jabberwocky238/bazi-skills.git
 [submodule "bazi-engine"]
 	path = bazi-engine
-	url = git@github.com:Jabberwocky238/bazi-engine.git
+	url = https://github.com/Jabberwocky238/bazi-engine.git

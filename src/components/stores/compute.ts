@@ -8,7 +8,7 @@ import {
   computeShishen,
   ganWuxing,
   zhiWuxing,
-  zizuoState,
+  changshengState,
   nayinOf,
   CANG_GAN,
   type Pillar as EnginePillar,
@@ -113,7 +113,7 @@ export function computeBazi(
       hideShishen: hideSs,
       hideShishenWuxings: hideSs.map((s) => shishenWuxing(dayGan, s)) as WuXing[],
       shensha: shensha[b.ssKey],
-      zizuo: zizuoState(b.p.gan, b.p.zhi),
+      zizuo: changshengState(b.p.gan, b.p.zhi),
     }
   })
 
@@ -167,7 +167,7 @@ export function baziToPillars(bazi: Bazi, sex: Sex): Pillar[] {
       hideShishen: hideSs,
       hideShishenWuxings: hideSs.map((s) => shishenWuxing(dayGan, s)) as WuXing[],
       shensha: shensha[SS_KEYS[i]!],
-      zizuo: zizuoState(p.gan, p.zhi),
+      zizuo: changshengState(p.gan, p.zhi),
     }
   })
 }

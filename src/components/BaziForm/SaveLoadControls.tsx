@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { HOUR_UNKNOWN } from '@/lib'
 import type { BaziInputMode } from '@@/stores'
 import type { BaziInputData } from '@@/stores/compute'
-import { Dialog } from '@@/Dialog'
 
 /**
  * Generic 保存 / 加载 控件 — 由 BaziFormView 内嵌, 主盘与合盘共用.
@@ -102,6 +102,20 @@ export function SaveLoadControls({
     setEntries(loadAll(storageKey))
   }, [storageKey, presets])
 
+  useEffect(() => {
+    if (!dialogOpen) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDialogOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [dialogOpen])
+
   const openDialog = () => {
     setEntries(loadAll(storageKey))
     setDialogOpen(true)
@@ -154,11 +168,81 @@ export function SaveLoadControls({
 
   const cls = compact ? btnClsCompact : btnCls
 
+  const loadDialog = dialogOpen ? createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-start justify-center bg-black/50 px-3 py-8 backdrop-blur-sm md:items-center md:p-6">
+      <div className="flex max-h-[85vh] w-[min(520px,92vw)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+        <div className="shrink-0 flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
+          <div className="text-sm font-medium tracking-[0.2em] text-slate-600 dark:text-slate-300">已保存命例</div>
+          <button
+            type="button"
+            onClick={closeDialog}
+            className="shrink-0 text-xs text-slate-500 hover:text-amber-700 dark:text-slate-400 dark:hover:text-amber-400"
+          >
+            关闭 ✕
+          </button>
+        </div>
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 scrollbar-thin">
+          {entries.length === 0 ? (
+            <div className="py-6 text-sm text-slate-500 text-center">暂无保存记录</div>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
+              {entries.map((e) => (
+                <div
+                  key={e.name}
+                  className="flex items-stretch bg-white dark:bg-slate-900"
+                >
+                  <button
+                    type="button"
+                    onClick={() => onPick(e)}
+                    className="flex-1 min-w-0 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  >
+                    <div className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                      {e.name}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                      {e.mode === 'bazi' && e.bazi
+                        ? `八字 ${e.bazi.filter((g) => g.length === 2).join(' ')}`
+                        : <>
+                            {e.year}-{String(e.month).padStart(2, '0')}-{String(e.day).padStart(2, '0')}{' '}
+                            {e.hour === HOUR_UNKNOWN
+                              ? '时辰未知'
+                              : `${String(e.hour).padStart(2, '0')}:${String(e.minute ?? 0).padStart(2, '0')}`}
+                            {e.mode === 'gregorianLong' && e.longitude != null && ` (${e.longitude}°E)`}
+                          </>
+                      }
+                      {' · '}{e.sex === 1 ? '男' : '女'}
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(ev) => onDelete(e.name, ev)}
+                    aria-label={`删除 ${e.name}`}
+                    className="shrink-0 px-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body,
+  ) : null
+
   return (
     <>
       <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
         <button type="button" onClick={onSave} className={cls}>保存</button>
-        <button type="button" onClick={openDialog} className={cls}>加载</button>
+        <button
+          type="button"
+          onClick={openDialog}
+          aria-expanded={dialogOpen}
+          className={cls}
+        >
+          加载
+        </button>
         <button
           type="button"
           onClick={onReset}
@@ -167,52 +251,7 @@ export function SaveLoadControls({
           {compact ? '清空' : '恢复出厂设置'}
         </button>
       </div>
-
-      <Dialog open={dialogOpen} onClose={closeDialog} title="已保存命例">
-        {entries.length === 0 ? (
-          <div className="py-6 text-sm text-slate-500 text-center">暂无保存记录</div>
-        ) : (
-          <div className="-mx-5">
-            {entries.map((e) => (
-              <div
-                key={e.name}
-                className="flex items-stretch border-b last:border-b-0 border-slate-100 dark:border-slate-800"
-              >
-                <button
-                  type="button"
-                  onClick={() => onPick(e)}
-                  className="flex-1 min-w-0 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  <div className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                    {e.name}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    {e.mode === 'bazi' && e.bazi
-                      ? `八字 ${e.bazi.filter((g) => g.length === 2).join(' ')}`
-                      : <>
-                          {e.year}-{String(e.month).padStart(2, '0')}-{String(e.day).padStart(2, '0')}{' '}
-                          {e.hour === HOUR_UNKNOWN
-                            ? '时辰未知'
-                            : `${String(e.hour).padStart(2, '0')}:${String(e.minute ?? 0).padStart(2, '0')}`}
-                          {e.mode === 'gregorianLong' && e.longitude != null && ` (${e.longitude}°E)`}
-                        </>
-                    }
-                    {' · '}{e.sex === 1 ? '男' : '女'}
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={(ev) => onDelete(e.name, ev)}
-                  aria-label={`删除 ${e.name}`}
-                  className="px-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </Dialog>
+      {loadDialog}
     </>
   )
 }

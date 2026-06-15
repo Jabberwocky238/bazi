@@ -134,10 +134,18 @@ function FindingList({ list }: { list: AnyFinding[] }) {
   return (
     <div className="flex flex-col gap-1.5">
       {list.map((f, idx) => (
-        <FindingRow key={`${f.kind}-${f.name}-${f.positions}-${idx}`} f={f} />
+        <FindingRow key={`${f.kind}-${f.name}-${findingPositions(f)}-${idx}`} f={f} />
       ))}
     </div>
   )
+}
+
+function findingPositions(f: AnyFinding): string {
+  return 'positions' in f ? f.positions : ''
+}
+
+function extraGz(d: FindingMod): string {
+  return `${d.by.gan}${d.by.zhi}`
 }
 
 function FindingRow({ f }: { f: AnyFinding }) {
@@ -146,6 +154,9 @@ function FindingRow({ f }: { f: AnyFinding }) {
   const opened: FindingMod[]    = 'opened'    in f ? (f.opened    ?? []) : []
   const close = 'close' in f ? f.close : false
   const transformed = 'transformed' in f ? f.transformed : undefined
+  const mdKey = 'mdKey' in f ? f.mdKey : undefined
+  const positions = findingPositions(f)
+  const state = 'state' in f ? f.state : ''
   const isDissolved = dissolved.length > 0
   return (
     <div
@@ -156,36 +167,38 @@ function FindingRow({ f }: { f: AnyFinding }) {
       <div className="flex items-baseline gap-2 flex-wrap">
         <span className="inline-flex items-center gap-1 text-[10px] opacity-70 font-medium">{f.kind}</span>
         <span className={`font-bold text-sm ${isDissolved ? 'line-through decoration-amber-500/70' : ''}`}>
-          {f.mdKey ? (
-            <SkillLink category="jichu" name={f.mdKey} className="underline decoration-dotted">{f.name}</SkillLink>
+          {mdKey ? (
+            <SkillLink category="jichu" name={mdKey} className="underline decoration-dotted">{f.name}</SkillLink>
           ) : (
             f.name
           )}
         </span>
-        <span className="text-[10px] opacity-80 tabular-nums">[{f.positions}{close ? ' · 紧贴' : ''}]</span>
-        <span className="ml-auto text-[11px] font-medium">
-          {f.state}
-          {transformed !== undefined && (
-            <span className={transformed ? 'ml-1 text-emerald-700 dark:text-emerald-400' : 'ml-1 opacity-60'}>
-              {transformed ? '✓化' : '未化'}
-            </span>
-          )}
-        </span>
+        {positions && <span className="text-[10px] opacity-80 tabular-nums">[{positions}{close ? ' · 紧贴' : ''}]</span>}
+        {state && (
+          <span className="ml-auto text-[11px] font-medium">
+            {state}
+            {transformed !== undefined && (
+              <span className={transformed ? 'ml-1 text-emerald-700 dark:text-emerald-400' : 'ml-1 opacity-60'}>
+                {transformed ? '✓化' : '未化'}
+              </span>
+            )}
+          </span>
+        )}
       </div>
       {f.note && <div className="text-[10px] opacity-80 mt-0.5">{f.note}</div>}
       {dissolved.map((d, i) => (
-        <FindingTag key={`d-${d.by.label}-${d.by.gz}-${i}`} tone="amber" prefix="化解">
-          {d.by.label} {d.by.gz} → {d.via}
+        <FindingTag key={`d-${d.by.label}-${extraGz(d)}-${i}`} tone="amber" prefix="化解">
+          {d.by.label} {extraGz(d)} → {d.via}
         </FindingTag>
       ))}
       {impacted.map((d, i) => (
-        <FindingTag key={`i-${d.by.label}-${d.by.gz}-${i}`} tone="rose" prefix="冲克">
-          {d.by.label} {d.by.gz} → {d.via}
+        <FindingTag key={`i-${d.by.label}-${extraGz(d)}-${i}`} tone="rose" prefix="冲克">
+          {d.by.label} {extraGz(d)} → {d.via}
         </FindingTag>
       ))}
       {opened.map((d, i) => (
-        <FindingTag key={`o-${d.by.label}-${d.by.gz}-${i}`} tone="indigo" prefix="冲开">
-          {d.by.label} {d.by.gz} → {d.via}
+        <FindingTag key={`o-${d.by.label}-${extraGz(d)}-${i}`} tone="indigo" prefix="冲开">
+          {d.by.label} {extraGz(d)} → {d.via}
         </FindingTag>
       ))}
     </div>

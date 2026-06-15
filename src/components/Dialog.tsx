@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ShellProps {
   title: string
@@ -20,7 +21,7 @@ function Shell({ title, subtitle, onClose, children }: ShellProps) {
               {subtitle}
             </div>
           )}
-          <h2 className="text-sm font-medium tracking-[0.2em] text-slate-600 dark:text-slate-300 truncate">
+          <h2 id="dialog-title" className="text-sm font-medium tracking-[0.2em] text-slate-600 dark:text-slate-300 truncate">
             {title}
           </h2>
         </div>
@@ -55,43 +56,46 @@ interface DialogProps {
  * 受控: `open` 控制显示，关闭(背景点击 / ESC / 关闭按钮)统一回调 `onClose`。
  */
 export function Dialog({ open, onClose, title, subtitle, children, className }: DialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-
   useEffect(() => {
-    const d = dialogRef.current
-    if (!d) return
-    if (open && !d.open) d.showModal()
-    else if (!open && d.open) d.close()
-  }, [open])
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [open, onClose])
 
-  useEffect(() => {
-    const d = dialogRef.current
-    if (!d) return
-    const onCloseEvt = () => onClose()
-    d.addEventListener('close', onCloseEvt)
-    return () => d.removeEventListener('close', onCloseEvt)
-  }, [onClose])
+  if (!open) return null
 
-  const onBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
-    if (e.target === dialogRef.current) dialogRef.current?.close()
-  }
-
-  return (
-    <dialog
-      ref={dialogRef}
-      onClick={onBackdropClick}
-      className={[
-        // open:flex 让 dialog 在打开时变 flex column，便于 Shell 的 flex-1 滚动正确生效
-        // (UA 样式 dialog:not([open]) 仍会隐藏关闭态)。
-        'open:flex flex-col m-auto w-[min(720px,92vw)] max-h-[85vh] overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0 text-inherit shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm',
-        className ?? '',
-      ].join(' ')}
+  const node = (
+    <div
+      role="presentation"
+      onMouseDown={onClose}
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-3 backdrop-blur-sm md:p-6"
     >
-      <Shell title={title} subtitle={subtitle} onClose={() => dialogRef.current?.close()}>
-        {children}
-      </Shell>
-    </dialog>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+        onMouseDown={(e) => e.stopPropagation()}
+        className={[
+          'flex max-h-[85vh] w-[min(720px,92vw)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 text-inherit shadow-2xl dark:border-slate-800 dark:bg-slate-900',
+          className ?? '',
+        ].join(' ')}
+      >
+        <Shell title={title} subtitle={subtitle} onClose={onClose}>
+          {children}
+        </Shell>
+      </div>
+    </div>
   )
+
+  return createPortal(node, document.body)
 }
 
 interface DialogPanelProps {

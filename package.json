@@ -6,7 +6,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "bun run build && wrangler dev",
     "react:dev": "vite",
     "build": "tsc -b && vite-react-ssg build",
     "lint": "eslint .",

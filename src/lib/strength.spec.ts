@@ -35,41 +35,60 @@ describe('analyzeStrength', () => {
     ]))).toBeNull()
   })
 
-  test('统计得令、四柱根和天干同党贡献，判为身极旺', () => {
+  test('按完整量化公式判定甲木午月案例为身弱', () => {
     const result = analyzeStrength(pillars([
       ['甲', '寅', '比肩'],
-      ['壬', '亥', '偏印'],
-      ['甲', '寅', '日主'],
-      ['乙', '卯', '劫财'],
+      ['丙', '午', '食神'],
+      ['甲', '戌', '日主'],
+      ['丁', '卯', '伤官'],
     ]))
 
     expect(result).not.toBeNull()
     expect(result?.dayGan).toBe('甲')
     expect(result?.dayWx).toBe('木')
-    expect(result?.monthZhi).toBe('亥')
-    expect(result?.monthWx).toBe('水')
+    expect(result?.monthZhi).toBe('午')
+    expect(result?.monthWx).toBe('火')
 
-    expect(result?.deLing).toBe(true)
-    expect(result?.deLingPoints).toBe(3)
-    expect(result?.roots.map((r) => [r.pos, r.zhi, r.kind, r.label, r.points])).toEqual([
-      ['年', '寅', 'benqi', '本气旁根', 2],
-      ['月', '亥', 'zhongqi', '中气旁根', 1],
-      ['日', '寅', 'benqi', '本气正根', 3],
-      ['时', '卯', 'benqi', '本气旁根', 2],
+    expect(result?.deLing).toBe(false)
+    expect(result?.deLingPoints).toBe(-10)
+    expect(result?.correction).toBe(-10)
+    expect(result?.correctionNote).toBe('死 -10')
+    expect(result?.roots.map((r) => [r.pos, r.zhi, r.rawPoints, r.weight, r.points])).toEqual([
+      ['年', '寅', 4, 0.8, 3.2],
+      ['月', '午', -14, 1.5, -21],
+      ['日', '戌', -16, 1.2, -19.2],
+      ['时', '卯', 10, 1, 10],
     ])
-    expect(result?.rootPoints).toBe(8)
+    expect(result?.rootPoints).toBe(-27)
     expect(result?.ganContribs.map((c) => [c.pos, c.gan, c.shishen, c.isSelf, c.points])).toEqual([
-      ['年', '甲', '比肩', true, 1],
-      ['月', '壬', '偏印', true, 1],
-      ['时', '乙', '劫财', true, 1],
+      ['年', '甲', '比肩', true, 8],
+      ['月', '丙', '食神', false, -10],
+      ['时', '丁', '伤官', false, -10],
     ])
-    expect(result?.ganPoints).toBe(3)
-    expect(result?.correction).toBe(0)
-    expect(result?.score).toBe(14)
-    expect(result?.level).toBe('身极旺')
+    expect(result?.ganPoints).toBe(-12)
+    expect(result?.score).toBe(-49)
+    expect(result?.level).toBe('身弱')
   })
 
-  test('月令得令但无中气以上根时扣分，并跳过未知时干', () => {
+  test('按完整量化公式判定甲木寅月案例为身旺', () => {
+    const result = analyzeStrength(pillars([
+      ['甲', '寅', '比肩'],
+      ['丙', '寅', '食神'],
+      ['甲', '子', '日主'],
+      ['乙', '丑', '劫财'],
+    ]))
+
+    expect(result).not.toBeNull()
+    expect(result?.deLing).toBe(true)
+    expect(result?.deLingPoints).toBe(20)
+    expect(result?.correctionNote).toBe('临官 +20')
+    expect(result?.rootPoints).toBe(13.2)
+    expect(result?.ganPoints).toBe(8)
+    expect(result?.score).toBe(41.2)
+    expect(result?.level).toBe('身旺')
+  })
+
+  test('未知时柱跳过时干时支贡献', () => {
     const result = analyzeStrength(pillars([
       ['庚', '申', '七杀'],
       ['辛', '子', '正官'],
@@ -78,36 +97,11 @@ describe('analyzeStrength', () => {
     ]))
 
     expect(result).not.toBeNull()
-    expect(result?.deLing).toBe(true)
-    expect(result?.deLingPoints).toBe(3)
-    expect(result?.rootPoints).toBe(0)
-    expect(result?.ganContribs).toHaveLength(2)
+    expect(result?.roots).toHaveLength(4)
+    expect(result?.roots[3]).toMatchObject({ pos: '时', zhi: '', points: 0, hidden: [] })
     expect(result?.ganContribs.map((c) => [c.pos, c.gan, c.shishen, c.isSelf, c.points])).toEqual([
-      ['年', '庚', '七杀', false, -1],
-      ['月', '辛', '正官', false, -1],
+      ['年', '庚', '七杀', false, -8],
+      ['月', '辛', '正官', false, -10],
     ])
-    expect(result?.ganPoints).toBe(-2)
-    expect(result?.correction).toBe(-1)
-    expect(result?.correctionNote).toBe('月令得令但 子 本身无中气以上根 (-1)')
-    expect(result?.score).toBe(0)
-    expect(result?.level).toBe('身中(偏弱)')
-  })
-
-  test('失令且无根无助时判为身弱', () => {
-    const result = analyzeStrength(pillars([
-      ['庚', '申', '七杀'],
-      ['戊', '辰', '偏财'],
-      ['甲', '午', '日主'],
-      ['辛', '酉', '正官'],
-    ]))
-
-    expect(result).not.toBeNull()
-    expect(result?.deLing).toBe(false)
-    expect(result?.deLingPoints).toBe(-3)
-    expect(result?.rootPoints).toBe(0)
-    expect(result?.ganPoints).toBe(-3)
-    expect(result?.correction).toBe(0)
-    expect(result?.score).toBe(-6)
-    expect(result?.level).toBe('身弱')
   })
 })

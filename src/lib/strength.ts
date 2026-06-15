@@ -1,52 +1,83 @@
 /**
- * 日元旺衰分析 —— 严格按 bazi-skills/core/基础/身强弱/ md 评分流程实现：
- *   - 得令 / 得地 / 得生 / 得助 四判据
- *   - 分数累积 → 九级分级
- * 不含人元司令修正（无节气天数数据）与合冲刑害动态修正（md 亦说
- * 评分法仅作参考基线，需人工再审）。
+ * 日元旺衰量化分析：
+ *   - 地支藏干按本气/中气/余气计 10/4/2，并套用年/月/日/时支权重
+ *   - 年/月/时天干按 10 分基数计，并套用位置权重
+ *   - 月令十二长生额外修正
+ *
+ * 印星/比劫为 +1，官杀/财星/食伤为 -1；暂不纳入合冲刑害动态修正。
  */
 
+import { create } from 'zustand'
 import type { Pillar } from './store'
-import { ganWuxing, zhiWuxing } from '@jabberwocky238/bazi-engine'
+import {
+  CANG_GAN,
+  changshengState,
+  ganWuxing,
+  shishenOf,
+  zhiWuxing,
+  type Gan,
+  type WuXing,
+  type Zhi,
+} from '@jabberwocky238/bazi-engine'
+import { useBazi } from './shishen'
 
-/**
- * 日主根层级表（推断逻辑.md § 二 2）
- *   key = 日干  value = { 本气根地支, 中气根地支, 余气根地支 }
- */
-const ROOT_TABLE: Record<string, { benqi: string[]; zhongqi: string[]; yuqi: string[] }> = {
-  甲: { benqi: ['寅', '卯'], zhongqi: ['亥'],             yuqi: [] },
-  乙: { benqi: ['寅', '卯'], zhongqi: ['未', '辰'],       yuqi: [] },
-  丙: { benqi: ['巳', '午'], zhongqi: ['寅'],             yuqi: [] },
-  丁: { benqi: ['巳', '午'], zhongqi: ['戌', '未'],       yuqi: [] },
-  戊: { benqi: ['辰', '戌', '丑', '未'], zhongqi: ['巳', '寅', '申'], yuqi: [] },
-  己: { benqi: ['辰', '戌', '丑', '未'], zhongqi: [],     yuqi: ['午'] },
-  庚: { benqi: ['申', '酉'], zhongqi: ['巳'],             yuqi: [] },
-  辛: { benqi: ['申', '酉'], zhongqi: ['丑'],             yuqi: ['戌'] },
-  壬: { benqi: ['亥', '子'], zhongqi: ['申'],             yuqi: [] },
-  癸: { benqi: ['亥', '子'], zhongqi: ['辰'],             yuqi: ['丑'] },
-}
+const HIDDEN_STEM_STRENGTH = [10, 4, 2] as const
+const BRANCH_WEIGHTS = { 年: 0.8, 月: 1.5, 日: 1.2, 时: 1.0 } as const
+const STEM_WEIGHTS = { 年: 0.8, 月: 1.0, 时: 1.0 } as const
+
+const LONG_SHENG_POINTS = {
+  临官: 20,
+  帝旺: 25,
+  长生: 15,
+  冠带: 10,
+  沐浴: 5,
+  衰: 0,
+  病: -5,
+  死: -10,
+  墓: -5,
+  绝: -20,
+  胎: -10,
+  养: -5,
+} as const
+
+type LongShengState = keyof typeof LONG_SHENG_POINTS
 
 // ————————————————————————————————————————————————————————
 // 2. 类型
 // ————————————————————————————————————————————————————————
 
-export type RootKind = 'benqi' | 'zhongqi' | 'yuqi' | 'none'
+export type RootKind = 'positive' | 'negative' | 'neutral' | 'none'
+
+export interface HiddenStemContrib {
+  gan: string
+  shishen: string
+  wuxing: string
+  base: number
+  direction: 1 | -1
+  points: number
+}
 
 export interface RootInfo {
   pos: '年' | '月' | '日' | '时'
   zhi: string
   kind: RootKind
-  isZheng: boolean    // 正根 = 日支坐下
-  label: string       // 显示用，如 "本气正根"
+  isZheng: boolean
+  label: string
+  rawPoints: number
+  weight: number
   points: number
+  hidden: HiddenStemContrib[]
 }
 
 export interface GanContrib {
   pos: '年' | '月' | '时'
   gan: string
   shishen: string
-  isSelf: boolean     // 同党 true / 异党 false
-  points: number      // +1 / -1
+  isSelf: boolean
+  base: number
+  weight: number
+  direction: 1 | -1
+  points: number
 }
 
 export type StrengthLevel =
@@ -58,17 +89,17 @@ export interface StrengthAnalysis {
   dayWx: string
   monthZhi: string
   monthWx: string
-  /** 得令：月支主气对日元是生扶 (比劫/印)？ */
+  /** 得令：月令十二长生修正为正值。 */
   deLing: boolean
   deLingNote: string
   deLingPoints: number
-  /** 四柱根 */
+  /** 四柱地支藏干加权贡献。 */
   roots: RootInfo[]
   rootPoints: number
-  /** 年/月/时 天干贡献 */
+  /** 年/月/时 天干贡献。 */
   ganContribs: GanContrib[]
   ganPoints: number
-  /** 修正：月令印比但日元月令无中气以上根 -1 */
+  /** 月令十二长生修正。 */
   correction: number
   correctionNote: string
   /** 总分 */
@@ -85,51 +116,76 @@ function relation(a: string, b: string): 'same' | 'sheng' | 'ke' | 'xie' | 'hao'
   if (a === b) return 'same'
   const gen: Record<string, string> = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' }
   const con: Record<string, string> = { 木: '土', 土: '水', 水: '火', 火: '金', 金: '木' }
-  if (gen[b] === a) return 'sheng'       // b 生 a
-  if (con[b] === a) return 'ke'          // b 克 a
-  if (gen[a] === b) return 'xie'         // a 生 b (泄)
-  if (con[a] === b) return 'hao'         // a 克 b (耗)
+  if (gen[b] === a) return 'sheng'
+  if (con[b] === a) return 'ke'
+  if (gen[a] === b) return 'xie'
+  if (con[a] === b) return 'hao'
   return 'same'
 }
 
-/** 判断位置 i 对应的根信息 */
-function analyzeRoot(
-  dayGan: string,
+function directionOf(dayWx: string, otherWx: string): 1 | -1 {
+  const r = relation(dayWx, otherWx)
+  return r === 'same' || r === 'sheng' ? 1 : -1
+}
+
+function directionLabel(direction: 1 | -1): string {
+  return direction > 0 ? '印比生扶' : '官财食伤克泄耗'
+}
+
+function analyzeBranch(
+  dayGan: Gan,
+  dayWx: WuXing,
   zhi: string,
   pos: RootInfo['pos'],
   isZheng: boolean,
 ): RootInfo {
-  const t = ROOT_TABLE[dayGan]
-  if (!t) {
-    return { pos, zhi, kind: 'none', isZheng, label: '无根', points: 0 }
+  const weight = BRANCH_WEIGHTS[pos]
+  if (!zhi || !(zhi in CANG_GAN)) {
+    return { pos, zhi, kind: 'none', isZheng, label: '未知', rawPoints: 0, weight, points: 0, hidden: [] }
   }
-  if (t.benqi.includes(zhi)) {
+
+  const hidden = CANG_GAN[zhi as Zhi].map((gan, i) => {
+    const wuxing = ganWuxing(gan)
+    const direction = directionOf(dayWx, wuxing)
+    const base = HIDDEN_STEM_STRENGTH[i] ?? 0
     return {
-      pos, zhi, kind: 'benqi', isZheng,
-      label: isZheng ? '本气正根' : '本气旁根',
-      points: isZheng ? 3 : 2,
+      gan,
+      shishen: shishenOf(dayGan, gan),
+      wuxing,
+      base,
+      direction,
+      points: base * direction,
     }
-  }
-  if (t.zhongqi.includes(zhi)) {
-    return {
-      pos, zhi, kind: 'zhongqi', isZheng,
-      label: isZheng ? '中气正根' : '中气旁根',
-      points: isZheng ? 1.5 : 1,
-    }
-  }
-  if (t.yuqi.includes(zhi)) {
-    return {
-      pos, zhi, kind: 'yuqi', isZheng,
-      label: '余气根',
-      points: 0.5,
-    }
-  }
-  return { pos, zhi, kind: 'none', isZheng, label: '无根', points: 0 }
+  })
+  const rawPoints = hidden.reduce((s, h) => s + h.points, 0)
+  const points = Number((rawPoints * weight).toFixed(10))
+  const kind: RootKind = points > 0 ? 'positive' : points < 0 ? 'negative' : 'neutral'
+  const label = `${directionLabel(points >= 0 ? 1 : -1)} ${rawPoints >= 0 ? '+' : ''}${rawPoints} × ${weight}`
+  return { pos, zhi, kind, isZheng, label, rawPoints, weight, points, hidden }
 }
 
-/** 十神是同党 (比劫/印) 还是异党 */
-function isSelfParty(shishen: string): boolean {
-  return ['比肩', '劫财', '正印', '偏印'].includes(shishen)
+function analyzeStem(
+  dayGan: Gan,
+  dayWx: WuXing,
+  gan: string,
+  pos: GanContrib['pos'],
+): GanContrib | null {
+  if (!gan || !(ganWuxing as (g: string) => WuXing | undefined)(gan)) return null
+  const g = gan as Gan
+  const wx = ganWuxing(g)
+  const direction = directionOf(dayWx, wx)
+  const weight = STEM_WEIGHTS[pos]
+  const points = 10 * direction * weight
+  return {
+    pos,
+    gan,
+    shishen: shishenOf(dayGan, g),
+    isSelf: direction > 0,
+    base: 10,
+    weight,
+    direction,
+    points,
+  }
 }
 
 // ————————————————————————————————————————————————————————
@@ -139,80 +195,89 @@ function isSelfParty(shishen: string): boolean {
 export function analyzeStrength(pillars: Pillar[]): StrengthAnalysis | null {
   if (pillars.length !== 4) return null
   const [yearP, monthP, dayP, hourP] = pillars
-  const dayGan = dayP.gan
+  const dayGan = dayP.gan as Gan
   const dayWx = ganWuxing(dayGan)
   if (!dayWx) return null
-  const monthZhi = monthP.zhi
+  const monthZhi = monthP.zhi as Zhi
+  if (!monthZhi) return null
   const monthWx = zhiWuxing(monthZhi)
 
-  // —— 得令 ——
-  // 月支主气对日元: same=比劫, sheng=印  → 得令 +3；否则 -3
-  const rel = relation(dayWx, monthWx)
-  const deLing = rel === 'same' || rel === 'sheng'
-  const deLingPoints = deLing ? 3 : -3
-  const deLingNote = deLing
-    ? `月令 ${monthZhi}(${monthWx}) ${rel === 'same' ? '同日主(比劫)' : '生日主(印)'}`
-    : `月令 ${monthZhi}(${monthWx}) ${
-        rel === 'ke' ? '克日主(官杀)' : rel === 'xie' ? '日主生之(食伤)' : '日主克之(财)'
-      }`
-
-  // —— 得地 ——
-  const roots: RootInfo[] = [
-    analyzeRoot(dayGan, yearP.zhi,  '年', false),
-    analyzeRoot(dayGan, monthP.zhi, '月', false),
-    analyzeRoot(dayGan, dayP.zhi,   '日', true),  // 正根
-    analyzeRoot(dayGan, hourP.zhi,  '时', false),
+  const branches: RootInfo[] = [
+    analyzeBranch(dayGan, dayWx, yearP.zhi, '年', false),
+    analyzeBranch(dayGan, dayWx, monthP.zhi, '月', false),
+    analyzeBranch(dayGan, dayWx, dayP.zhi, '日', true),
+    analyzeBranch(dayGan, dayWx, hourP.zhi, '时', false),
   ]
-  const rootPoints = roots.reduce((s, r) => s + r.points, 0)
+  const rootPoints = Number(branches.reduce((s, r) => s + r.points, 0).toFixed(10))
 
-  // —— 天干得生 / 得助 ——
-  const rawGans = [
-    { pos: '年' as const, gan: yearP.gan,  shishen: yearP.shishen },
-    { pos: '月' as const, gan: monthP.gan, shishen: monthP.shishen },
-    { pos: '时' as const, gan: hourP.gan,  shishen: hourP.shishen },
-  ]
-  const ganContribs: GanContrib[] = rawGans.map((c) => {
-    const self = isSelfParty(c.shishen)
-    return { ...c, isSelf: self, points: self ? 1 : -1 }
-  })
-  // 若时柱未知（空），gan 为 '' shishen 为 ''，跳过
-  const activeGanContribs = ganContribs.filter((c) => c.gan && c.shishen)
-  const ganPoints = activeGanContribs.reduce((s, c) => s + c.points, 0)
+  const ganContribs = [
+    analyzeStem(dayGan, dayWx, yearP.gan, '年'),
+    analyzeStem(dayGan, dayWx, monthP.gan, '月'),
+    analyzeStem(dayGan, dayWx, hourP.gan, '时'),
+  ].filter((x): x is GanContrib => !!x)
+  const ganPoints = Number(ganContribs.reduce((s, c) => s + c.points, 0).toFixed(10))
 
-  // —— 修正：月令得令但日元月令地支本身无中气以上根 —— -1
-  let correction = 0
-  let correctionNote = ''
-  if (deLing) {
-    const monthRoot = roots[1]
-    if (monthRoot.kind === 'none' || monthRoot.kind === 'yuqi') {
-      correction = -1
-      correctionNote = `月令得令但 ${monthZhi} 本身无中气以上根 (-1)`
-    }
-  }
+  const longState = changshengState(dayGan, monthZhi)
+  const correction = LONG_SHENG_POINTS[longState]
+  const deLing = correction > 0
+  const deLingPoints = correction
+  const deLingNote = `月令 ${monthZhi}(${monthWx}) 为日主 ${dayGan}${dayWx} 十二长生「${longState}」`
+  const correctionNote = `${longState} ${correction >= 0 ? '+' : ''}${correction}`
 
-  const score = deLingPoints + rootPoints + ganPoints + correction
+  const score = Number((rootPoints + ganPoints + correction).toFixed(10))
   const level = levelOf(score)
 
   return {
     dayGan, dayWx, monthZhi, monthWx,
     deLing, deLingNote, deLingPoints,
-    roots, rootPoints,
-    ganContribs: activeGanContribs,
-    ganPoints,
+    roots: branches, rootPoints,
+    ganContribs, ganPoints,
     correction, correctionNote,
     score, level,
   }
 }
 
 function levelOf(s: number): StrengthLevel {
-  if (s >= 10) return '身极旺'
-  if (s >= 7) return '身旺'
-  if (s >= 4) return '身中强'
-  if (s >= 1) return '身中(偏强)'
-  if (s >= -1) return '身中(偏弱)'
-  if (s >= -4) return '身略弱'
-  if (s >= -7) return '身弱'
-  if (s >= -10) return '身极弱'
+  if (s >= 60) return '身极旺'
+  if (s >= 30) return '身旺'
+  if (s >= 15) return '身中强'
+  if (s >= 0) return '身中(偏强)'
+  if (s > -15) return '身中(偏弱)'
+  if (s > -30) return '身略弱'
+  if (s >= -60) return '身弱'
+  if (s >= -90) return '身极弱'
   return '近从弱'
 }
 
+interface StrengthStore {
+  analysis: StrengthAnalysis | null
+  level: StrengthLevel | ''
+  deLing: boolean
+  deDi: boolean
+  deShi: boolean
+  shenWang: boolean
+  shenRuo: boolean
+}
+
+function deriveStrength(pillars: Pillar[]): StrengthStore {
+  const analysis = analyzeStrength(pillars)
+  const rootPoints = analysis?.rootPoints ?? 0
+  const ganPoints = analysis?.ganPoints ?? 0
+  const score = analysis?.score ?? 0
+  return {
+    analysis,
+    level: analysis?.level ?? '',
+    deLing: analysis?.deLing ?? false,
+    deDi: rootPoints > 0,
+    deShi: ganPoints > 0,
+    shenWang: !!analysis && score >= 30,
+    shenRuo: !!analysis && score <= -30,
+  }
+}
+
+export const useStrength = create<StrengthStore>()(() => deriveStrength(useBazi.getState().pillars))
+
+useBazi.subscribe((s, prev) => {
+  if (s.pillars === prev.pillars) return
+  useStrength.setState(deriveStrength(s.pillars))
+})

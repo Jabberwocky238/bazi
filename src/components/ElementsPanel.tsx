@@ -201,7 +201,7 @@ function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Comp
     for (const f of a[kind] as ConflictFinding[]) {
       const dissolvedBy = f.dissolved ?? []
       if (dissolvedBy.length > 0) {
-        const via = dissolvedBy.map((d) => `${d.by.label}${d.by.gz}`).join('、')
+        const via = dissolvedBy.map((d) => `${d.by.label}${d.by.gan}${d.by.zhi}`).join('、')
         adjustments.push({
           source: '岁运', category: '化解',
           desc: `${f.name}（${f.positions}）— ${via} 引化, 效力消解`,

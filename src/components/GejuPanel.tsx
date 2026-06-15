@@ -3,7 +3,7 @@ import {
   CANG_GAN,
   ganWuxing,
   zhiWuxing,
-  zizuoState,
+  changshengState,
   type Gan,
   type WuXing,
 } from '@jabberwocky238/bazi-engine'
@@ -101,7 +101,7 @@ function extraToPillar(e: ExtraPillar, dayGan: Gan): Pillar {
       (s) => (shishenWuxing(dayGan, s) || fallbackWx) as WuXing,
     ),
     shensha: [],
-    zizuo: zizuoState(e.gan, e.zhi),
+    zizuo: changshengState(e.gan, e.zhi),
   }
 }
 

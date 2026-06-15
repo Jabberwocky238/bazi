@@ -1,5 +1,5 @@
-import type { Ctx } from '../../types'
-import type { GejuHit } from '../../types'
+import type { Ctx } from '../types'
+import type { GejuHit } from '../types'
 
 /**
  * 从强格 (md)：印星力量 > 比劫 + 月令为印或比劫 + 全局皆印比 + 无食伤财官杀。

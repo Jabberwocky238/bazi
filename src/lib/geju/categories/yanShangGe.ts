@@ -1,6 +1,6 @@
-import type { Ctx } from '../../types'
-import type { GejuHit } from '../../types'
-import { checkZhuanWang } from './_check'
+import type { Ctx } from '../types'
+import type { GejuHit } from '../types'
+import { checkZhuanWang } from './zhuanwang/_check'
 
 /** 炎上格：丙丁火日主专旺。 */
 export function isYanShangGe(ctx: Ctx): GejuHit | null {

@@ -8,7 +8,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:strength": "bun test src/lib/strength.spec.ts",
+    
+    "test:bazi": "bun test src/lib/geju/random_bazi.spec.ts",
+    "test:geju": "bun test src/lib/geju/random_geju.spec.ts"
   },
   "dependencies": {
     "@jabberwocky238/bazi-engine": "1.0.3",

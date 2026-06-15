@@ -7,7 +7,6 @@
  *  - 每个类别的命中次数 + 占总命中比
  */
 
-import { test } from 'bun:test'
 import type { Sex } from '@jabberwocky238/bazi-engine'
 import { baziToPillars } from '../compute'
 import { type Bazi } from '../shared'

@@ -6,14 +6,8 @@
  * 评分法仅作参考基线，需人工再审）。
  */
 
-import { create } from 'zustand'
 import type { Pillar } from './store'
 import { ganWuxing, zhiWuxing } from '@jabberwocky238/bazi-engine'
-import { useBazi } from './shishen'
-
-// ————————————————————————————————————————————————————————
-// 1. 基础表格（全部来自 md 原文）
-// ————————————————————————————————————————————————————————
 
 /**
  * 日主根层级表（推断逻辑.md § 二 2）
@@ -222,54 +216,3 @@ function levelOf(s: number): StrengthLevel {
   return '近从弱'
 }
 
-// ————————————————————————————————————————————————————————
-// useStrength — 自动跟随 useBazi.pillars 重算 analyzeStrength；同时把
-// level / deLing / deDi / deShi / shenWang / shenRuo 这几个常用判定扁平
-// 到 store 顶层，避免到处 .analysis?.X 或挂在 ctx 上。
-// ————————————————————————————————————————————————————————
-
-const STRONG_LV = new Set<StrengthLevel>(['身极旺', '身旺', '身中强', '身中(偏强)'])
-const WEAK_LV = new Set<StrengthLevel>(['身略弱', '身弱', '身极弱', '近从弱', '身中(偏弱)'])
-
-interface StrengthDerived {
-  analysis: StrengthAnalysis | null
-  level: StrengthLevel | ''
-  deLing: boolean
-  deDi: boolean
-  deShi: boolean
-  shenWang: boolean
-  shenRuo: boolean
-}
-
-function deriveStrength(pillars: Pillar[]): StrengthDerived {
-  const analysis = analyzeStrength(pillars)
-  if (!analysis) {
-    return {
-      analysis: null,
-      level: '',
-      deLing: false,
-      deDi: false,
-      deShi: false,
-      shenWang: false,
-      shenRuo: false,
-    }
-  }
-  return {
-    analysis,
-    level: analysis.level,
-    deLing: analysis.deLing,
-    deDi: analysis.roots[2].kind !== 'none',
-    deShi: analysis.ganPoints > 0,
-    shenWang: STRONG_LV.has(analysis.level),
-    shenRuo: WEAK_LV.has(analysis.level),
-  }
-}
-
-export const useStrength = create<StrengthDerived>()(() =>
-  deriveStrength(useBazi.getState().pillars),
-)
-
-useBazi.subscribe((s, prev) => {
-  if (s.pillars === prev.pillars) return
-  useStrength.setState(deriveStrength(s.pillars))
-})

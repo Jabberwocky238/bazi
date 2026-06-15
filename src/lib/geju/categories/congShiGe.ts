@@ -1,5 +1,5 @@
-import type { Ctx } from '../../types'
-import type { GejuHit } from '../../types'
+import type { Ctx } from '../types'
+import type { GejuHit } from '../types'
 
 /**
  * 弃命从势（温和收紧）：

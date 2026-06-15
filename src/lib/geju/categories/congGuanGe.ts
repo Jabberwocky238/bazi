@@ -1,5 +1,5 @@
-import { WX_CONTROLLED_BY, type Ctx } from '../../types'
-import type { GejuHit } from '../../types'
+import { WX_CONTROLLED_BY, type Ctx } from '../types'
+import type { GejuHit } from '../types'
 import type { WuXing } from '@jabberwocky238/bazi-engine'
 
 /**

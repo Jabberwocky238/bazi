@@ -1,6 +1,6 @@
-import { WX_CONTROLLED_BY, type Ctx } from '../../types'
-import type { GejuHit } from '../../types'
-import { checkCong } from './_check'
+import { WX_CONTROLLED_BY, type Ctx } from '../types'
+import type { GejuHit } from '../types'
+import { checkCong } from './congge/_check'
 
 /** 弃命从煞 —— md：「官杀数量 ≥ 财星」「官杀数量 > 食伤」+ 「无食伤克官杀」+ 官杀 ≥ 5 位。 */
 export function isCongShaGe(ctx: Ctx): GejuHit | null {

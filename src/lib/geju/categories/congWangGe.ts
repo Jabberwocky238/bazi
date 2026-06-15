@@ -1,5 +1,5 @@
-import type { Ctx } from '../../types'
-import type { GejuHit } from '../../types'
+import type { Ctx } from '../types'
+import type { GejuHit } from '../types'
 
 /**
  * 从旺格（依 md 4 条 + 亚型区分）：

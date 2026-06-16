@@ -11,7 +11,7 @@ interface AppBarProps {
   /** 大字标题。 */
   title: string
   /** 标题旁的次级链接 (返回 / 跳转), 可选。 */
-  link?: { href: string; text: string }
+  link?: ReactNode
   /** 副标题左侧描述。 */
   description?: ReactNode
   /** 副标题右侧自定义槽 (例如免责声明按钮)。 */
@@ -26,12 +26,9 @@ function AppBar({ title, link, description, descriptionRight }: AppBarProps) {
       <div className="flex items-baseline gap-3 flex-wrap">
         <h1 className="text-2xl md:text-4xl font-bold tracking-tight">{title}</h1>
         {link && (
-          <a
-            href={link.href}
-            className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 underline decoration-dotted"
-          >
-            {link.text}
-          </a>
+          <span className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 underline decoration-dotted">
+            {link}
+          </span>
         )}
         <span className="text-[11px] md:text-xs text-slate-400 dark:text-slate-600 tabular-nums ml-auto">
           版本为 {build.display} · {build.label}

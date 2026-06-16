@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useBazi } from '@/lib'
 import { BaziForm } from '@@/BaziForm'
 import { BaziMeta } from '@@/BaziMeta'
@@ -28,7 +29,7 @@ function App() {
     <GenericLayout
       errorBoundaryName="App"
       title="八字补完计划"
-      link={{ href: '/hepan', text: '← 合盘分析' }}
+      link={<Link to="/hepan">← 合盘分析</Link>}
       description="点击任意词条查看释义"
       descriptionRight={
         <button

@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "bun run build && wrangler dev",
     "react:dev": "vite",
-    "build": "tsc -b && vite-react-ssg build",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:strength": "bun test src/lib/strength.spec.ts",

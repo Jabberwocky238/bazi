@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useXiyong, type Cat, type GanZhiType, type WuXing } from '@/lib'
+import { useXiyong, type Cat, type WuXing } from '@/lib'
 import { WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
 
@@ -16,15 +16,6 @@ const TONE: Record<'用神' | '喜神' | '忌神' | '调候', string> = {
   喜神: 'border-emerald-500/40 bg-emerald-500/10',
   忌神: 'border-rose-500/40 bg-rose-500/10',
   调候: 'border-sky-500/40 bg-sky-500/10',
-}
-
-const GANZHI_TONE: Record<GanZhiType, string> = {
-  盖头: 'border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-400',
-  截脚: 'border-rose-500/40 bg-rose-500/5 text-rose-700 dark:text-rose-400',
-  '覆载(同气)': 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-  '覆载(得载)': 'border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
-  '覆载(得覆)': 'border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
-  中性: 'border-slate-300 dark:border-slate-700 text-slate-500',
 }
 
 const SECTION_LABEL = 'text-[11px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400 uppercase'
@@ -67,36 +58,9 @@ export function XiyongPanel() {
             </div>
           )}
 
-          {/* ① 干支关系 */}
+          {/* ① 扶抑分析 */}
           <div className="space-y-1.5">
-            <div className={SECTION_LABEL}>① 干支关系 · 盖头 / 截脚 / 覆载</div>
-            <div className="grid grid-cols-4 gap-1.5">
-              {a.ganZhi.map((g) => (
-                <div
-                  key={g.pos}
-                  className={`rounded border px-2 py-1.5 text-center ${GANZHI_TONE[g.type]}`}
-                >
-                  <div className="text-[10px] opacity-70">{g.pos}柱</div>
-                  <div className="font-bold text-sm leading-tight">
-                    <span className={WUXING_TEXT[g.ganWx] ?? ''}>{g.gan}</span>
-                    <span className={WUXING_TEXT[g.zhiWx] ?? ''}>{g.zhi}</span>
-                  </div>
-                  <div className="text-[10px] font-medium">{g.type}</div>
-                </div>
-              ))}
-            </div>
-            {a.ganZhi.some((g) => g.type !== '中性' && g.note) && (
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                {a.ganZhi.filter((g) => g.type !== '中性' && g.note).map((g) => (
-                  <div key={g.pos}>{g.pos}柱 · {g.note}</div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* ② 扶抑分析 */}
-          <div className="space-y-1.5">
-            <div className={SECTION_LABEL}>② 扶抑分析 · 日主 {a.level}</div>
+            <div className={SECTION_LABEL}>① 扶抑分析 · 日主 {a.level}</div>
             <div className="rounded-lg bg-slate-50 dark:bg-slate-950/40 px-3 py-2 text-xs leading-relaxed space-y-1">
               <div>
                 <span className="text-slate-500">病根 · </span>
@@ -108,9 +72,9 @@ export function XiyongPanel() {
             </div>
           </div>
 
-          {/* ③ 救应分析 */}
+          {/* ② 救应分析 */}
           <div className="space-y-1.5">
-            <div className={SECTION_LABEL}>③ 救应分析 · 病有多重，救有多深</div>
+            <div className={SECTION_LABEL}>② 救应分析 · 病有多重，救有多深</div>
             <div
               className={`rounded-lg border px-3 py-2 text-xs leading-relaxed ${
                 a.jiuying.method
@@ -154,9 +118,9 @@ export function XiyongPanel() {
             </div>
           </div>
 
-          {/* ④ 调候分析 */}
+          {/* ③ 调候分析 */}
           <div className="space-y-1.5">
-            <div className={SECTION_LABEL}>④ 调候分析 · 寒暖燥湿</div>
+            <div className={SECTION_LABEL}>③ 调候分析 · 寒暖燥湿</div>
             <div className={`rounded-lg border px-3 py-2 text-xs ${a.tiaohou.required ? TONE.调候 : 'border-slate-200 dark:border-slate-700'}`}>
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-slate-600 dark:text-slate-400">
@@ -184,9 +148,9 @@ export function XiyongPanel() {
             </div>
           </div>
 
-          {/* ⑤ 通关分析 */}
+          {/* ④ 通关分析 */}
           <div className="space-y-1.5">
-            <div className={SECTION_LABEL}>⑤ 通关分析 · 两强相战</div>
+            <div className={SECTION_LABEL}>④ 通关分析 · 两强相战</div>
             <div
               className={`rounded-lg border px-3 py-2 text-xs leading-relaxed ${
                 a.tongguan.active
@@ -223,9 +187,9 @@ export function XiyongPanel() {
             </div>
           </div>
 
-          {/* ⑥ 喜忌 */}
+          {/* ⑤ 喜忌 */}
           <div className="space-y-2">
-            <div className={SECTION_LABEL}>⑥ 喜忌 · 用神 / 喜神 / 忌神</div>
+            <div className={SECTION_LABEL}>⑤ 喜忌 · 用神 / 喜神 / 忌神</div>
             {a.primaryCat && a.primaryWx && (
               <GodRow label="用神" cat={a.primaryCat} wx={a.primaryWx} toneCls={TONE.用神} />
             )}

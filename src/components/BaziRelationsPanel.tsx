@@ -1,8 +1,18 @@
+import { useMemo } from 'react'
 import type { Pillar } from '@/lib'
-import { WUXING_BG_SOFT, WUXING_BORDER, WUXING_TEXT } from '@@/css'
-
-const GENERATES: Record<string, string> = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' }
-const CONTROLS: Record<string, string> = { 木: '土', 土: '水', 水: '火', 火: '金', 金: '木' }
+import { useBaziStore } from '@@/stores'
+import {
+  ganWuxing,
+  zhiWuxing,
+  GENERATES,
+  CONTROLS,
+  pairwiseGan,
+  pairwiseZhi,
+  type Gan,
+  type Zhi,
+  type PairResult,
+} from '@jabberwocky238/bazi-engine'
+import type { WuXing } from '@/lib'
 
 interface BaziChar {
   key: string
@@ -12,72 +22,54 @@ interface BaziChar {
 }
 
 interface Relation {
-  kind: '生' | '克'
-  /** 从第一个字指向第二个字，或从第二个字指回第一个字。 */
-  direction: 'forward' | 'backward'
+  kind: '生' | '克' | '助'
+  direction: 'forward' | 'backward' | 'both'
 }
 
 function relationOf(a: BaziChar, b: BaziChar): Relation | null {
-  if (!a.value || !b.value || !a.wuxing || !b.wuxing || a.wuxing === b.wuxing) return null
-  if (GENERATES[a.wuxing] === b.wuxing) return { kind: '生', direction: 'forward' }
-  if (CONTROLS[a.wuxing] === b.wuxing) return { kind: '克', direction: 'forward' }
-  if (GENERATES[b.wuxing] === a.wuxing) return { kind: '生', direction: 'backward' }
-  if (CONTROLS[b.wuxing] === a.wuxing) return { kind: '克', direction: 'backward' }
+  if (!a.value || !b.value || !a.wuxing || !b.wuxing) return null
+  if (a.wuxing === b.wuxing) return { kind: '助', direction: 'both' }
+  if (GENERATES[a.wuxing as WuXing] === b.wuxing) return { kind: '生', direction: 'forward' }
+  if (CONTROLS[a.wuxing as WuXing] === b.wuxing) return { kind: '克', direction: 'forward' }
+  if (GENERATES[b.wuxing as WuXing] === a.wuxing) return { kind: '生', direction: 'backward' }
+  if (CONTROLS[b.wuxing as WuXing] === a.wuxing) return { kind: '克', direction: 'backward' }
   return null
 }
 
-function arrowTone(kind: Relation['kind']): string {
-  return kind === '生'
-    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-    : 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-300'
+function verticalRelationOf(gan: BaziChar, zhi: BaziChar): { type: string; kind: '生' | '克' | '助' } | null {
+  if (!gan.wuxing || !zhi.wuxing) return null
+  const gw = gan.wuxing as WuXing
+  const zw = zhi.wuxing as WuXing
+
+  if (gw === zw) return { type: '同气', kind: '助' }
+  if (GENERATES[gw] === zw) return { type: '得覆', kind: '生' }
+  if (GENERATES[zw] === gw) return { type: '得载', kind: '生' }
+  if (CONTROLS[gw] === zw) return { type: '盖头', kind: '克' }
+  if (CONTROLS[zw] === gw) return { type: '截脚', kind: '克' }
+  return null
 }
 
-function HorizontalArrow({ relation }: { relation: Relation | null }) {
-  const base = 'h-7 w-7 md:w-10 inline-flex items-center justify-center gap-0.5 rounded-full border px-1 text-[10px] md:text-[11px] font-medium'
-  if (!relation) return <div className={`${base} invisible`} aria-hidden="true" />
-  return (
-    <div className={`${base} ${arrowTone(relation.kind)}`}>
-      <span>{relation.direction === 'forward' ? '→' : '←'}</span>
-      <span>{relation.kind}</span>
-    </div>
-  )
-}
-
-function VerticalArrow({ relation }: { relation: Relation | null }) {
-  const base = 'h-8 w-7 md:w-10 inline-flex items-center justify-center gap-0.5 rounded-full border px-1 text-[10px] md:text-[11px] font-medium'
-  if (!relation) return <div className={`${base} invisible`} aria-hidden="true" />
-  return (
-    <div className={`${base} ${arrowTone(relation.kind)}`}>
-      <span>{relation.direction === 'forward' ? '↓' : '↑'}</span>
-      <span>{relation.kind}</span>
-    </div>
-  )
-}
-
-function CharBlock({ item }: { item: BaziChar }) {
-  const empty = !item.value
-  return (
-    <div
-      className={[
-        'rounded-xl border px-1.5 py-2 text-center shadow-sm md:px-2.5',
-        empty
-          ? 'border-slate-200 bg-slate-50 text-slate-300 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-700'
-          : `${WUXING_BORDER[item.wuxing] ?? 'border-slate-200'} ${WUXING_BG_SOFT[item.wuxing] ?? 'bg-white'} bg-white/70 dark:bg-slate-950/40`,
-      ].join(' ')}
-    >
-      <div className="text-[10px] tracking-[0.18em] text-slate-400 dark:text-slate-500">{item.label}</div>
-      <div className={`mt-0.5 text-2xl font-bold leading-none ${WUXING_TEXT[item.wuxing] ?? ''}`}>
-        {item.value || '—'}
-      </div>
-      <div className={`mt-1 text-[11px] font-medium ${WUXING_TEXT[item.wuxing] ?? 'text-slate-400'}`}>
-        {item.wuxing || '未知'}
-      </div>
-    </div>
-  )
+const WUXING_COLORS: Record<string, string> = {
+  '木': '#22c55e',
+  '火': '#ef4444',
+  '土': '#eab308',
+  '金': '#64748b',
+  '水': '#3b82f6',
 }
 
 export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
   if (pillars.length !== 4) return null
+  const extraPillars = useBaziStore((s) => s.extraPillars)
+
+  const dayun = extraPillars.find((p) => p.label === '大运')
+  const liunian = extraPillars.find((p) => p.label === '流年')
+  const liuyue = extraPillars.find((p) => p.label === '流月')
+
+  const extraList: typeof extraPillars = []
+  if (liuyue) extraList.push(liuyue)
+  if (liunian) extraList.push(liunian)
+  if (dayun) extraList.push(dayun)
+
   const stems: BaziChar[] = pillars.map((p) => ({
     key: `${p.label}-gan`,
     label: `${p.label[0]}干`,
@@ -91,6 +83,155 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
     wuxing: p.zhiWuxing,
   }))
 
+  const extraStems: BaziChar[] = extraList.map((p) => ({
+    key: `extra-${p.label}-gan`,
+    label: p.label,
+    value: p.gan,
+    wuxing: ganWuxing(p.gan) ?? '',
+  }))
+  const extraBranches: BaziChar[] = extraList.map((p) => ({
+    key: `extra-${p.label}-zhi`,
+    label: '',
+    value: p.zhi,
+    wuxing: zhiWuxing(p.zhi) ?? '',
+  }))
+
+  const extraCount = extraList.length
+
+  // 所有天干两两关系（包括相邻和不相邻）
+  const ganPairs = useMemo(() => {
+    const results: { from: number; to: number; pair: PairResult | null }[] = []
+    for (let i = 0; i < stems.length; i++) {
+      for (let j = i + 1; j < stems.length; j++) {
+        results.push({
+          from: extraCount + i,
+          to: extraCount + j,
+          pair: pairwiseGan(stems[i].value as Gan, stems[j].value as Gan),
+        })
+      }
+    }
+    extraStems.forEach((extra, ei) => {
+      stems.forEach((stem, si) => {
+        results.push({
+          from: ei,
+          to: extraCount + si,
+          pair: pairwiseGan(extra.value as Gan, stem.value as Gan),
+        })
+      })
+    })
+    return results.filter(r => r.pair)
+  }, [stems, extraStems, extraCount])
+
+  // 所有地支两两关系
+  const zhiPairs = useMemo(() => {
+    const results: { from: number; to: number; pair: PairResult | null }[] = []
+    for (let i = 0; i < branches.length; i++) {
+      for (let j = i + 1; j < branches.length; j++) {
+        results.push({
+          from: extraCount + i,
+          to: extraCount + j,
+          pair: pairwiseZhi(branches[i].value as Zhi, branches[j].value as Zhi),
+        })
+      }
+    }
+    extraBranches.forEach((extra, ei) => {
+      branches.forEach((branch, bi) => {
+        results.push({
+          from: ei,
+          to: extraCount + bi,
+          pair: pairwiseZhi(extra.value as Zhi, branch.value as Zhi),
+        })
+      })
+    })
+    return results.filter(r => r.pair)
+  }, [branches, extraBranches, extraCount])
+
+  // 相邻天干的生克关系（用于中间箭头）
+  const adjacentGanRels = useMemo(() => {
+    const results: { col: number; rel: Relation | null }[] = []
+    for (let i = 0; i < stems.length - 1; i++) {
+      results.push({
+        col: extraCount + i,
+        rel: relationOf(stems[i], stems[i + 1]),
+      })
+    }
+    return results
+  }, [stems, extraCount])
+
+  // 相邻地支的生克关系
+  const adjacentZhiRels = useMemo(() => {
+    const results: { col: number; rel: Relation | null }[] = []
+    for (let i = 0; i < branches.length - 1; i++) {
+      results.push({
+        col: extraCount + i,
+        rel: relationOf(branches[i], branches[i + 1]),
+      })
+    }
+    return results
+  }, [branches, extraCount])
+
+  // 垂直关系
+  const verticalRels = useMemo(() => {
+    return stems.map((stem, i) => ({
+      col: extraCount + i,
+      rel: verticalRelationOf(stem, branches[i]),
+    })).filter(r => r.rel)
+  }, [stems, branches, extraCount])
+
+  // SVG布局参数 - 增加列宽给箭头留空间
+  const colWidth = 75
+  const gap = extraCount > 0 ? 15 : 0
+  const cardWidth = 60
+  const cardHeight = 72
+  const rowGap = 36
+
+  const totalCols = extraCount + 4 + (extraCount > 0 ? 1 : 0)
+  const svgWidth = totalCols * colWidth + 40
+
+  // 动态计算高度 - 每个关系线一行，确保不重叠
+  const lineHeight = 22
+  const topSpace = ganPairs.length * lineHeight + 30
+  const bottomSpace = zhiPairs.length * lineHeight + 30
+
+  const ganY = topSpace
+  const zhiY = ganY + cardHeight + rowGap
+  const svgHeight = zhiY + cardHeight + bottomSpace
+
+  const getColX = (colIdx: number, isExtra: boolean) => {
+    if (isExtra) return 20 + colIdx * colWidth + colWidth / 2
+    const extraWidth = extraCount * colWidth + gap
+    return 20 + extraWidth + (colIdx - extraCount) * colWidth + colWidth / 2
+  }
+
+  const renderCharBlock = (x: number, y: number, char: BaziChar, isExtra: boolean) => {
+    const color = WUXING_COLORS[char.wuxing] || '#64748b'
+    const borderColor = isExtra ? '#a78bfa' : color
+
+    return (
+      <g key={`${char.key}-${x}-${y}`}>
+        <rect
+          x={x - cardWidth / 2}
+          y={y}
+          width={cardWidth}
+          height={cardHeight}
+          rx="12"
+          fill="none"
+          stroke={borderColor}
+          strokeWidth="2"
+        />
+        <text x={x} y={y + 18} textAnchor="middle" className="fill-slate-500 text-[10px]" style={{ letterSpacing: '0.1em' }}>
+          {char.label}
+        </text>
+        <text x={x} y={y + 50} textAnchor="middle" className="text-2xl font-bold" style={{ fill: color }}>
+          {char.value}
+        </text>
+        <text x={x} y={y + 70} textAnchor="middle" className="text-[11px] font-medium" style={{ fill: color }}>
+          {char.wuxing}
+        </text>
+      </g>
+    )
+  }
+
   return (
     <section className="mt-5 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80 md:p-5">
       <div className="mb-3 flex items-baseline justify-between gap-3 flex-wrap">
@@ -98,42 +239,150 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
           八字生克图
         </h2>
         <span className="text-[10px] text-slate-400 dark:text-slate-600">
-          天干在上、地支在下；只显示横向相邻与柱内上下生克，绿为生、红为克，箭头指向受生/受克方
+          显示所有天干地支两两关系
         </span>
       </div>
 
-      <div className="grid grid-cols-[minmax(0,1fr)_1.75rem_minmax(0,1fr)_1.75rem_minmax(0,1fr)_1.75rem_minmax(0,1fr)] items-center gap-x-1 gap-y-2 md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)_2.5rem_minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-x-2">
-        {stems.map((item, i) => (
-          <div key={item.key} className="contents">
-            <div style={{ gridColumn: i * 2 + 1, gridRow: 1 }}>
-              <CharBlock item={item} />
-            </div>
-            {i < stems.length - 1 && (
-              <div style={{ gridColumn: i * 2 + 2, gridRow: 1 }} className="flex justify-center">
-                <HorizontalArrow relation={relationOf(item, stems[i + 1])} />
-              </div>
-            )}
-          </div>
-        ))}
+      <div style={{ width: '100%', overflowX: 'auto' }}>
+        <div style={{ minWidth: svgWidth, maxWidth: '100%', margin: '0 auto' }}>
+          <svg
+            width="100%"
+            height={svgHeight}
+            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+            preserveAspectRatio="xMidYMid meet"
+            className="overflow-visible"
+          >
+        {extraCount > 0 && (
+          <line
+            x1={20 + extraCount * colWidth + gap / 2}
+            y1={topSpace - 20}
+            x2={20 + extraCount * colWidth + gap / 2}
+            y2={zhiY + cardHeight + 20}
+            stroke="#e2e8f0"
+            strokeWidth="1"
+            strokeDasharray="4,4"
+          />
+        )}
 
-        {stems.map((item, i) => (
-          <div key={`${item.key}-vertical`} style={{ gridColumn: i * 2 + 1, gridRow: 2 }} className="flex justify-center">
-            <VerticalArrow relation={relationOf(item, branches[i])} />
-          </div>
-        ))}
+        {/* 天干关系线 - 灰色实线，每个关系独立一行 */}
+        {ganPairs.map(({ from, to, pair }, idx) => {
+          if (!pair) return null
+          const x1 = getColX(from, from < extraCount)
+          const x2 = getColX(to, to < extraCount)
+          const y = ganY - 15 - idx * 22
 
-        {branches.map((item, i) => (
-          <div key={item.key} className="contents">
-            <div style={{ gridColumn: i * 2 + 1, gridRow: 3 }}>
-              <CharBlock item={item} />
-            </div>
-            {i < branches.length - 1 && (
-              <div style={{ gridColumn: i * 2 + 2, gridRow: 3 }} className="flex justify-center">
-                <HorizontalArrow relation={relationOf(item, branches[i + 1])} />
-              </div>
-            )}
-          </div>
-        ))}
+          return (
+            <g key={`gan-line-${idx}`}>
+              <line x1={x1} y1={y} x2={x2} y2={y} stroke="#6b7280" strokeWidth="1.5" />
+              <circle cx={x1} cy={y} r="3" fill="#6b7280" />
+              <circle cx={x2} cy={y} r="3" fill="#6b7280" />
+              <text x={(x1 + x2) / 2} y={y - 5} textAnchor="middle" className="fill-slate-600 text-[10px]">
+                {pair.note}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* 地支关系线 - 灰色实线，每个关系独立一行 */}
+        {zhiPairs.map(({ from, to, pair }, idx) => {
+          if (!pair) return null
+          const x1 = getColX(from, from < extraCount)
+          const x2 = getColX(to, to < extraCount)
+          const y = zhiY + cardHeight + 15 + idx * 22
+
+          return (
+            <g key={`zhi-line-${idx}`}>
+              <line x1={x1} y1={y} x2={x2} y2={y} stroke="#6b7280" strokeWidth="1.5" />
+              <circle cx={x1} cy={y} r="3" fill="#6b7280" />
+              <circle cx={x2} cy={y} r="3" fill="#6b7280" />
+              <text x={(x1 + x2) / 2} y={y + 14} textAnchor="middle" className="fill-slate-600 text-[10px]">
+                {pair.note}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* 额外列 - 天干 */}
+        {extraStems.map((char, i) => renderCharBlock(getColX(i, true), ganY, char, true))}
+
+        {/* 主局天干 */}
+        {stems.map((char, i) => renderCharBlock(getColX(extraCount + i, false), ganY, char, false))}
+
+        {/* 天干相邻之间的箭头 */}
+        {adjacentGanRels.map(({ col, rel }, idx) => {
+          if (!rel) return null
+          const x = getColX(col, false) + colWidth / 2
+          const y = ganY + cardHeight / 2
+          const color = rel.kind === '克' ? '#f43f5e' : rel.kind === '生' ? '#10b981' : '#9ca3af'
+
+          return (
+            <g key={`gan-arrow-${idx}`}>
+              <line x1={x - 20} y1={y} x2={x + 20} y2={y} stroke={color} strokeWidth="2" />
+              {rel.direction === 'forward' && <polygon points={`${x + 15},${y - 4} ${x + 25},${y} ${x + 15},${y + 4}`} fill={color} />}
+              {rel.direction === 'backward' && <polygon points={`${x - 15},${y - 4} ${x - 25},${y} ${x - 15},${y + 4}`} fill={color} />}
+              {rel.direction === 'both' && (
+                <>
+                  <polygon points={`${x + 15},${y - 4} ${x + 25},${y} ${x + 15},${y + 4}`} fill={color} />
+                  <polygon points={`${x - 15},${y - 4} ${x - 25},${y} ${x - 15},${y + 4}`} fill={color} />
+                </>
+              )}
+              <text x={x} y={y - 12} textAnchor="middle" className="text-[10px] font-medium" style={{ fill: color }}>
+                {rel.kind}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* 垂直关系 */}
+        {verticalRels.map(({ col, rel }, idx) => {
+          if (!rel) return null
+          const x = getColX(col, false)
+          const y = ganY + cardHeight + 5
+          const color = rel.kind === '克' ? '#f43f5e' : '#10b981'
+
+          return (
+            <g key={`v-rel-${idx}`}>
+              <line x1={x} y1={y} x2={x} y2={y + rowGap - 10} stroke={color} strokeWidth="2" />
+              <polygon points={`${x - 4},${y + rowGap - 18} ${x},${y + rowGap - 10} ${x + 4},${y + rowGap - 18}`} fill={color} />
+              <text x={x + 8} y={y + rowGap / 2} textAnchor="start" className="text-[10px] font-medium" style={{ fill: color }}>
+                {rel.type}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* 额外列 - 地支 */}
+        {extraBranches.map((char, i) => renderCharBlock(getColX(i, true), zhiY, char, true))}
+
+        {/* 主局地支 */}
+        {branches.map((char, i) => renderCharBlock(getColX(extraCount + i, false), zhiY, char, false))}
+
+        {/* 地支相邻之间的箭头 */}
+        {adjacentZhiRels.map(({ col, rel }, idx) => {
+          if (!rel) return null
+          const x = getColX(col, false) + colWidth / 2
+          const y = zhiY + cardHeight / 2
+          const color = rel.kind === '克' ? '#f43f5e' : rel.kind === '生' ? '#10b981' : '#9ca3af'
+
+          return (
+            <g key={`zhi-arrow-${idx}`}>
+              <line x1={x - 20} y1={y} x2={x + 20} y2={y} stroke={color} strokeWidth="2" />
+              {rel.direction === 'forward' && <polygon points={`${x + 15},${y - 4} ${x + 25},${y} ${x + 15},${y + 4}`} fill={color} />}
+              {rel.direction === 'backward' && <polygon points={`${x - 15},${y - 4} ${x - 25},${y} ${x - 15},${y + 4}`} fill={color} />}
+              {rel.direction === 'both' && (
+                <>
+                  <polygon points={`${x + 15},${y - 4} ${x + 25},${y} ${x + 15},${y + 4}`} fill={color} />
+                  <polygon points={`${x - 15},${y - 4} ${x - 25},${y} ${x - 15},${y + 4}`} fill={color} />
+                </>
+              )}
+              <text x={x} y={y - 12} textAnchor="middle" className="text-[10px] font-medium" style={{ fill: color }}>
+                {rel.kind}
+              </text>
+            </g>
+          )
+        })}
+          </svg>
+        </div>
       </div>
     </section>
   )

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { computeFromState } from '@@/stores/compute'
 import type { Pillar, BaziResult } from '@/lib'
 import { EMPTY_PILLAR } from '@/lib'
@@ -28,7 +29,7 @@ export default function HepanApp() {
     <GenericLayout
       errorBoundaryName="HepanApp"
       title="八字合盘"
-      link={{ href: '/', text: '← 返回主盘' }}
+      link={<Link to="/">← 返回主盘</Link>}
       description="输入两人出生信息 — 干支互动 / 用神配对 自动比对"
     >
       <div className="grid grid-cols-2 gap-2 md:gap-6">

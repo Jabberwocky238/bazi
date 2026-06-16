@@ -12,6 +12,7 @@ import {
   type Zhi,
   type PairResult,
 } from '@jabberwocky238/bazi-engine'
+import { WUXING_SVG_COLOR } from '@@/css'
 import type { WuXing } from '@/lib'
 
 interface BaziChar {
@@ -49,13 +50,8 @@ function verticalRelationOf(gan: BaziChar, zhi: BaziChar): { type: string; kind:
   return null
 }
 
-const WUXING_COLORS: Record<string, string> = {
-  '木': '#22c55e',
-  '火': '#ef4444',
-  '土': '#eab308',
-  '金': '#64748b',
-  '水': '#3b82f6',
-}
+// 复用全局定义的五行颜色
+const WUXING_COLORS = WUXING_SVG_COLOR
 
 export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
   if (pillars.length !== 4) return null
@@ -313,7 +309,7 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
           if (!rel) return null
           const x = getColX(col, false) + colWidth / 2
           const y = ganY + cardHeight / 2
-          const color = rel.kind === '克' ? '#f43f5e' : rel.kind === '生' ? '#10b981' : '#9ca3af'
+          const color = rel.kind === '克' ? '#f43f5e' : '#10b981'
 
           return (
             <g key={`gan-arrow-${idx}`}>
@@ -362,7 +358,7 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
           if (!rel) return null
           const x = getColX(col, false) + colWidth / 2
           const y = zhiY + cardHeight / 2
-          const color = rel.kind === '克' ? '#f43f5e' : rel.kind === '生' ? '#10b981' : '#9ca3af'
+          const color = rel.kind === '克' ? '#f43f5e' : '#10b981'
 
           return (
             <g key={`zhi-arrow-${idx}`}>

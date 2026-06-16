@@ -48,9 +48,9 @@ function App() {
           <ErrorBoundary name="BaziForm"><BaziForm /></ErrorBoundary>
           <ErrorBoundary name="BaziMeta"><BaziMeta solar={solarStr} trueSolar={trueSolarStr} lunar={lunarStr} /></ErrorBoundary>
           <ErrorBoundary name="BaziChart"><BaziChart pillars={pillars} /></ErrorBoundary>
-          <ErrorBoundary name="BaziRelationsPanel"><BaziRelationsPanel pillars={pillars} /></ErrorBoundary>
-          <ErrorBoundary name="GejuPanel"><GejuPanel /></ErrorBoundary>
           <ErrorBoundary name="DaYunPanel"><DaYunPanel /></ErrorBoundary>
+          <ErrorBoundary name="GejuPanel"><GejuPanel /></ErrorBoundary>
+          <ErrorBoundary name="BaziRelationsPanel"><BaziRelationsPanel pillars={pillars} /></ErrorBoundary>
           <ErrorBoundary name="ElementsPanel"><ElementsPanel /></ErrorBoundary>
           <ErrorBoundary name="StrengthPanel"><StrengthPanel /></ErrorBoundary>
           <ErrorBoundary name="GanZhiPanel"><GanZhiPanel /></ErrorBoundary>

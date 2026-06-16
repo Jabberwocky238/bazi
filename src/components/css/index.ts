@@ -59,4 +59,13 @@ export const WUXING_BG_STRONG: Record<string, string> = {
   水: 'bg-water',
 }
 
+/** SVG 用的五行颜色值（浅色模式） */
+export const WUXING_SVG_COLOR: Record<string, string> = {
+  木: '#15803d',
+  火: '#dc2626',
+  土: '#854d0e',
+  金: '#ca8a04',
+  水: '#1d4ed8',
+}
+
 export * from './tones'

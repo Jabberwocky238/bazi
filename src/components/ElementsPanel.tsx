@@ -257,7 +257,7 @@ export function ElementsPanel() {
   const dayGan = useBazi((s) => s.dayGan)
   const extras = useBaziStore((s) => s.extraPillars)
   const setExtras = useBaziStore((s) => s.setExtraPillars)
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   const [showAdj, setShowAdj] = useState(false)
 
   const data = useMemo(

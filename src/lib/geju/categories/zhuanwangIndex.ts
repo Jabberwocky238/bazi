@@ -1,6 +1,0 @@
-export { checkZhuanWang } from './zhuanwangCheck'
-export { isQuZhiGe } from './quZhiGe'
-export { isYanShangGe } from './yanShangGe'
-export { isJiaSeGe } from './jiaSeGe'
-export { isCongGeGe } from './congGeGe'
-export { isRunXiaGe } from './runXiaGe'

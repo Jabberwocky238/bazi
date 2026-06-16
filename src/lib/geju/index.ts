@@ -84,17 +84,9 @@ export const DETECTORS: Record<string, [Detector, GejuQuality, GejuCategory]> = 
   斧斤伐木: [geju.isFuJinFaMu, 'good', '五行格'],
   寒木向阳: [geju.judgeHanMu, 'good', '特殊格'],
   日照江河: [geju.judgeRiZhao, 'good', '特殊格'],
-  // 专旺
-  曲直格: [geju.isQuZhiGe, 'good', '专旺格'],
-  炎上格: [geju.isYanShangGe, 'good', '专旺格'],
-  稼穑格: [geju.isJiaSeGe, 'good', '专旺格'],
-  从革格: [geju.isCongGeGe, 'good', '专旺格'],
-  润下格: [geju.isRunXiaGe, 'good', '专旺格'],
-  // 从格
-  弃命从财: [geju.isCongCaiGe, 'good', '从格'],
-  弃命从煞: [geju.isCongShaGe, 'good', '从格'],
-  弃命从势: [geju.isCongShiGe, 'good', '从格'],
-  从儿格: [geju.isCongErGe, 'good', '从格'],
+  // 专旺 / 从格理论互斥，各自只暴露聚合 detector
+  专旺格: [geju.isZhuanWangGe, 'good', '专旺格'],
+  从格: [geju.isCongGe, 'good', '从格'],
   // 特殊格
   魁罡格: [geju.isKuiGangGe, 'good', '特殊格'],
   三奇格: [geju.isSanQiGe, 'good', '特殊格'],
@@ -116,6 +108,12 @@ export function detectGeju(): GejuOutput[] {
   for (const [detect, quality, category] of Object.values(DETECTORS)) {
     const h = detect()
     if (!h) continue
+    // 从格与专旺格理论互斥；若 detector 边界重叠，按当前顺序只保留先命中的一类。
+    if (h.name === '从格' && hits.some((x) => x.name === '专旺格')) continue
+    if (h.name === '专旺格') {
+      const i = hits.findIndex((x) => x.name === '从格')
+      if (i >= 0) hits.splice(i, 1)
+    }
     // detector 可只返回 name/note(/guigeVariant), 在此补齐默认 岁运/显隐。
     const 岁运 = h.岁运 ?? { ...EMPTY_SUIYUN }
     const 显隐 = h.显隐 ?? deriveVisibility(岁运)

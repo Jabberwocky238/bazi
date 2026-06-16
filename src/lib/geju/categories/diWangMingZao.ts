@@ -3,7 +3,7 @@ import { EMPTY_SUIYUN, deriveVisibility, type GejuHit } from '../types'
 import { isCaiGuanYinQuan } from './caiGuanYinQuan'
 import { isGuanShaHunZa } from './guanShaHunZa'
 import { isShangGuanJianGuan, isXiaoShenDuoShi } from './shishangIndex'
-import { checkZhuanWang } from './zhuanwangCheck'
+import { isZhuanWangGe } from './专旺'
 
 /**
  * 帝王命造 —— md：「格局清纯不混杂」+ 「五行流通或气势纯粹二者居其一」
@@ -22,7 +22,7 @@ export function isDiWangMingZao(): GejuHit | null {
   const extras = readExtras()
   if (strength.shenRuo && !strength.deLing) return null
   const hasFull = isCaiGuanYinQuan() !== null
-  const hasZhuan = !!checkZhuanWang(bazi.dayWx)
+  const hasZhuan = !!isZhuanWangGe()
   if (!hasFull && !hasZhuan) return null
   if (isGuanShaHunZa() !== null) return null
   if (isShangGuanJianGuan() !== null) return null

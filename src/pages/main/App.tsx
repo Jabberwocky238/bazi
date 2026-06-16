@@ -3,6 +3,7 @@ import { useBazi } from '@/lib'
 import { BaziForm } from '@@/BaziForm'
 import { BaziMeta } from '@@/BaziMeta'
 import { BaziChart } from '@@/chart/BaziChart'
+import { BaziRelationsPanel } from '@@/BaziRelationsPanel'
 import { SkillIndex } from '@@/SkillIndex'
 import { SkillPanel } from '@@/SkillPanel'
 import { BasicsPanel } from '@@/BasicsPanel'
@@ -46,6 +47,7 @@ function App() {
           <ErrorBoundary name="BaziForm"><BaziForm /></ErrorBoundary>
           <ErrorBoundary name="BaziMeta"><BaziMeta solar={solarStr} trueSolar={trueSolarStr} lunar={lunarStr} /></ErrorBoundary>
           <ErrorBoundary name="BaziChart"><BaziChart pillars={pillars} /></ErrorBoundary>
+          <ErrorBoundary name="BaziRelationsPanel"><BaziRelationsPanel pillars={pillars} /></ErrorBoundary>
           <ErrorBoundary name="GejuPanel"><GejuPanel /></ErrorBoundary>
           <ErrorBoundary name="DaYunPanel"><DaYunPanel /></ErrorBoundary>
           <ErrorBoundary name="ElementsPanel"><ElementsPanel /></ErrorBoundary>

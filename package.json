@@ -15,9 +15,19 @@
     "test:bazi": "bun test src/lib/geju/random_bazi.spec.ts",
     "test:geju": "bun test src/lib/geju/random_geju.spec.ts",
     "deploy": "npm run build && wrangler deploy",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "cap:sync": "cap sync",
+    "cap:open:ios": "cap open ios",
+    "cap:open:android": "cap open android",
+    "cap:build:ios": "npm run build && cap sync ios && cap open ios",
+    "cap:build:android": "npm run build && cap sync android && cap open android"
   },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
   "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
     "@jabberwocky238/bazi-engine": "file:./bazi-engine",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-popover": "^1.1.15",
@@ -32,6 +42,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
     "@babel/core": "^7.29.0",
     "@cloudflare/workers-types": "^4.20250923.0",
     "@eslint/js": "^9.39.4",

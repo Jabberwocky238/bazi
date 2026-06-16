@@ -29,7 +29,14 @@ export const DETECTORS: Record<string, [Detector, GejuQuality, GejuCategory]> = 
   // 正格 (月令单一十神)
   建禄格: [geju.isJianLuGe, 'good', '正格'],
   阳刃格: [geju.isYangRenGe, 'good', '正格'],
-  十神格: [geju.isShiShenGe, 'good', '十神格'],
+  正官格: [geju.isZhengGuanGe, 'good', '正格'],
+  七杀格: [geju.isQiShaGe, 'good', '正格'],
+  食神格: [geju.isShiShenYueLingGe, 'good', '正格'],
+  伤官格: [geju.isShangGuanGe, 'good', '正格'],
+  正财格: [geju.isZhengCaiGe, 'good', '正格'],
+  偏财格: [geju.isPianCaiGe, 'good', '正格'],
+  正印格: [geju.isZhengYinGe, 'good', '正格'],
+  偏印格: [geju.isPianYinGe, 'good', '正格'],
 
   // 官杀
   官杀混杂: [geju.isGuanShaHunZa, 'bad', '十神格'],

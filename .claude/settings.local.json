@@ -32,7 +32,9 @@
       "Bash(git -C bazi-engine diff --stat)",
       "Bash(git -C bazi-engine status --short)",
       "Bash(git -C bazi-engine diff -- src/ganzhi/common.ts src/ganzhi/index.ts src/index.ts src/zizuo.ts)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(bunx cap *)",
+      "Bash(npx cap *)"
     ],
     "deny": [
       "Bash(npm install *)"

@@ -340,15 +340,13 @@ function isPianYinGe(): GejuHit | null {
   )
 }
 
-export function isShiShenGe(): GejuHit | null {
-  const hit =
-    isZhengGuanGe() ||
-    isQiShaGe() ||
-    isShiShenYueLingGe() ||
-    isShangGuanGe() ||
-    isZhengCaiGe() ||
-    isPianCaiGe() ||
-    isZhengYinGe() ||
-    isPianYinGe()
-  return hit ? { ...hit, name: '十神格', note: `${hit.name} · ${hit.note}` } : null
+export {
+  isZhengGuanGe,
+  isQiShaGe,
+  isShiShenYueLingGe,
+  isShangGuanGe,
+  isZhengCaiGe,
+  isPianCaiGe,
+  isZhengYinGe,
+  isPianYinGe,
 }

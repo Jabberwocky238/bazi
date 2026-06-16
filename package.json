@@ -6,24 +6,17 @@
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "scripts": {
-    "dev": "bun run build && wrangler dev",
-    "react:dev": "vite",
+    "worker:dev": "bun run build && wrangler dev",
+    "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:strength": "bun test src/lib/strength.spec.ts",
     "test:bazi": "bun test src/lib/geju/random_bazi.spec.ts",
     "test:geju": "bun test src/lib/geju/random_geju.spec.ts",
-    "deploy": "npm run build && wrangler deploy",
-    "cf-typegen": "wrangler types",
-    "cap:sync": "cap sync",
-    "cap:open:ios": "cap open ios",
-    "cap:open:android": "cap open android",
-    "cap:build:ios": "npm run build && cap sync ios && cap open ios",
-    "cap:build:android": "npm run build && cap sync android && cap open android"
+    "deploy": "bun run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
-  "devDependencies": {
-    "@capacitor/cli": "^6.0.0",
   "dependencies": {
     "@capacitor/android": "^6.0.0",
     "@capacitor/core": "^6.0.0",

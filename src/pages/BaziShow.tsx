@@ -5,7 +5,6 @@ import { BaziChart } from '@@/chart/BaziChart'
 import { BaziRelationsPanel } from '@@/BaziRelationsPanel'
 import { SkillIndex } from '@@/SkillIndex'
 import { SkillPanel } from '@@/SkillPanel'
-import { BasicsPanel } from '@@/BasicsPanel'
 import { ElementsPanel } from '@@/ElementsPanel'
 import { GejuPanel } from '@@/GejuPanel'
 import { DaYunPanel } from '@@/DaYunPanel'
@@ -54,7 +53,6 @@ export default function BaziShow() {
           <ErrorBoundary name="GanZhiPanel"><GanZhiPanel /></ErrorBoundary>
           <ErrorBoundary name="XiyongPanel"><XiyongPanel /></ErrorBoundary>
           <ErrorBoundary name="SkillIndex"><SkillIndex pillars={pillars} /></ErrorBoundary>
-          <ErrorBoundary name="BasicsPanel"><BasicsPanel /></ErrorBoundary>
         </section>
 
         <section className="min-w-0">

@@ -195,11 +195,19 @@ export const useBazi = create<BaziStore>((set, get) => ({
   },
 }))
 
-// 输入变化 → 重新计算排盘
+// 大运计算依赖出生公历日期 (lunar-typescript 数节气定起运),
+// 仅 gregorian / trueSolar 模式有 effectiveDate; bazi 直输无日期则无法排运。
+function syncDayun(sex: Sex, effectiveDate: { year: number; month: number; day: number; hour: number; minute: number } | null) {
+  const data = effectiveDate ? computeDaYun(effectiveDate.year, effectiveDate.month, effectiveDate.day, effectiveDate.hour, effectiveDate.minute, sex) : null
+  useDayun.getState().setDayun(data)
+}
+
+// 输入变化 → 重新计算排盘 + 大运
 useBaziInput.subscribe((s) => {
   const result = computeFromState(s)
   if (result) {
     useBazi.getState().setResult(result.bazi)
+    syncDayun(s.sex, result.effectiveDate)
   }
 })
 
@@ -207,4 +215,5 @@ useBaziInput.subscribe((s) => {
 const initialResult = computeFromState(useBaziInput.getState())
 if (initialResult) {
   useBazi.getState().setResult(initialResult.bazi)
+  syncDayun(useBaziInput.getState().sex, initialResult.effectiveDate)
 }

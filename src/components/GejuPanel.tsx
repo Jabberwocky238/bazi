@@ -17,7 +17,7 @@ import {
   skillNames,
 } from '@/lib'
 import { useBaziStore, type ExtraPillar, useBazi } from '@@/stores'
-import { SkillLink } from '@@/SkillLink'
+import { SkillLink, type SkillItem } from '@@/SkillLink'
 
 // 配色 (按"是否引化"区分颜色饱和度, 边框样式不变):
 //   已引化 吉   border-emerald-500 + bg-emerald-500/10
@@ -52,14 +52,35 @@ function hitBorderClass(h: GejuOutput): string {
   return (isFormed(h) ? FORMED_BORDER : UNFORMED_BORDER)[h.quality]
 }
 
+/** 专旺格的变体家族 —— 点击 chip 先列出全部变体, 再选看详情 (multiple 模式)。 */
+const ZHUANWANG_FAMILY: SkillItem[] = [
+  { category: 'geju', name: '专旺格' },
+  { category: 'geju', name: '曲直格' },
+  { category: 'geju', name: '炎上格' },
+  { category: 'geju', name: '稼穑格' },
+  { category: 'geju', name: '从革格' },
+  { category: 'geju', name: '润下格' },
+]
+
 function GejuChip({ hit }: { hit: GejuOutput }) {
   const display = hit.guigeVariant ?? hit.name
+  const chipCls = `text-sm px-3 py-1 rounded-full border-2 ${hitBorderClass(hit)} ${CATEGORY_TEXT[hit.category]}`
+
+  // 专旺格: 以 multiple 列出其变体家族
+  if (hit.name === '专旺格') {
+    return (
+      <SkillLink items={ZHUANWANG_FAMILY} listTitle="专旺格" className={chipCls}>
+        {display}
+      </SkillLink>
+    )
+  }
+
   return (
     <SkillLink
       category="geju"
       name={hit.name}
       subtitle={hit.note}
-      className={`text-sm px-3 py-1 rounded-full border-2 ${hitBorderClass(hit)} ${CATEGORY_TEXT[hit.category]}`}
+      className={chipCls}
     >
       {display}
     </SkillLink>

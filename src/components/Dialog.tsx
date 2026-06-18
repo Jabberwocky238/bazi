@@ -16,23 +16,37 @@ interface ShellProps {
   subtitle?: string
   /** 提供则显示右上角"关闭 ✕"。 */
   onClose?: () => void
+  /** 提供则显示左上角"← 返回"箭头 (eg. 从详情返回列表)。 */
+  onBack?: () => void
   children: ReactNode
 }
 
-/** 共享 chrome —— header (subtitle + title + 可选关闭) + 滚动 body。 */
-export function DialogShell({ title, subtitle, onClose, children }: ShellProps) {
+/** 共享 chrome —— header (可选返回箭头 + subtitle + title + 可选关闭) + 滚动 body。 */
+export function DialogShell({ title, subtitle, onClose, onBack, children }: ShellProps) {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <header className="shrink-0 flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-200 dark:border-slate-800">
-        <div className="min-w-0">
-          {subtitle && (
-            <div className="text-[11px] tracking-[0.25em] uppercase text-slate-500 dark:text-slate-400 truncate">
-              {subtitle}
-            </div>
+        <div className="flex items-center gap-2 min-w-0">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="返回"
+              className="shrink-0 text-base leading-none text-slate-400 hover:text-amber-700 dark:hover:text-amber-400"
+            >
+              ←
+            </button>
           )}
-          <h2 className="text-sm font-medium tracking-[0.2em] text-slate-600 dark:text-slate-300 truncate">
-            {title}
-          </h2>
+          <div className="min-w-0">
+            {subtitle && (
+              <div className="text-[11px] tracking-[0.25em] uppercase text-slate-500 dark:text-slate-400 truncate">
+                {subtitle}
+              </div>
+            )}
+            <h2 className="text-sm font-medium tracking-[0.2em] text-slate-600 dark:text-slate-300 truncate">
+              {title}
+            </h2>
+          </div>
         </div>
         {onClose && (
           <button
@@ -56,6 +70,8 @@ interface DialogProps {
   onClose: () => void
   title: string
   subtitle?: string
+  /** 提供则显示左上角"← 返回"箭头。 */
+  onBack?: () => void
   children: ReactNode
   className?: string
   /** 是否点击背景关闭，默认true */
@@ -72,6 +88,7 @@ export function Dialog({
   onClose,
   title,
   subtitle,
+  onBack,
   children,
   className,
   closeOnBackdropClick = true,
@@ -112,7 +129,7 @@ export function Dialog({
           className ?? '',
         ].join(' ')}
       >
-        <DialogShell title={title} subtitle={subtitle} onClose={onClose}>
+        <DialogShell title={title} subtitle={subtitle} onClose={onClose} onBack={onBack}>
           {children}
         </DialogShell>
       </div>
@@ -126,6 +143,8 @@ interface DialogPanelProps {
   subtitle?: string
   /** 提供则显示关闭按钮 (sticky 面板可用来"清空 focused")。 */
   onClose?: () => void
+  /** 提供则显示左上角"← 返回"箭头。 */
+  onBack?: () => void
   children: ReactNode
   className?: string
 }
@@ -134,7 +153,7 @@ interface DialogPanelProps {
  * 与 Dialog 同款样式的 sticky 右侧面板 —— 用于桌面端常驻"释义"等场景。
  * 内部 chrome (header + 滚动 body) 与 Dialog 完全一致。
  */
-export function DialogPanel({ title, subtitle, onClose, children, className }: DialogPanelProps) {
+export function DialogPanel({ title, subtitle, onClose, onBack, children, className }: DialogPanelProps) {
   return (
     <aside
       className={[
@@ -142,7 +161,7 @@ export function DialogPanel({ title, subtitle, onClose, children, className }: D
         className ?? '',
       ].join(' ')}
     >
-      <DialogShell title={title} subtitle={subtitle} onClose={onClose}>
+      <DialogShell title={title} subtitle={subtitle} onClose={onClose} onBack={onBack}>
         {children}
       </DialogShell>
     </aside>

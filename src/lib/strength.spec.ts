@@ -17,7 +17,7 @@ function pillar(gan: string, zhi: string, shishen: string, label: DetailedPillar
     hideShishenWuxings: [],
     shensha: [],
     zizuo: '',
-  } as DetailedPillar
+  } as unknown as DetailedPillar
 }
 
 function pillars(parts: Array<[string, string, string]>): DetailedPillar[] {

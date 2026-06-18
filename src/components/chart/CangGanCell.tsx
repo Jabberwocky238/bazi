@@ -1,6 +1,6 @@
 import { ganWuxing, type Gan } from '@jabberwocky238/bazi-engine'
 import { WUXING_TEXT } from '@@/css'
-import { SkillLink } from '@@/SkillLink'
+import { SkillLink, type SkillItem } from '@@/SkillLink'
 
 export function CangGanCell({
   gans,
@@ -18,15 +18,20 @@ export function CangGanCell({
       {hasAny ? (
         <div className="flex flex-col gap-0.5">
           {gans.map((g, i) => {
+            const ss = shishens[i] ?? ''
             const sWx = shishenWuxings[i] ?? ''
+            // 点击藏干 → multiple 列出 [天干, 十神] 两条释义;
+            // 十神为"日主"(无释义) 时退化为 single (仅天干)。
+            const items: SkillItem[] = [
+              { category: 'tiangan', name: g, subtitle: '藏干' },
+              { category: 'shishen', name: ss, subtitle: '藏干' },
+            ]
             return (
-              <div key={i} className="flex items-center justify-center gap-1.5 md:gap-2">
-                <SkillLink category="tiangan" name={g}>
+              <div key={i} className="flex items-center justify-center">
+                <SkillLink items={items} listTitle={`${g}${ss}`} className="flex items-center gap-1.5 md:gap-2">
                   <span className={`font-bold ${WUXING_TEXT[ganWuxing(g as Gan)] ?? ''}`}>{g}</span>
-                </SkillLink>
-                <SkillLink category="shishen" name={shishens[i] ?? ''}>
                   <span className={`text-[11px] md:text-xs ${WUXING_TEXT[sWx] ?? 'text-slate-500 dark:text-slate-400'}`}>
-                    {shishens[i] ?? ''}
+                    {ss}
                   </span>
                 </SkillLink>
               </div>

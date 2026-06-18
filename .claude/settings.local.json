@@ -16,28 +16,19 @@
       "Bash(git diff *)",
       "Bash(git ls-tree *)",
       "Bash(python3 *)",
-      "Bash(command -v chromium-cli)",
-      "Bash(command -v playwright)",
-      "Bash(command -v npx)",
       "Bash(npm exec *)",
       "WebSearch",
       "Bash(git switch *)",
       "Bash(git commit *)",
-      "Bash(tsc *)",
       "Bash(bunx tsc *)",
       "Bash(git config *)",
-      "Bash(git -C bazi-engine remote -v)",
-      "Bash(git -C bazi-engine status --short --branch)",
-      "Bash(git -C bazi-engine log --oneline --max-count=5)",
-      "Bash(git -C bazi-engine diff --stat)",
-      "Bash(git -C bazi-engine status --short)",
-      "Bash(git -C bazi-engine diff -- src/ganzhi/common.ts src/ganzhi/index.ts src/index.ts src/zizuo.ts)",
       "Bash(git *)",
       "Bash(bunx cap *)",
       "Bash(npx cap *)"
     ],
     "deny": [
-      "Bash(npm install *)"
+      "Bash(tsc *)",
+      "Bash(npm *)"
     ]
   }
 }

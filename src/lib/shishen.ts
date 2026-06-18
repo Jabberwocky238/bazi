@@ -25,14 +25,6 @@ import { CHONG_PAIR, SHI_SHEN_CAT, YANG_GANS } from './shared'
 // useBazi —— 持有 BaziResult + 柱面派生 + 五行查询
 // ————————————————————————————————————————————————————————
 
-const EMPTY_BAZI: BaziResult = {
-  solarStr: '',
-  trueSolarStr: '',
-  lunarStr: '',
-  pillars: [],
-  hourKnown: false,
-}
-
 interface BaziDerived {
   /** 日主天干。pillars 不齐时回空串。 */
   dayGan: Gan | ''

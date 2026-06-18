@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { computeFromState } from '@@/stores/compute'
 import type { Pillar } from '@/lib'
 import { EMPTY_PILLAR } from '@/lib'
@@ -8,22 +7,16 @@ import { BaziChart } from '@@/chart/BaziChart'
 import { ErrorBoundary } from '@@/ErrorBoundary'
 import { GenericLayout } from '@@/GenericLayout'
 import { defaultA, defaultB, type HepanState } from '@@/HepanInput'
-import { BaziFormView } from '@@/BaziForm/BaziFormView'
-import { applySavedEntry, type SavedEntry } from '@@/BaziForm/SaveLoadControls'
+import { BaziForm } from '@@/BaziForm'
+import { applySavedEntry, type SavedEntry } from '@@/stores/savedEntries'
 import { CommonButton } from '@@/CommonButton'
-
-const DEFAULT_STORAGE_KEY = 'bazi.saved.v1'
-
-function loadAllSaved(): SavedEntry[] {
-  try {
-    const raw = localStorage.getItem(DEFAULT_STORAGE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as SavedEntry[]) : []
-  } catch {
-    return []
-  }
-}
+import { useDialog } from '@@/DialogContext'
+import { LoadDialog } from '@@/LoadDialog'
+import {
+  useSavedEntries,
+  DEFAULT_STORAGE_KEY,
+  MAIN_PRESETS,
+} from '@@/stores/savedEntries'
 
 interface HepanInputPageState {
   a: HepanState
@@ -52,14 +45,12 @@ export default function HepanInput() {
     return loadHepanInputPageState() || { a: defaultA, b: defaultB }
   })
   const [activeTab, setActiveTab] = useState<'a' | 'b'>('a')
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [savedEntries, setSavedEntries] = useState<SavedEntry[]>([])
+  const { open } = useDialog()
+  const { init, entries } = useSavedEntries()
 
   useEffect(() => {
-    if (dialogOpen) {
-      setSavedEntries(loadAllSaved())
-    }
-  }, [dialogOpen])
+    init(DEFAULT_STORAGE_KEY, MAIN_PRESETS)
+  }, [init])
 
   const handleChange = (newState: Partial<HepanInputPageState>) => {
     const next = { ...state, ...newState }
@@ -87,50 +78,23 @@ export default function HepanInput() {
   const tabAName = state.a.name || '左侧人物'
   const tabBName = state.b.name || '右侧人物'
 
-  const handleLoadEntry = (entry: SavedEntry) => {
-    const next = applySavedEntry(activeState, entry)
-    if (entry.name) {
-      next.name = entry.name
-    }
-    setActiveState(next)
-    setDialogOpen(false)
+  const handleLoad = () => {
+    open((onClose) => (
+      <LoadDialog
+        open={true}
+        onClose={onClose}
+        entries={entries}
+        onLoad={(entry) => {
+          const next = applySavedEntry(activeState, entry)
+          if (entry.name) {
+            next.name = entry.name
+          }
+          setActiveState(next)
+          onClose()
+        }}
+      />
+    ))
   }
-
-  const loadDialog = dialogOpen ? createPortal(
-    <div className="fixed inset-0 z-[1000] flex items-start justify-center bg-black/50 px-3 py-8 backdrop-blur-sm md:items-center md:p-6">
-      <div className="flex max-h-[85vh] w-[min(520px,92vw)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-        <div className="shrink-0 flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
-          <div className="text-sm font-medium tracking-[0.2em] text-slate-600 dark:text-slate-300">已保存命例</div>
-          <button
-            type="button"
-            onClick={() => setDialogOpen(false)}
-            className="shrink-0 text-xs text-slate-500 hover:text-amber-700 dark:text-slate-400 dark:hover:text-amber-400"
-          >
-            关闭 ×
-          </button>
-        </div>
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 scrollbar-thin">
-          {savedEntries.length === 0 ? (
-            <div className="py-6 text-sm text-slate-500 text-center">暂无保存记录</div>
-          ) : (
-            <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
-              {savedEntries.map((e) => (
-                <div key={e.name} className="flex items-stretch bg-white dark:bg-slate-900">
-                  <button type="button" onClick={() => handleLoadEntry(e)} className="flex-1 min-w-0 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800">
-                    <div className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{e.name}</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                      八字 {e.bazi.filter((g: string) => g.length === 2).join(' ')} · {e.sex === 1 ? '男' : '女'}
-                    </div>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>,
-    document.body,
-  ) : null
 
   return (
     <GenericLayout errorBoundaryName="HepanInput" title="八字合盘" link={<Link to="/">← 首页</Link>}>
@@ -157,11 +121,10 @@ export default function HepanInput() {
 
         {/* 输入面板 */}
         <div className="space-y-4">
-          {/* BaziFormView 输入 */}
-          <BaziFormView
+          {/* BaziForm 输入 */}
+          <BaziForm
             state={activeState}
             onChange={setActiveState}
-            isMainBaziInput
             hideButtons
           />
 
@@ -169,7 +132,7 @@ export default function HepanInput() {
           <div className="space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <CommonButton
-                onClick={() => setDialogOpen(true)}
+                onClick={handleLoad}
                 width="w-1/2 md:w-[50%]"
               >
                 加载
@@ -198,7 +161,6 @@ export default function HepanInput() {
           </div>
         </div>
       </div>
-      {loadDialog}
     </GenericLayout>
   )
 }

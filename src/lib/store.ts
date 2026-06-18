@@ -23,13 +23,11 @@ export interface Pillar {
   zizuo: string
 }
 
-export interface BaziResult {
-  solarStr: string
-  /** 真太阳时（仅均时差修正；时辰未知时为空串）。 */
-  trueSolarStr: string
-  lunarStr: string
-  pillars: Pillar[]
-  hourKnown: boolean
+export type BaziResult = {
+  year: [Gan, Zhi]
+  month: [Gan, Zhi]
+  day: [Gan, Zhi]
+  hour: [Gan, Zhi] | null
 }
 
 export interface SkillFocus {

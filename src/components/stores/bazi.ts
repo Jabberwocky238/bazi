@@ -90,20 +90,7 @@ const initial = readQuery()
 
 export const useBaziInput = create<BaziInputState>((set, get) => ({
   ...initial,
-  setMode: (mode) => set({ mode }),
-  setDate: ({ year, month, day, hour, minute, sex }) => {
-    const hourKnown = hour !== HOUR_UNKNOWN
-    set({
-      year,
-      month,
-      day,
-      hour,
-      minute: hourKnown ? minute : 0,
-      sex,
-    })
-  },
-  setLongitude: (longitude) => set({ longitude }),
-  setBaziGz: (bazi, sex) => set({ bazi, sex }),
+  setBazi: (bazi, sex) => set({ bazi, sex }),
   syncToUrl: () => {
     if (typeof window === 'undefined') return
     const { mode, year, month, day, hour, minute, sex, longitude, bazi } = get()
@@ -127,40 +114,3 @@ export const useBaziInput = create<BaziInputState>((set, get) => ({
     window.history.replaceState(null, '', next)
   },
 }))
-
-// ————————————————————————————————————————————————————————
-// 输入 → 输出 wiring。
-// 实际计算在 computeFromState (compute.ts) 中, 此处仅写入 store + 调大运。
-// ————————————————————————————————————————————————————————
-
-function pushBazi(s: BaziInputState) {
-  const r = computeFromState(s)
-  if (!r) return
-  useBazi.getState().setBazi(r.bazi)
-  if (r.effectiveDate) {
-    const { year, month, day, hour, minute } = r.effectiveDate
-    useDayun.getState().setDayun(computeDaYun(year, month, day, hour, minute, s.sex))
-  } else {
-    useDayun.getState().setDayun(null)
-  }
-}
-
-pushBazi(useBaziInput.getState())
-
-useBaziInput.subscribe((s, prev) => {
-  if (
-    s.mode === prev.mode &&
-    s.year === prev.year &&
-    s.month === prev.month &&
-    s.day === prev.day &&
-    s.hour === prev.hour &&
-    s.minute === prev.minute &&
-    s.sex === prev.sex &&
-    s.longitude === prev.longitude &&
-    s.bazi[0] === prev.bazi[0] &&
-    s.bazi[1] === prev.bazi[1] &&
-    s.bazi[2] === prev.bazi[2] &&
-    s.bazi[3] === prev.bazi[3]
-  ) return
-  pushBazi(s)
-})

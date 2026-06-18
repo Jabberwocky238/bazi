@@ -1,7 +1,13 @@
-import { Link } from 'react-router-dom'
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import { GenericLayout } from '@@/GenericLayout'
+import { DialogProvider } from '@/components/DialogContext'
+import { Suspense } from 'react'
+import BaziInput from './BaziInput'
+import BaziShow from './BaziShow'
+import HepanInput from './HepanInput'
+import HepanShow from './HepanShow'
 
-export default function Index() {
+function Index() {
   return (
     <GenericLayout errorBoundaryName="Index" title="八字补完计划">
       <div className="max-w-md mx-auto space-y-4 py-8">
@@ -23,4 +29,20 @@ export default function Index() {
       </div>
     </GenericLayout>
   )
+}
+
+export default function App() {
+  return  <DialogProvider>
+    <BrowserRouter>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/bazi-input" element={<BaziInput />} />
+          <Route path="/bazi-show" element={<BaziShow />} />
+          <Route path="/hepan-input" element={<HepanInput />} />
+          <Route path="/hepan-show" element={<HepanShow />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  </DialogProvider>
 }

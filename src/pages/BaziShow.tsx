@@ -1,7 +1,5 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useBazi } from '@/lib'
-import { BaziForm } from '@@/BaziForm'
 import { BaziMeta } from '@@/BaziMeta'
 import { BaziChart } from '@@/chart/BaziChart'
 import { BaziRelationsPanel } from '@@/BaziRelationsPanel'
@@ -17,8 +15,9 @@ import { GanZhiPanel } from '@@/GanZhiPanel'
 import { ErrorBoundary } from '@@/ErrorBoundary'
 import { DisclaimerDialog } from '@@/DisclaimerDialog'
 import { GenericLayout } from '@@/GenericLayout'
+import { useState } from 'react'
 
-function App() {
+export default function BaziShow() {
   const solarStr = useBazi((s) => s.solarStr)
   const trueSolarStr = useBazi((s) => s.trueSolarStr)
   const lunarStr = useBazi((s) => s.lunarStr)
@@ -27,9 +26,9 @@ function App() {
 
   return (
     <GenericLayout
-      errorBoundaryName="App"
+      errorBoundaryName="BaziShow"
       title="八字补完计划"
-      link={<Link to="/hepan">← 合盘分析</Link>}
+      link={<Link to="/bazi-input">← 修改输入</Link>}
       description="点击任意词条查看释义"
       descriptionRight={
         <button
@@ -45,7 +44,6 @@ function App() {
 
       <div className="grid gap-5 md:gap-6 md:grid-cols-[minmax(0,6fr)_minmax(0,4fr)]">
         <section className="min-w-0">
-          <ErrorBoundary name="BaziForm"><BaziForm /></ErrorBoundary>
           <ErrorBoundary name="BaziMeta"><BaziMeta solar={solarStr} trueSolar={trueSolarStr} lunar={lunarStr} /></ErrorBoundary>
           <ErrorBoundary name="BaziChart"><BaziChart pillars={pillars} /></ErrorBoundary>
           <ErrorBoundary name="DaYunPanel"><DaYunPanel /></ErrorBoundary>
@@ -66,5 +64,3 @@ function App() {
     </GenericLayout>
   )
 }
-
-export default App

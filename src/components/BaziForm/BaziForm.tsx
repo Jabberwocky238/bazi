@@ -6,7 +6,12 @@ import { MAIN_PRESETS } from './SaveLoadControls'
  * 主盘 BaziForm — useBaziInput store ↔ BaziFormView 的薄连接器.
  * 单一通道: state ← store, onChange → store.setState (zustand 浅合并).
  */
-export function BaziForm() {
+interface BaziFormProps {
+  showViewButton?: boolean
+  onViewDetail?: () => void
+}
+
+export function BaziForm({ showViewButton, onViewDetail }: BaziFormProps = {}) {
   const mode = useBaziInput((s) => s.mode)
   const year = useBaziInput((s) => s.year)
   const month = useBaziInput((s) => s.month)
@@ -24,6 +29,9 @@ export function BaziForm() {
       onChange={(next) => useBaziInput.setState(next)}
       onSubmitted={syncToUrl}
       saveLoad={{ presets: MAIN_PRESETS }}
+      isMainBaziInput={true}
+      showViewButton={showViewButton}
+      onViewDetail={onViewDetail}
     />
   )
 }

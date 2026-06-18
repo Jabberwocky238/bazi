@@ -3,6 +3,7 @@ import { HOUR_UNKNOWN } from '@/lib'
 import type { BaziInputMode } from '@@/stores'
 import type { BaziInputData } from '@@/stores/compute'
 import { SaveLoadControls, applySavedEntry, type SavedEntry } from './SaveLoadControls'
+import { CommonButton } from '@@/CommonButton'
 
 /**
  * 通用 八字输入面板 — 4-tab UI (公历 / 真太阳时 / 公历+经度 / 八字直输).
@@ -33,12 +34,19 @@ export interface BaziFormViewProps {
   trailing?: ReactNode
   /** 在表单首字段前插入 (合盘可放 姓名 输入). */
   leading?: ReactNode
+  /** 是否为主八字输入面板 (控制tab栏布局) */
+  isMainBaziInput?: boolean
+  /** 显示查看详情按钮 */
+  showViewButton?: boolean
+  /** 查看详情按钮点击 */
+  onViewDetail?: () => void
+  /** 隐藏内置按钮区域 (由父组件自定义按钮) */
+  hideButtons?: boolean
 }
 
 const TABS: { key: BaziInputMode; label: string; desc: string }[] = [
   { key: 'gregorian',     label: '公历', desc: '常规出生时间' },
   { key: 'trueSolar',     label: '真太阳时', desc: '已校正时间' },
-  { key: 'gregorianLong', label: '公历 + 经度', desc: '按出生地修正' },
   { key: 'bazi',          label: '八字直输', desc: '直接输入四柱' },
 ]
 
@@ -52,9 +60,6 @@ const fieldInput =
   'placeholder:text-slate-300 disabled:cursor-not-allowed disabled:opacity-40 ' +
   'dark:text-slate-100 dark:placeholder:text-slate-700'
 const hintCls = 'text-[10px] text-slate-400 dark:text-slate-600 leading-relaxed'
-const primaryBtn =
-  'inline-flex items-center justify-center rounded-xl bg-amber-700 px-5 py-3 text-sm font-semibold text-white ' +
-  'shadow-sm transition hover:bg-amber-600 active:scale-[0.99]'
 const GAN_CHARS = '甲乙丙丁戊己庚辛壬癸'
 const ZHI_CHARS = '子丑寅卯辰巳午未申酉戌亥'
 
@@ -102,7 +107,8 @@ function leadingWithCard(leading: ReactNode) {
 }
 
 export function BaziFormView({
-  state, onChange, onSubmitted, saveLoad, trailing, leading,
+  state, onChange, onSubmitted, saveLoad, trailing, leading, isMainBaziInput = false,
+  showViewButton = false, onViewDetail, hideButtons = false,
 }: BaziFormViewProps) {
   const { mode, year, month, day, hour, minute, longitude, bazi, sex } = state
   const [hourUnknown, setHourUnknown] = useState(hour === HOUR_UNKNOWN)
@@ -113,7 +119,7 @@ export function BaziFormView({
 
   const setMode = (m: BaziInputMode) => onChange({ ...state, mode: m })
 
-  const saveLoadEl = saveLoad ? (
+  const saveLoadButtons = saveLoad ? (
     <SaveLoadControls
       current={state}
       onLoad={(e) => {
@@ -124,6 +130,7 @@ export function BaziFormView({
       storageKey={saveLoad.storageKey}
       presets={saveLoad.presets}
       compact={saveLoad.compact}
+      buttonsOnly={true}
     />
   ) : null
 
@@ -145,7 +152,7 @@ export function BaziFormView({
       day: d,
       hour: nextHour,
       minute: hourUnknown ? 0 : Number(f.get('minute')),
-      longitude: mode === 'gregorianLong' ? Number(f.get('lng')) : state.longitude,
+      longitude: mode === 'gregorian' ? (f.get('lng') ? Number(f.get('lng')) : undefined) : state.longitude,
       sex: Number(f.get('sex')) === 0 ? 0 : 1,
     })
     onSubmitted?.()
@@ -180,29 +187,50 @@ export function BaziFormView({
 
   const hourInputValue = hour === HOUR_UNKNOWN ? 0 : hour
 
+  const paimianBtn = showViewButton && onViewDetail ? (
+    <CommonButton
+      variant="primary"
+      onClick={onViewDetail}
+      width="w-full md:w-[50%]"
+      type="button"
+    >
+      排盘
+    </CommonButton>
+  ) : (
+    <CommonButton
+      variant="primary"
+      width="w-full md:w-[50%]"
+      type="submit"
+    >
+      排盘
+    </CommonButton>
+  )
+
   return (
-    <div className="relative z-30 mb-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/75 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/75">
-      <div className="grid grid-cols-2 gap-1.5 border-b border-slate-100 bg-slate-50/80 p-2 dark:border-slate-800 dark:bg-slate-950/40 md:grid-cols-4">
-        {TABS.map((t) => {
-          const active = mode === t.key
-          return (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setMode(t.key)}
-              className={[
-                'rounded-2xl px-3 py-2.5 text-left transition',
-                active
-                  ? 'bg-white text-amber-700 shadow-sm ring-1 ring-amber-500/25 dark:bg-slate-900 dark:text-amber-400'
-                  : 'text-slate-500 hover:bg-white/70 hover:text-amber-700 dark:text-slate-400 dark:hover:bg-slate-900/70 dark:hover:text-amber-400',
-              ].join(' ')}
-            >
-              <div className="text-sm font-semibold tracking-wide">{t.label}</div>
-              <div className="mt-0.5 text-[10px] opacity-70">{t.desc}</div>
-            </button>
-          )
-        })}
-      </div>
+    <div className={`${isMainBaziInput ? 'relative z-30 mb-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/75 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/75' : ''}`}>
+      {isMainBaziInput && (
+        <div className={`grid gap-1.5 border-b border-slate-100 bg-slate-50/80 p-2 dark:border-slate-800 dark:bg-slate-950/40 grid-cols-3`}>
+          {TABS.map((t) => {
+            const active = mode === t.key
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setMode(t.key)}
+                className={[
+                  'rounded-2xl px-3 py-2.5 text-left transition',
+                  active
+                    ? 'bg-white text-amber-700 shadow-sm ring-1 ring-amber-500/25 dark:bg-slate-900 dark:text-amber-400'
+                    : 'text-slate-500 hover:bg-white/70 hover:text-amber-700 dark:text-slate-400 dark:hover:bg-slate-900/70 dark:hover:text-amber-400',
+                ].join(' ')}
+              >
+                <div className="text-sm font-semibold tracking-wide">{t.label}</div>
+                <div className="mt-0.5 text-[10px] opacity-70">{t.desc}</div>
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {mode === 'bazi' ? (
         <form
@@ -210,22 +238,32 @@ export function BaziFormView({
           onSubmit={onSubmitBazi}
           className="space-y-4 p-4 md:p-5"
         >
-          <div className="grid gap-2 md:grid-cols-[repeat(4,minmax(0,1fr))_7rem]">
-            {leadingWithCard(leading)}
-            <Field label="年柱"><input name="bazi-y" defaultValue={bazi[0]} placeholder="甲子 / 8字" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
-            <Field label="月柱"><input name="bazi-m" defaultValue={bazi[1]} placeholder="甲子 / 8字" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
-            <Field label="日柱"><input name="bazi-d" defaultValue={bazi[2]} placeholder="甲子 / 8字" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
-            <Field label="时柱"><input name="bazi-h" defaultValue={bazi[3]} placeholder="甲子 / 8字" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
-            <Field label="性别"><select name="sex" defaultValue={sex} className={fieldInput}><option value={1}>男</option><option value={0}>女</option></select></Field>
+          <div className="space-y-2">
+            {/* 第一行：年月日时柱 */}
+            <div className="grid gap-2 grid-cols-[repeat(4,minmax(0,1fr))]">
+              {leadingWithCard(leading)}
+              <Field label="年柱"><input name="bazi-y" defaultValue={bazi[0]} placeholder="甲子 / 8字" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
+              <Field label="月柱"><input name="bazi-m" defaultValue={bazi[1]} placeholder="甲子 / 8字" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
+              <Field label="日柱"><input name="bazi-d" defaultValue={bazi[2]} placeholder="甲子 / 8字" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
+              <Field label="时柱"><input name="bazi-h" defaultValue={bazi[3]} placeholder="甲子 / 8字" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
+            </div>
+            {/* 第二行：性别 */}
+            <div className="grid gap-2 grid-cols-[7rem]">
+              <Field label="性别"><select name="sex" defaultValue={sex} className={fieldInput}><option value={1}>男</option><option value={0}>女</option></select></Field>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
-            <button type="submit" className={primaryBtn}>排盘</button>
-            {trailing}
-            {saveLoadEl}
-            <span className={`w-full ${hintCls}`}>
-              八字直输模式: 年/月/日/时四柱必填；也可在任意柱粘贴完整 8 字八字（如 甲子乙丑丙寅丁卯）自动拆分；大运不可计算 (无日期)。
-            </span>
-          </div>
+          {!hideButtons && (
+            <div className="space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+              <div className="flex flex-wrap items-center gap-2">
+                {saveLoadButtons}
+                {paimianBtn}
+              </div>
+              {trailing}
+              <span className={`w-full ${hintCls}`}>
+                出生日期只为计算八字本身，当八字无变化时，无需修正出生日期
+              </span>
+            </div>
+          )}
         </form>
       ) : (
         <form
@@ -233,52 +271,53 @@ export function BaziFormView({
           onSubmit={onSubmitGregorianLike}
           className="space-y-4 p-4 md:p-5"
         >
-          <div className="grid gap-2 md:grid-cols-[1.15fr_0.75fr_0.75fr_0.75fr_0.75fr_7rem]">
-            {leadingWithCard(leading)}
-            <Field label="年份"><input name="year" type="number" defaultValue={year} className={fieldInput} /></Field>
-            <Field label="月份"><input name="month" type="number" min={1} max={12} defaultValue={month} className={fieldInput} /></Field>
-            <Field label="日期"><input name="day" type="number" min={1} max={31} defaultValue={day} className={fieldInput} /></Field>
-            <Field label="小时"><input name="hour" type="number" min={0} max={23} defaultValue={hourInputValue} disabled={hourUnknown} className={fieldInput} /></Field>
-            <Field label="分钟"><input name="minute" type="number" min={0} max={59} defaultValue={minute} disabled={hourUnknown} className={fieldInput} /></Field>
-            <Field label="性别"><select name="sex" defaultValue={sex} className={fieldInput}><option value={1}>男</option><option value={0}>女</option></select></Field>
-            {mode === 'gregorianLong' && (
-              <Field label="出生地经度" className="md:col-span-2">
-                <div className="flex items-baseline gap-2">
-                  <input name="lng" type="number" step="0.01" min={-180} max={180} defaultValue={longitude} className={fieldInput} />
-                  <span className="text-xs text-slate-400">°E</span>
-                </div>
-              </Field>
-            )}
-            <label className="flex min-h-[4.25rem] items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2.5 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-400">
-              <input
-                type="checkbox"
-                checked={hourUnknown}
-                onChange={(e) => setHourUnknown(e.currentTarget.checked)}
-                className="accent-amber-700"
-              />
-              <span>时柱未知</span>
-            </label>
+          <div className="space-y-2">
+            {/* 第一行：年月日时分 */}
+            <div className="grid gap-2 grid-cols-[1.15fr_0.75fr_0.75fr_0.75fr_0.75fr]">
+              {leadingWithCard(leading)}
+              <Field label="年份"><input name="year" type="number" defaultValue={year} className={fieldInput} /></Field>
+              <Field label="月份"><input name="month" type="number" min={1} max={12} defaultValue={month} className={fieldInput} /></Field>
+              <Field label="日期"><input name="day" type="number" min={1} max={31} defaultValue={day} className={fieldInput} /></Field>
+              <Field label="小时"><input name="hour" type="number" min={0} max={23} defaultValue={hourInputValue} disabled={hourUnknown} className={fieldInput} /></Field>
+              <Field label="分钟"><input name="minute" type="number" min={0} max={59} defaultValue={minute} disabled={hourUnknown} className={fieldInput} /></Field>
+            </div>
+            {/* 第二行：其他选项 */}
+            <div className="grid gap-2 grid-cols-[7rem_1fr_1fr]">
+              <Field label="性别"><select name="sex" defaultValue={sex} className={fieldInput}><option value={1}>男</option><option value={0}>女</option></select></Field>
+              {mode === 'gregorian' && (
+                <Field label="出生地经度">
+                  <div className="flex items-baseline gap-2">
+                    <input name="lng" type="number" step="0.01" min={-180} max={180} defaultValue={longitude || ''} placeholder="留空不校正" className={fieldInput} />
+                    <span className="text-xs text-slate-400">°E</span>
+                  </div>
+                </Field>
+              )}
+              {mode !== 'gregorian' && (
+                <div></div>
+              )}
+              <label className="flex min-h-[4.25rem] items-center gap-2 rounded-md border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-400">
+                <input
+                  type="checkbox"
+                  checked={hourUnknown}
+                  onChange={(e) => setHourUnknown(e.currentTarget.checked)}
+                  className="accent-amber-700"
+                />
+                <span>时柱未知</span>
+              </label>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
-            <button type="submit" className={primaryBtn}>排盘</button>
-            {trailing}
-            {saveLoadEl}
-            {mode === 'trueSolar' && (
+          {!hideButtons && (
+            <div className="space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+              <div className="flex flex-wrap items-center gap-2">
+                {saveLoadButtons}
+                {paimianBtn}
+              </div>
+              {trailing}
               <span className={`w-full ${hintCls}`}>
-                真太阳时模式: 输入视作已修正的真太阳时, 时柱按输入时辰直接划分, 不再做均时差/经度修正。
+                出生日期只为计算八字本身，当八字无变化时，无需修正出生日期
               </span>
-            )}
-            {mode === 'gregorianLong' && (
-              <span className={`w-full ${hintCls}`}>
-                公历 + 经度: 自动应用均时差(仅太阳轨道) + 经度差 (与 120°E 差 1° = ±4 分钟) → 真太阳时, 再排时柱。
-              </span>
-            )}
-            {mode === 'gregorian' && (
-              <span className={`w-full ${hintCls}`}>
-                公历模式: 直接以 wall clock 排盘 (现代多数算法), 真太阳时仅作参考显示。
-              </span>
-            )}
-          </div>
+            </div>
+          )}
         </form>
       )}
     </div>

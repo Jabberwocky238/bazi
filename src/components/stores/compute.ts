@@ -187,7 +187,7 @@ export interface BaziInputData {
   day: number
   hour: number
   minute: number
-  longitude: number
+  longitude?: number
   bazi: [string, string, string, string]
   sex: Sex
 }
@@ -241,7 +241,7 @@ export function computeFromState(s: BaziInputData): ComputedFromState | null {
   let solarStr = ''
   const hourKnown = hour !== HOUR_UNKNOWN && hour >= 0 && hour < 24
 
-  if (s.mode === 'gregorianLong' && hourKnown) {
+  if (s.mode === 'gregorian' && s.longitude !== undefined && hourKnown) {
     const eot = equationOfTime(year, month, day)
     const longShift = (s.longitude - 120) * 4
     const total = Math.round(eot + longShift)
@@ -259,7 +259,7 @@ export function computeFromState(s: BaziInputData): ComputedFromState | null {
   }
 
   const r = computeBazi(year, month, day, hour, minute, s.sex)
-  if (s.mode === 'gregorianLong' && solarStr) {
+  if (s.mode === 'gregorian' && s.longitude !== undefined && solarStr) {
     r.solarStr = `${solarStr} (公历)`
     r.trueSolarStr = `${trueSolarStr} (真太阳时)`
   } else if (s.mode === 'trueSolar' && trueSolarStr) {

@@ -1,0 +1,26 @@
+import { Link } from 'react-router-dom'
+import { GenericLayout } from '@@/GenericLayout'
+
+export default function Index() {
+  return (
+    <GenericLayout errorBoundaryName="Index" title="八字补完计划">
+      <div className="max-w-md mx-auto space-y-4 py-8">
+        <Link
+          to="/bazi-input"
+          className="block w-full text-center px-6 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+        >
+          <div className="text-lg font-medium">八字排盘</div>
+          <div className="text-sm text-slate-500">输入出生时间，查看八字命盘</div>
+        </Link>
+
+        <Link
+          to="/hepan-input"
+          className="block w-full text-center px-6 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+        >
+          <div className="text-lg font-medium">八字合盘</div>
+          <div className="text-sm text-slate-500">对比两人八字，查看合盘分析</div>
+        </Link>
+      </div>
+    </GenericLayout>
+  )
+}

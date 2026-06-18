@@ -139,6 +139,14 @@ export const EMPTY_RESULT: BaziResult = {
   ganSet: new Set(),
 }
 
+/** 四柱占位 (年/月/日/时)，label 各异，用于无有效排盘时渲染空表，避免 key 重复。 */
+export function emptyPillars(): ExtendedDetailedPillar[] {
+  return (['年柱', '月柱', '日柱', '时柱'] as PillarType[]).map((label) => ({
+    ...EMPTY_PILLAR,
+    label,
+  }))
+}
+
 /** 填充派生命段到 BaziResult，并为每个 pillar 添加扩展字段 */
 export function fillDerivedFields(result: {
   solarStr: string

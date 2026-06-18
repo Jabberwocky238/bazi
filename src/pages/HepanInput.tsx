@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { computeFromState } from '@@/stores/compute'
 import type { Pillar } from '@/lib'
-import { EMPTY_PILLAR } from '@/lib'
+import { emptyPillars } from '@/lib'
 import { BaziChart } from '@@/chart/BaziChart'
 import { ErrorBoundary } from '@@/ErrorBoundary'
 import { GenericLayout } from '@@/GenericLayout'
@@ -27,7 +27,14 @@ function loadHepanInputPageState(): HepanInputPageState | null {
   try {
     const raw = localStorage.getItem('hepan.input.v1')
     if (!raw) return null
-    return JSON.parse(raw) as HepanInputPageState
+    const parsed = JSON.parse(raw) as Partial<HepanInputPageState> | null
+    if (!parsed || (!parsed.a && !parsed.b)) return null
+    const norm = (s: Partial<HepanState> | undefined, fallback: HepanState): HepanState => ({
+      ...fallback,
+      ...(s ?? {}),
+      bazi: Array.isArray(s?.bazi) ? (s!.bazi as [string, string, string, string]) : fallback.bazi,
+    })
+    return { a: norm(parsed.a, defaultA), b: norm(parsed.b, defaultB) }
   } catch {
     return null
   }
@@ -60,11 +67,11 @@ export default function HepanInput() {
 
   const aResult = computeFromState(state.a)?.bazi || {
     solarStr: '', trueSolarStr: '', lunarStr: '',
-    pillars: [EMPTY_PILLAR, EMPTY_PILLAR, EMPTY_PILLAR, EMPTY_PILLAR], hourKnown: false
+    pillars: emptyPillars(), hourKnown: false
   }
   const bResult = computeFromState(state.b)?.bazi || {
     solarStr: '', trueSolarStr: '', lunarStr: '',
-    pillars: [EMPTY_PILLAR, EMPTY_PILLAR, EMPTY_PILLAR, EMPTY_PILLAR], hourKnown: false
+    pillars: emptyPillars(), hourKnown: false
   }
 
   const hasValidBazi = (pillars: Pillar[]) => pillars && pillars.length === 4 && pillars.every(p => p.gan && p.zhi)
@@ -147,7 +154,7 @@ export default function HepanInput() {
                 <CommonButton
                   variant="primary"
                   width="w-1/2 md:w-[50%]"
-                  as="a"
+                  as="span"
                 >
                   开始合盘
                 </CommonButton>

@@ -162,10 +162,11 @@ export interface ComputedFromState {
 
 export function computeFromState(s: BaziInputData): ComputedFromState | null {
   if (s.mode === 'bazi') {
-    const valid = s.bazi.slice(0, 3).every((g) => g.length === 2)
+    const bazi = Array.isArray(s.bazi) ? s.bazi : []
+    const valid = bazi.slice(0, 3).every((g) => typeof g === 'string' && g.length === 2)
     if (!valid) return null
     return {
-      bazi: parseBaziToResult(s.bazi, s.sex),
+      bazi: parseBaziToResult(bazi as [string, string, string, string], s.sex),
       effectiveDate: null,
     }
   }

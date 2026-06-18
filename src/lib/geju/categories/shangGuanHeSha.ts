@@ -34,11 +34,11 @@ export function isShangGuanHeSha(): GejuHit | null {
     || (shishen.tou('七杀') && extras.tou('伤官'))
 
   // —— 条件 4: 无争合 (透 ≤ 1 each, 含岁运) ——
-  const shangN = bazi.mainArr.filter((p, i) => i !== 2 && p.shishen === '伤官').length
-  const shaN = bazi.mainArr.filter((p, i) => i !== 2 && p.shishen === '七杀').length
+  const shangN = bazi.mainArr.filter((p, i) => i !== 2 && p.gan.shishen === '伤官').length
+  const shaN = bazi.mainArr.filter((p, i) => i !== 2 && p.gan.shishen === '七杀').length
   const baseClean = shangN <= 1 && shaN <= 1
-  const extraShang = extras.extraArr.filter((p) => p.shishen === '伤官').length
-  const extraSha = extras.extraArr.filter((p) => p.shishen === '七杀').length
+  const extraShang = extras.extraArr.filter((p) => p.gan.shishen === '伤官').length
+  const extraSha = extras.extraArr.filter((p) => p.gan.shishen === '七杀').length
   const extClean = baseClean && (shangN + extraShang) <= 1 && (shaN + extraSha) <= 1
 
   const baseFormed = baseStruct && baseClean

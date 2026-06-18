@@ -23,9 +23,9 @@ import { analyzeHepanCross } from './cross'
 export function wxDistribution(pillars: DetailedPillar[]): Record<WuXing, number> {
   const cnt: Record<WuXing, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 }
   for (const p of pillars) {
-    const gw = ganWuxing(p.gan) as WuXing | undefined
+    const gw = ganWuxing(p.gan.name) as WuXing | undefined
     if (gw) cnt[gw] += 1
-    const zw = zhiWuxing(p.zhi) as WuXing | undefined
+    const zw = zhiWuxing(p.zhi.name) as WuXing | undefined
     if (zw) cnt[zw] += 1
   }
   return cnt

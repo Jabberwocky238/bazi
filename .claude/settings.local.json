@@ -11,7 +11,8 @@
       "Bash(bunx cap *)",
       "Bash(npx cap *)",
       "Bash(node *)",
-      "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx\\)$\")",
+      "Bash(bash scripts/check-exports.sh)"
     ],
     "deny": [
       "Bash(tsc *)",

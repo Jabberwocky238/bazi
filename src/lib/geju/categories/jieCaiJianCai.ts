@@ -32,10 +32,10 @@ export function isJieCaiJianCai(): GejuHit | null {
   const baseBijieN = shishen.countCat('比劫')
   const baseCaiN = shishen.countCat('财')
   const extraBijieAdd = extras.extraArr.filter(
-    (p) => p.shishen === '比肩' || p.shishen === '劫财',
+    (p) => p.gan.shishen === '比肩' || p.gan.shishen === '劫财',
   ).length
   const extraCaiAdd = extras.extraArr.filter(
-    (p) => p.shishen === '正财' || p.shishen === '偏财',
+    (p) => p.gan.shishen === '正财' || p.gan.shishen === '偏财',
   ).length
   const baseStruct3 = baseBijieN > baseCaiN
   const extStruct3 = (baseBijieN + extraBijieAdd) > (baseCaiN + extraCaiAdd)

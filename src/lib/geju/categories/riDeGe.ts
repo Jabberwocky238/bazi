@@ -31,22 +31,22 @@ export function isRiDeGe(): GejuHit | null {
   if (!RI_DE.has(bazi.dayGz)) return null
   const { year, month, hour } = bazi.pillars
   const otherGzs = [
-    year.gan + year.zhi,
-    month.gan + month.zhi,
-    hour.gan + hour.zhi,
+    year.gan.name + year.zhi.name,
+    month.gan.name + month.zhi.name,
+    hour.gan.name + hour.zhi.name,
   ]
   if (!otherGzs.some((gz) => RI_DE.has(gz))) return null
   const dzChong = CHONG_PAIR[bazi.dayZhi as string]
-  if (dzChong && [year.zhi, month.zhi, hour.zhi].includes(dzChong as never)) return null
+  if (dzChong && [year.zhi.name, month.zhi.name, hour.zhi.name].includes(dzChong as never)) return null
   if (shishen.tou('七杀') && (
-    month.shishen === '七杀' || hour.shishen === '七杀'
+    month.gan.shishen === '七杀' || hour.gan.shishen === '七杀'
   )) return null
   const forbiddenKuigang = RI_DE_FORBIDDEN_KUIGANG[bazi.dayGz] ?? []
   if (otherGzs.some((gz) => forbiddenKuigang.includes(gz))) return null
 
   // 岁运忌魁罡判定
   const extrasViolate = extras.extraArr.some(
-    (p) => forbiddenKuigang.includes(`${p.gan}${p.zhi}`),
+    (p) => forbiddenKuigang.includes(`${p.gan.name}${p.zhi.name}`),
   )
 
   // 主局已成格 — 仅看岁运是否破

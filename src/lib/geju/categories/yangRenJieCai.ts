@@ -23,7 +23,7 @@ export function isYangRenJieCai(): GejuHit | null {
   if (!bazi.dayYang) return null
   const yr = YANG_REN[bazi.dayGan as Gan]
   if (!yr) return null
-  if (bazi.pillars.month.zhi !== yr) return null
+  if (bazi.pillars.month.zhi.name !== yr) return null
   if (!shishen.tou('劫财')) return null
 
   const baseClean = !shishen.touCat('官杀')

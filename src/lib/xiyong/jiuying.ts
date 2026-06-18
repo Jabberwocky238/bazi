@@ -13,8 +13,8 @@ function findWxInPillars(pillars: DetailedPillar[], wx: WuXing): string[] {
   const hits: string[] = []
   pillars.forEach((p, i) => {
     const pos = ['年', '月', '日', '时'][i]
-    if (ganWuxing(p.gan) === wx) hits.push(`${pos}干 ${p.gan}`)
-    if (zhiWuxing(p.zhi) === wx) hits.push(`${pos}支 ${p.zhi}`)
+    if (ganWuxing(p.gan.name) === wx) hits.push(`${pos}干 ${p.gan.name}`)
+    if (zhiWuxing(p.zhi.name) === wx) hits.push(`${pos}支 ${p.zhi.name}`)
   })
   return hits
 }

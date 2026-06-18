@@ -76,7 +76,7 @@ function zhengGuanHeQu(): boolean {
   const heTarget = HE_GAN[bazi.dayGan as Gan]
   const guanGan = ZHENG_GUAN[bazi.dayGan as Gan]
   if (heTarget !== guanGan) return false
-  return bazi.pillars.month.gan === guanGan || bazi.pillars.hour.gan === guanGan
+  return bazi.pillars.month.gan.name === guanGan || bazi.pillars.hour.gan.name === guanGan
 }
 
 /**
@@ -109,7 +109,7 @@ function isQiShaGe(): GejuHit | null {
   const foodControl = shishen.tou('食神') && shishen.zang('食神') && shishen.adjacentTou('食神', '七杀')
   const yinHua = shishen.touCat('印') && (shishen.zang('正印') || shishen.zang('偏印'))
   const renDiSha = bazi.dayYang && bazi.mainArr.some(
-    (p, i) => i !== 2 && p.zhi === (YANG_REN[bazi.dayGan as Gan] ?? ''),
+    (p, i) => i !== 2 && p.zhi.name === (YANG_REN[bazi.dayGan as Gan] ?? ''),
   )
   const details: string[] = []
   if (heQu) details.push('合官留杀')
@@ -319,7 +319,7 @@ function isPianYinGe(): GejuHit | null {
   if (!monthGeFormed('偏印')) return null
   if (strength.level === '身极旺') return null
 
-  const ganCount = bazi.mainArr.filter((p) => p.shishen === '偏印').length
+  const ganCount = bazi.mainArr.filter((p) => p.gan.shishen === '偏印').length
   const mainCount = shishen.mainAt('偏印').length
   if (ganCount + mainCount > 2) return null
 
@@ -327,7 +327,7 @@ function isPianYinGe(): GejuHit | null {
   const baseFormed = !xiao
 
   // 岁运: 偏印加量 → 超阈 Break; 透偏印贴食神且无财救 → Break
-  const extraXiaoTou = extras.extraArr.filter((p) => p.shishen === '偏印').length
+  const extraXiaoTou = extras.extraArr.filter((p) => p.gan.shishen === '偏印').length
   const extOverflow = (ganCount + mainCount + extraXiaoTou) > 2
   const extXiao = xiao || (
     extras.tou('偏印') && !shishen.touCat('财') && !extras.touCat('财')

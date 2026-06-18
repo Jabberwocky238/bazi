@@ -32,7 +32,7 @@ export function isShenShaLiangTing(): GejuHit | null {
   const baseStruct3 = shishen.countCat('官杀') >= 3
   // 岁运透杀加量 → 仍可两停 (count + 岁运)
   const extraSha = extras.extraArr.filter(
-    (p) => p.shishen === '七杀' || p.hideShishen[0] === '七杀',
+    (p) => p.gan.shishen === '七杀' || p.zhi.cangGan[0]?.shishen === '七杀',
   ).length
   const extStruct3 = (shishen.countCat('官杀') + extraSha) >= 3
 

@@ -3,8 +3,6 @@ import type { Sex } from '@jabberwocky238/bazi-engine'
 import {
   deriveAll,
   EMPTY_RESULT,
-  type BaziDerived,
-  type ShishenDerived,
   type StrengthDerived,
   type Pillar,
   type BaziResult,
@@ -148,11 +146,51 @@ export const useBazi = create<BaziStore>((set, get) => ({
     set({ ...r, ...deriveAll(r, gejuExtras) })
   },
   setGejuExtras: (e) => {
-    const r = { pillars: get().pillars, solarStr: get().solarStr, trueSolarStr: get().trueSolarStr, lunarStr: get().lunarStr, hourKnown: get().hourKnown }
+    // 获取当前完整的 BaziResult 状态
+    const current = get()
+    const r: BaziResult = {
+      pillars: current.pillars,
+      solarStr: current.solarStr,
+      trueSolarStr: current.trueSolarStr,
+      lunarStr: current.lunarStr,
+      hourKnown: current.hourKnown,
+      dayGan: current.dayGan,
+      dayZhi: current.dayZhi,
+      dayGz: current.dayGz,
+      dayWx: current.dayWx,
+      dayYang: current.dayYang,
+      yearZhi: current.yearZhi,
+      monthZhi: current.monthZhi,
+      season: current.season,
+      monthCat: current.monthCat,
+      monthZhiBeingChong: current.monthZhiBeingChong,
+      mainArr: current.mainArr,
+      ganSet: current.ganSet,
+    }
     set({ gejuExtras: e, ...deriveAll(r, e) })
   },
   clearGejuExtras: () => {
-    const r = { pillars: get().pillars, solarStr: get().solarStr, trueSolarStr: get().trueSolarStr, lunarStr: get().lunarStr, hourKnown: get().hourKnown }
+    // 获取当前完整的 BaziResult 状态
+    const current = get()
+    const r: BaziResult = {
+      pillars: current.pillars,
+      solarStr: current.solarStr,
+      trueSolarStr: current.trueSolarStr,
+      lunarStr: current.lunarStr,
+      hourKnown: current.hourKnown,
+      dayGan: current.dayGan,
+      dayZhi: current.dayZhi,
+      dayGz: current.dayGz,
+      dayWx: current.dayWx,
+      dayYang: current.dayYang,
+      yearZhi: current.yearZhi,
+      monthZhi: current.monthZhi,
+      season: current.season,
+      monthCat: current.monthCat,
+      monthZhiBeingChong: current.monthZhiBeingChong,
+      mainArr: current.mainArr,
+      ganSet: current.ganSet,
+    }
     set({ gejuExtras: {}, ...deriveAll(r, {}) })
   },
 }))

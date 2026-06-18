@@ -20,16 +20,16 @@ export function isBiJieChongChong(): GejuHit | null {
   const extras = readExtras()
 
   const baseTouN = [shishen.tou('比肩'), shishen.tou('劫财')].filter(Boolean).length +
-    (bazi.mainArr.filter((p, i) => i !== 2 && SHI_SHEN_CAT[p.shishen] === '比劫').length > 1 ? 1 : 0)
+    (bazi.mainArr.filter((p, i) => i !== 2 && SHI_SHEN_CAT[p.gan.shishen ?? ''] === '比劫').length > 1 ? 1 : 0)
   const baseZhiN = bazi.mainArr.filter(
-    (p) => SHI_SHEN_CAT[p.hideShishen[0] ?? ''] === '比劫',
+    (p) => SHI_SHEN_CAT[p.zhi.cangGan[0]?.shishen ?? ''] === '比劫',
   ).length
 
   const extraBijieTou = extras.extraArr.filter(
-    (p) => SHI_SHEN_CAT[p.shishen] === '比劫',
+    (p) => SHI_SHEN_CAT[p.gan.shishen ?? ''] === '比劫',
   ).length
   const extraBijieZhi = extras.extraArr.filter(
-    (p) => SHI_SHEN_CAT[p.hideShishen[0] ?? ''] === '比劫',
+    (p) => SHI_SHEN_CAT[p.zhi.cangGan[0]?.shishen ?? ''] === '比劫',
   ).length
 
   const allTouN = baseTouN + extraBijieTou

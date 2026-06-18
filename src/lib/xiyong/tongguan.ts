@@ -3,8 +3,8 @@ import {
   ganWuxing,
   zhiWuxing,
   GENERATED_BY as GEN_BY,
-  type DetailedPillar,
 } from '@jabberwocky238/bazi-engine'
+import type { DetailedPillar } from '../base'
 import type { TongguanInfo, WuXing } from './types'
 
 /**
@@ -15,11 +15,11 @@ import type { TongguanInfo, WuXing } from './types'
 export function countWxStrength(pillars: DetailedPillar[]): Record<WuXing, number> {
   const cnt: Record<WuXing, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 }
   pillars.forEach((p, i) => {
-    const w = ganWuxing(p.gan) as WuXing
+    const w = ganWuxing(p.gan.name) as WuXing
     if (w) cnt[w] += i === 1 ? 1.5 : 1
   })
   pillars.forEach((p, i) => {
-    const w = zhiWuxing(p.zhi) as WuXing
+    const w = zhiWuxing(p.zhi.name) as WuXing
     if (w) cnt[w] += i === 1 ? 3 : 2
   })
   return cnt
@@ -29,8 +29,8 @@ function findWxInPillars(pillars: DetailedPillar[], wx: WuXing): string[] {
   const hits: string[] = []
   pillars.forEach((p, i) => {
     const pos = ['年', '月', '日', '时'][i]
-    if (ganWuxing(p.gan) === wx) hits.push(`${pos}干 ${p.gan}`)
-    if (zhiWuxing(p.zhi) === wx) hits.push(`${pos}支 ${p.zhi}`)
+    if (ganWuxing(p.gan.name) === wx) hits.push(`${pos}干 ${p.gan.name}`)
+    if (zhiWuxing(p.zhi.name) === wx) hits.push(`${pos}支 ${p.zhi.name}`)
   })
   return hits
 }

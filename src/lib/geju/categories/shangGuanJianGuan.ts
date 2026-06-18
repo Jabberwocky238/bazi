@@ -46,7 +46,7 @@ function posOfShishen(name: Shishen): number[] {
   const bazi = readBazi()
   const positions = new Set<number>()
   bazi.mainArr.forEach((p, i) => {
-    if (p.shishen === name) positions.add(i)
+    if (p.gan.shishen === name) positions.add(i)
     if (p.hideShishen.includes(name)) positions.add(i)
   })
   return Array.from(positions)

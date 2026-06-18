@@ -1,4 +1,5 @@
-import type { Pillar } from '@/lib'
+import type { ExtendedDetailedPillar } from '@/lib'
+type Pillar = ExtendedDetailedPillar
 import { cellBase } from '@@/css'
 import { Row } from './Row'
 import { ShishenCell } from './ShishenCell'
@@ -34,8 +35,8 @@ export function BaziChart({ pillars }: { pillars: Pillar[] }) {
             {pillars.map((p) => (
               <GanZhiCell
                 key={p.label}
-                gan={p.gan}
-                zhi={p.zhi}
+                gan={p.gan.name}
+                zhi={p.zhi.name}
                 ganWuxing={p.ganWuxing}
                 zhiWuxing={p.zhiWuxing}
               />

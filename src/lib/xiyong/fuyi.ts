@@ -17,14 +17,14 @@ export function sideOf(level: string): 'strong' | 'weak' | 'neutral' {
 /** 判定五大情况中"病根"最重的那一类。 */
 export function pickSickCat(pillars: DetailedPillar[], side: 'strong' | 'weak'): Cat | null {
   const cnt: Record<Cat, number> = { 比劫: 0, 印: 0, 食伤: 0, 财: 0, 官杀: 0 }
-  const ganShens = [pillars[0].shishen, pillars[1].shishen, pillars[3].shishen]
+  const ganShens = [pillars[0].gan.shishen, pillars[1].gan.shishen, pillars[3].gan.shishen]
   for (const s of ganShens) {
-    const c = CAT_OF_SHISHEN[s]
+    const c = CAT_OF_SHISHEN[s as string]
     if (c) cnt[c] += 1
   }
   for (const p of pillars) {
-    for (const s of p.hideShishen) {
-      const c = CAT_OF_SHISHEN[s]
+    for (const s of p.zhi.cangGan) {
+      const c = CAT_OF_SHISHEN[s.shishen as string]
       if (c) cnt[c] += 1
     }
   }
@@ -102,8 +102,10 @@ export function pickFuYi(pillars: DetailedPillar[], side: 'strong' | 'weak' | 'n
   }
 }
 
+import type { Zhi } from '@jabberwocky238/bazi-engine'
+
 /** 调候硬约束（寒暖燥湿）。 */
-export function computeTiaohou(monthZhi: string, dayWx: WuXing): {
+export function computeTiaohou(monthZhi: Zhi, dayWx: WuXing): {
   required: boolean
   wx: WuXing | null
   note: string

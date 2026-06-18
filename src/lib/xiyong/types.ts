@@ -5,8 +5,8 @@ import {
   GENERATED_BY as GEN_BY,
   CONTROLLED_BY as CON_BY,
 } from '@jabberwocky238/bazi-engine'
-
-export type WuXing = '木' | '火' | '土' | '金' | '水'
+import type { WuXing } from '@jabberwocky238/bazi-engine'
+export type { WuXing }
 export type Cat = '比劫' | '印' | '食伤' | '财' | '官杀'
 export type Side = 'self' | 'other' | 'neutral'
 

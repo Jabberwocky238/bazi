@@ -19,8 +19,8 @@ export function isSanGengGe(): GejuHit | null {
   if (bazi.dayWx === '金') return null
   if (bazi.dayWx === '木' && strength.shenRuo) return null
 
-  const baseGengN = bazi.mainArr.filter((p) => p.gan === '庚').length
-  const extraGengN = extras.extraArr.filter((p) => p.gan === '庚').length
+  const baseGengN = bazi.mainArr.filter((p) => p.gan.name === '庚').length
+  const extraGengN = extras.extraArr.filter((p) => p.gan.name === '庚').length
   const allGengN = baseGengN + extraGengN
 
   const baseFormed = baseGengN >= 3

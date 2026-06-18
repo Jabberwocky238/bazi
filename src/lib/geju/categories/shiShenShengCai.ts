@@ -23,7 +23,7 @@ export function isShiShenShengCai(): GejuHit | null {
   if (strength.level === '身极弱' || strength.level === '近从弱') return null
 
   // —— 条件 1: 食神显 ——
-  const monthMainShi = bazi.pillars.month.hideShishen[0] === '食神'
+  const monthMainShi = bazi.pillars.month.zhi.cangGan[0]?.shishen === '食神'
   const baseStruct1 = shishen.tou('食神') || monthMainShi
   const extStruct1 = baseStruct1 || extras.tou('食神')
 

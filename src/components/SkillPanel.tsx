@@ -3,7 +3,9 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { type SkillFocus, loadSkill, skillUrl } from '@/lib'
 import { useBaziStore } from '@@/stores'
-import { useMediaQuery } from '@@/hooks/useMediaQuery'
+// TODO: 安装 useMediaQuery hook 后恢复 import
+// import { useMediaQuery } from '@@/hooks/useMediaQuery'
+const useMediaQuery = (_query: string) => true // 临时兼容
 import { Dialog, DialogPanel } from '@@/Dialog'
 
 const CATEGORY_LABEL: Record<string, string> = {

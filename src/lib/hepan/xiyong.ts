@@ -29,7 +29,8 @@ export function analyzeSide(pillars: DetailedPillar[]): SideAnalysis | null {
   if (!strength) return null
   const xiyong = analyzeXiyong(pillars, strength)
   if (!xiyong) return null
-  const ganZhi = analyzeGanZhi(pillars, [])
+  const enginePillars = pillars.map((p) => ({ gan: p.gan.name, zhi: p.zhi.name }))
+  const ganZhi = analyzeGanZhi(enginePillars, [])
   if (!ganZhi) return null
   return { pillars, strength, xiyong, ganZhi }
 }

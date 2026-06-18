@@ -24,7 +24,7 @@ export function isShangGuanShengCai(): GejuHit | null {
   if (strength.level === '身极弱' || strength.level === '近从弱') return null
 
   // —— 条件 1: 伤官显 (透 OR 月令本气) ——
-  const monthMainShang = bazi.pillars.month.hideShishen[0] === '伤官'
+  const monthMainShang = bazi.pillars.month.zhi.cangGan[0]?.shishen === '伤官'
   const baseStruct1 = shishen.tou('伤官') || monthMainShang
   const extStruct1 = baseStruct1 || extras.tou('伤官')
 

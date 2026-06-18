@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
-  computeShishen,
+  computeShishenGan,
+  computeShishenZhi,
   ganWuxing,
   zhiWuxing,
   type Gan,
@@ -44,19 +45,18 @@ function analyzeGz(dayPillar: EnginePillar | null, gz: string): GzCell {
     ganSsWx: '', zhiSsWx: '', hideSs: [],
   }
   if (!gan || !zhi || !dayPillar) return empty
-  const r = computeShishen(dayPillar.gan, { gan: gan as Gan, zhi: zhi as Zhi })
-  const ganSs = r.十神 === '日主' ? '比肩' : r.十神
-  const zhiSs = r.藏干十神[0] ?? ''
+  const ganSs = computeShishenGan(dayPillar.gan, gan as Gan)
+  const zhiSs = computeShishenZhi(dayPillar.gan, zhi as Zhi)
   return {
     gan,
     zhi,
     ganWx: ganWuxing(gan as Gan) ?? '',
     zhiWx: zhiWuxing(zhi as Zhi) ?? '',
-    ganSs,
-    zhiSs,
+    ganSs: ganSs === '日主' ? '比肩' : ganSs,
+    zhiSs: zhiSs[0] ?? '',
     ganSsWx: shishenWuxing(dayPillar.gan, ganSs),
-    zhiSsWx: shishenWuxing(dayPillar.gan, zhiSs),
-    hideSs: r.藏干十神,
+    zhiSsWx: shishenWuxing(dayPillar.gan, zhiSs[0] ?? ''),
+    hideSs: zhiSs,
   }
 }
 
@@ -68,7 +68,7 @@ export function DaYunPanel() {
   const hour = useBaziInput((s) => s.hour)
   const dayPillarRaw = useBazi((s) => s.pillars[2])
   const dayPillar: EnginePillar | null = dayPillarRaw && dayPillarRaw.gan && dayPillarRaw.zhi
-    ? { gan: dayPillarRaw.gan as Gan, zhi: dayPillarRaw.zhi as Zhi }
+    ? { gan: dayPillarRaw.gan.name as Gan, zhi: dayPillarRaw.zhi.name as Zhi }
     : null
   const raw = useDayun((s) => s.data)
   const extras = useBaziStore((s) => s.extraPillars)

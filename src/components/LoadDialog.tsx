@@ -1,5 +1,5 @@
 import { Dialog } from '@@/Dialog'
-import type { SavedEntry } from '@@/stores/savedEntries'
+import { describeEntry, type SavedEntry } from '@@/stores/savedEntries'
 
 interface LoadDialogProps {
   open: boolean
@@ -21,7 +21,9 @@ export function LoadDialog({ open, onClose, entries, onLoad, onDelete }: LoadDia
         <div className="py-6 text-sm text-slate-500 text-center">暂无保存记录</div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
-          {entries.map((e) => (
+          {entries.map((e) => {
+            const { tag, detail } = describeEntry(e)
+            return (
             <div key={e.name} className="flex items-stretch bg-white dark:bg-slate-900">
               <button
                 type="button"
@@ -32,11 +34,8 @@ export function LoadDialog({ open, onClose, entries, onLoad, onDelete }: LoadDia
                   {e.name}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                  八字{' '}
-                  {Array.isArray(e.bazi)
-                    ? e.bazi.filter((g: string) => g && g.length === 2).join(' ')
-                    : ''}{' '}
-                  · {e.sex === 1 ? '男' : '女'}
+                  <span className="mr-1 rounded bg-slate-100 px-1 py-0.5 text-[10px] text-slate-400 dark:bg-slate-800 dark:text-slate-500">{tag}</span>
+                  {detail} · {e.sex === 1 ? '男' : '女'}
                 </div>
               </button>
               <button
@@ -48,7 +47,8 @@ export function LoadDialog({ open, onClose, entries, onLoad, onDelete }: LoadDia
                 ×
               </button>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </Dialog>

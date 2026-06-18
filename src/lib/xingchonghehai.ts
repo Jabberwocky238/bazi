@@ -79,7 +79,7 @@ export function analyzeGanZhiWithExtras(
     for (let i = 0; i < pillars.length && i < 4; i++) {
       const p = pillars[i]
       if (!p?.gan || !p?.zhi) continue
-      for (const hit of [pairwiseGan(e.gan, p.gan as Gan), pairwiseZhi(e.zhi, p.zhi as Zhi)]) {
+      for (const hit of [pairwiseGan(e.gan, p.gan), pairwiseZhi(e.zhi, p.zhi)]) {
         if (!hit) continue
         extra.push({
           kind: hit.kind,

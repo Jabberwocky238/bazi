@@ -193,25 +193,25 @@ function analyzeStem(
 export function analyzeStrength(pillars: DetailedPillar[]): StrengthAnalysis | null {
   if (pillars.length !== 4) return null
   const [yearP, monthP, dayP, hourP] = pillars
-  const dayGan = dayP.gan as Gan
+  const dayGan = dayP.gan.name as Gan
   const dayWx = ganWuxing(dayGan)
   if (!dayWx) return null
-  const monthZhi = monthP.zhi as Zhi
+  const monthZhi = monthP.zhi.name as Zhi
   if (!monthZhi) return null
   const monthWx = zhiWuxing(monthZhi)
 
   const branches: RootInfo[] = [
-    analyzeBranch(dayGan, dayWx, yearP.zhi, '年', false),
-    analyzeBranch(dayGan, dayWx, monthP.zhi, '月', false),
-    analyzeBranch(dayGan, dayWx, dayP.zhi, '日', true),
-    analyzeBranch(dayGan, dayWx, hourP.zhi, '时', false),
+    analyzeBranch(dayGan, dayWx, yearP.zhi.name, '年', false),
+    analyzeBranch(dayGan, dayWx, monthP.zhi.name, '月', false),
+    analyzeBranch(dayGan, dayWx, dayP.zhi.name, '日', true),
+    analyzeBranch(dayGan, dayWx, hourP.zhi.name, '时', false),
   ]
   const rootPoints = Number(branches.reduce((s, r) => s + r.points, 0).toFixed(10))
 
   const ganContribs = [
-    analyzeStem(dayGan, dayWx, yearP.gan, '年'),
-    analyzeStem(dayGan, dayWx, monthP.gan, '月'),
-    analyzeStem(dayGan, dayWx, hourP.gan, '时'),
+    analyzeStem(dayGan, dayWx, yearP.gan.name, '年'),
+    analyzeStem(dayGan, dayWx, monthP.gan.name, '月'),
+    analyzeStem(dayGan, dayWx, hourP.gan.name, '时'),
   ].filter((x): x is GanContrib => !!x)
   const ganPoints = Number(ganContribs.reduce((s, c) => s + c.points, 0).toFixed(10))
 

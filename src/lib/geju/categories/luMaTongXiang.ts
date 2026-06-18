@@ -1,7 +1,7 @@
 import { readBazi, readExtras, readStrength } from '../snapshot'
 import { LU, CHONG_PAIR, yimaFrom } from '../types'
 import type { GejuHit } from '../types'
-import type { Gan } from '@jabberwocky238/bazi-engine'
+import type { Gan, Zhi } from '@jabberwocky238/bazi-engine'
 import { emitGeju } from '../_emit'
 
 /**
@@ -19,27 +19,27 @@ export function isLuMaTongXiang(): GejuHit | null {
   const strength = readStrength()
   const extras = readExtras()
   const lu = LU[bazi.dayGan as Gan]
-  const ymY = yimaFrom(bazi.yearZhi)
-  const ymD = yimaFrom(bazi.dayZhi)
+  const ymY = bazi.yearZhi ? yimaFrom(bazi.yearZhi) : undefined
+  const ymD = bazi.dayZhi ? yimaFrom(bazi.dayZhi) : undefined
   const pillars = bazi.mainArr
-  const zhis = pillars.map((p) => p.zhi) as string[]
+  const zhis = pillars.map((p) => p.zhi.name)
   for (let i = 0; i < pillars.length; i++) {
     const p = pillars[i]
-    if (p.zhi === lu && (p.zhi === ymY || p.zhi === ymD)) {
-      const chong = CHONG_PAIR[p.zhi]
+    if (p.zhi.name === lu && (p.zhi.name === ymY || p.zhi.name === ymD)) {
+      const chong = CHONG_PAIR[p.zhi.name] as Zhi
       if (chong && zhis.includes(chong)) continue
       if (strength.level === '身极弱' || strength.level === '近从弱') continue
 
       const baseFormed = true
       // 岁运地支冲此禄马同乡支 → Break
-      const extraZhis = extras.extraArr.map((e) => e.zhi as string)
+      const extraZhis = extras.extraArr.map((e) => e.zhi.name)
       const extraChong = !!chong && extraZhis.includes(chong)
       const withExtrasFormed = !extraChong
 
       return emitGeju(
         {
           name: '禄马同乡',
-          note: `${['年', '月', '日', '时'][i]}柱 ${p.zhi} 禄马同位，不冲身可任`,
+          note: `${['年', '月', '日', '时'][i]}柱 ${p.zhi.name} 禄马同位，不冲身可任`,
         },
         { baseFormed, withExtrasFormed, hasExtras: extras.active },
       )

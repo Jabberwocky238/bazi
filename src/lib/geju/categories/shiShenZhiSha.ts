@@ -29,7 +29,7 @@ export function isShiShenZhiSha(): GejuHit | null {
   if (!shishen.adjacentTou('食神', '七杀')) return null
 
   // —— 条件 1: 七杀显 ——
-  const monthMainSha = bazi.pillars.month.hideShishen[0] === '七杀'
+  const monthMainSha = bazi.pillars.month.zhi.cangGan[0]?.shishen === '七杀'
   const shaTouRoot = shishen.tou('七杀') && shishen.zang('七杀')
   const baseSha = monthMainSha || shaTouRoot
   const extSha = baseSha || (extras.tou('七杀') && shishen.has('七杀'))

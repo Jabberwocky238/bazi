@@ -18,12 +18,12 @@ import { emitGeju } from '../_emit'
 export function isTianYuanYiQi(): GejuHit | null {
   const bazi = readBazi()
   const extras = readExtras()
-  const g = bazi.pillars.year.gan
+  const g = bazi.pillars.year.gan.name
   if (!g) return null
-  if (!bazi.mainArr.every((p) => p.gan === g)) return null
+  if (!bazi.mainArr.every((p) => p.gan.name === g)) return null
 
   // 岁运透克"我"之五行 → Break (天元一气最忌克气)
-  const selfWx = ganWuxing(g) as WuXing
+  const selfWx = bazi.pillars.year.gan.wuxing as WuXing
   const KE: Record<WuXing, WuXing> = { 木: '金', 火: '水', 土: '木', 金: '火', 水: '土' }
   const keWx = KE[selfWx]
   const breakBy = keWx ? extras.extraGanWxCount(keWx) > 0 : false

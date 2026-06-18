@@ -3,7 +3,7 @@
  * 直接使用 @jabberwocky238/bazi-engine 的 Calculator。
  */
 import { Solar } from 'lunar-typescript'
-import Calculator, { type DetailedPillar } from '@jabberwocky238/bazi-engine/calculator'
+import  {Calculator, type DetailedPillar } from '@jabberwocky238/bazi-engine'
 import {
   type BaziInput,
   type Gan,

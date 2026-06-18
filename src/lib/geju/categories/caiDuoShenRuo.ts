@@ -28,13 +28,13 @@ export function isCaiDuoShenRuo(): GejuHit | null {
   const caiTouArr = (['正财', '偏财'] as Shishen[]).map((s) => shishen.tou(s) ? 1 : 0)
   const baseTouN = caiTouArr[0] + caiTouArr[1]
   const baseZhiN = bazi.mainArr.filter(
-    (p) => SHI_SHEN_CAT[p.hideShishen[0] ?? ''] === '财',
+    (p) => SHI_SHEN_CAT[p.zhi.cangGan[0]?.shishen ?? ''] === '财',
   ).length
   const extraCaiTou = extras.extraArr.filter(
-    (p) => p.shishen === '正财' || p.shishen === '偏财',
+    (p) => p.gan.shishen === '正财' || p.gan.shishen === '偏财',
   ).length
   const extraCaiZhi = extras.extraArr.filter(
-    (p) => p.hideShishen[0] === '正财' || p.hideShishen[0] === '偏财',
+    (p) => p.zhi.cangGan[0]?.shishen === '正财' || p.zhi.cangGan[0]?.shishen === '偏财',
   ).length
   const baseStruct2 = baseTouN >= 2 || baseZhiN >= 2
   const extStruct2 = (baseTouN + extraCaiTou) >= 2 || (baseZhiN + extraCaiZhi) >= 2

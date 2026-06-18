@@ -29,7 +29,7 @@ export function isRiGuiGe(): GejuHit | null {
   const extras = readExtras()
   if (!RI_GUI.has(bazi.dayGz)) return null
   const { year, month, hour } = bazi.pillars
-  const otherZhis: string[] = [year.zhi, month.zhi, hour.zhi]
+  const otherZhis: string[] = [year.zhi.name, month.zhi.name, hour.zhi.name]
   // md 条件 5: 贵人日支不被局内冲
   const dzChong = CHONG_PAIR[bazi.dayZhi as string]
   if (dzChong && otherZhis.includes(dzChong)) return null
@@ -40,7 +40,7 @@ export function isRiGuiGe(): GejuHit | null {
   const hasHe = heZhi && otherZhis.includes(heZhi)
   // md 条件 7: 大运/流年 冲 / 合去 / 害 日支贵人 → 岁运冲害
   const dzHai = HAI_PAIR[bazi.dayZhi as string]
-  const extraZhis = extras.extraArr.map((p) => p.zhi as string)
+  const extraZhis = extras.extraArr.map((p) => p.zhi.name as string)
   const conquer =
     (!!dzChong && extraZhis.includes(dzChong)) ||
     (!!dzHai && extraZhis.includes(dzHai)) ||

@@ -7,6 +7,8 @@ import {
   type WholePillarFinding,
   type ZhengHeFinding,
   type FindingMod,
+  type Gan,
+  type Zhi,
 } from '@jabberwocky238/bazi-engine'
 import { analyzeGanZhiWithExtras, type ExtraInteraction } from '@/lib/xingchonghehai'
 import { useBazi, useBaziStore, type ExtraPillar } from '@@/stores'
@@ -47,9 +49,15 @@ export function GanZhiPanel() {
   const extras = useBaziStore((s) => s.extraPillars)
   const [open, setOpen] = useState(true)
 
+  // Convert ExtendedDetailedPillar[] to EnginePillar[]
+  const enginePillars = useMemo(
+    () => pillars.map((p) => ({ gan: p.gan.name as Gan, zhi: p.zhi.name as Zhi })),
+    [pillars],
+  )
+
   const analysis = useMemo(
-    () => analyzeGanZhiWithExtras(pillars, toExtraInputs(extras)),
-    [pillars, extras],
+    () => analyzeGanZhiWithExtras(enginePillars, toExtraInputs(extras)),
+    [enginePillars, extras],
   )
   if (!analysis) return null
   const a = analysis.base

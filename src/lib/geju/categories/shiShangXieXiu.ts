@@ -26,7 +26,7 @@ export function isShiShangXieXiu(): GejuHit | null {
   // —— 条件 2: 食 / 伤显 ——
   const shiTouRoot = shishen.tou('食神') && shishen.zang('食神')
   const shangTouRoot = shishen.tou('伤官') && shishen.zang('伤官')
-  const monthMain = bazi.pillars.month.hideShishen[0]
+  const monthMain = bazi.pillars.month.zhi.cangGan[0]?.shishen
   const monthIsShiShang = monthMain === '食神' || monthMain === '伤官'
   const baseStruct2 = shiTouRoot || shangTouRoot || monthIsShiShang
   const extStruct2 = baseStruct2 || extras.tou('食神') || extras.tou('伤官')

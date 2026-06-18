@@ -22,7 +22,7 @@ export function isKuiGangGe(): GejuHit | null {
   if (!strength.shenWang) return null
   const forbidden = KUIGANG_FORBIDDEN_WX[bazi.dayGz]
   if (forbidden && bazi.touWx(forbidden as WuXing)) return null
-  if (bazi.dayZhi === '辰' && bazi.mainArr.some((p, i) => i !== 2 && p.zhi === '戌')) return null
-  if (bazi.dayZhi === '戌' && bazi.mainArr.some((p, i) => i !== 2 && p.zhi === '辰')) return null
+  if (bazi.dayZhi === '辰' && bazi.mainArr.some((p, i) => i !== 2 && p.zhi.name === '戌')) return null
+  if (bazi.dayZhi === '戌' && bazi.mainArr.some((p, i) => i !== 2 && p.zhi.name === '辰')) return null
   return { name: '魁罡格', note: `日柱 ${bazi.dayGz} 魁罡 · 身旺 · 无忌透无冲` }
 }

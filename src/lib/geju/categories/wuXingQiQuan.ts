@@ -9,10 +9,10 @@ export function isWuXingQiQuan(): GejuHit | null {
   const bazi = readBazi()
   const wxSet = new Set<string>()
   for (const p of bazi.mainArr) {
-    const gw = ganWuxing(p.gan)
+    const gw = p.gan.wuxing
     if (gw) wxSet.add(gw)
-    for (const h of p.hideGans) {
-      const hw = ganWuxing(h)
+    for (const h of p.zhi.cangGan) {
+      const hw = h.wuxing
       if (hw) wxSet.add(hw)
     }
   }

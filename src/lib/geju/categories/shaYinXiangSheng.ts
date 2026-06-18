@@ -32,15 +32,15 @@ export function isShaYinXiangSheng(): GejuHit | null {
 
   // —— 静态前提: 条件 3 (印紧贴日主) + 条件 5 (非极弱) + 互斥 (伤官合杀) ——
   const yinAdjRi =
-    bazi.pillars.month.shishen === '正印' || bazi.pillars.month.shishen === '偏印' ||
-    bazi.pillars.hour.shishen === '正印' || bazi.pillars.hour.shishen === '偏印'
+    bazi.pillars.month.gan.shishen === '正印' || bazi.pillars.month.gan.shishen === '偏印' ||
+    bazi.pillars.hour.gan.shishen === '正印' || bazi.pillars.hour.gan.shishen === '偏印'
   if (!yinAdjRi) return null
   if (strength.level === '身极弱' || strength.level === '近从弱') return null
   if (!bazi.dayYang && shishen.tou('伤官') && shishen.tou('七杀') &&
       shishen.adjacentTou('伤官', '七杀')) return null
 
   // —— 条件 1: 七杀显 (月令本气 / 透 / 透+紧贴印) ——
-  const monthMainSha = bazi.pillars.month.hideShishen[0] === '七杀'
+  const monthMainSha = bazi.pillars.month.zhi.cangGan[0]?.shishen === '七杀'
   const baseSha = monthMainSha || shishen.tou('七杀') || shishen.zang('七杀')
   const shaTouAdj = shishen.tou('七杀')
     ? shishen.adjacentTou('七杀', '正印') || shishen.adjacentTou('七杀', '偏印')

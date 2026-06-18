@@ -1,30 +1,46 @@
 import { create } from 'zustand'
 import { HOUR_UNKNOWN } from '@/lib'
 import type { BaziInputData } from './compute'
-import { computeFromState } from './compute'
 
-export interface SavedEntry {
+export interface SavedEntryBase {
   name: string
-  mode: 'bazi'
-  bazi: [string, string, string, string]
   sex: 0 | 1
   savedAt: number
 }
 
+/** 八字直输：仅存四柱干支。 */
+export interface SavedBaziEntry extends SavedEntryBase {
+  mode: 'bazi'
+  bazi: [string, string, string, string]
+}
+
+/** 公历：存年月日时分 + 可选经度 (用于真太阳时校正)。 */
+export interface SavedGregorianEntry extends SavedEntryBase {
+  mode: 'gregorian'
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+  longitude?: number
+}
+
+/** 真太阳时：存已校正后的年月日时分。 */
+export interface SavedTrueSolarEntry extends SavedEntryBase {
+  mode: 'trueSolar'
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+}
+
+export type SavedEntry = SavedBaziEntry | SavedGregorianEntry | SavedTrueSolarEntry
+
 export const DEFAULT_STORAGE_KEY = 'bazi.saved.v1'
 
-function convertPreset(year: number, month: number, day: number, hour: number, minute: number, sex: 0 | 1, name: string): SavedEntry {
-  const temp: BaziInputData = {
-    mode: 'gregorian',
-    year, month, day, hour, minute,
-    sex,
-    bazi: ['', '', '', ''],
-  }
-  const computed = computeFromState(temp)
-  const bazi: [string, string, string, string] = computed
-    ? (computed.bazi.pillars.map((p) => `${p.gan}${p.zhi}`) as [string, string, string, string])
-    : ['甲子', '甲子', '甲子', '甲子']
-  return { name, mode: 'bazi', bazi, sex, savedAt: 0 }
+function convertPreset(year: number, month: number, day: number, hour: number, minute: number, sex: 0 | 1, name: string): SavedGregorianEntry {
+  return { name, mode: 'gregorian', year, month, day, hour, minute, sex, savedAt: 0 }
 }
 
 export const MAIN_PRESETS: SavedEntry[] = [
@@ -42,12 +58,47 @@ export const MAIN_PRESETS: SavedEntry[] = [
   convertPreset(1971, 10, 29, 8, 0, 1, '马化腾'),
 ]
 
+/** 将任意来源 (含旧格式/损坏数据) 规整为合法 SavedEntry，无法识别的丢弃。 */
+function normalizeEntry(raw: unknown): SavedEntry | null {
+  if (!raw || typeof raw !== 'object') return null
+  const e = raw as Record<string, unknown>
+  const name = typeof e.name === 'string' ? e.name : ''
+  const sex: 0 | 1 = e.sex === 0 ? 0 : 1
+  const savedAt = typeof e.savedAt === 'number' ? e.savedAt : 0
+  if (!name) return null
+
+  switch (e.mode) {
+    case 'bazi': {
+      const bazi = Array.isArray(e.bazi) ? (e.bazi as string[]).slice(0, 4) : []
+      const filled: [string, string, string, string] = ['', '', '', '']
+      bazi.forEach((g, i) => { filled[i] = typeof g === 'string' ? g : '' })
+      return { name, sex, savedAt, mode: 'bazi', bazi: filled }
+    }
+    case 'gregorian':
+    case 'trueSolar': {
+      const num = (k: string, fallback = 0) => Number.isFinite(e[k] as number) ? (e[k] as number) : fallback
+      const base = {
+        name, sex, savedAt,
+        mode: e.mode as 'gregorian' | 'trueSolar',
+        year: num('year'), month: num('month'), day: num('day'),
+        hour: num('hour', HOUR_UNKNOWN), minute: num('minute'),
+      }
+      return e.mode === 'gregorian'
+        ? { ...base, longitude: Number.isFinite(e.longitude as number) ? (e.longitude as number) : undefined }
+        : base
+    }
+    default:
+      return null
+  }
+}
+
 function loadAll(storageKey: string): SavedEntry[] {
   try {
     const raw = localStorage.getItem(storageKey)
     if (!raw) return []
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as SavedEntry[]) : []
+    if (!Array.isArray(parsed)) return []
+    return parsed.map(normalizeEntry).filter((e): e is SavedEntry => e !== null)
   } catch {
     return []
   }
@@ -80,11 +131,57 @@ export function seedIfAbsent(storageKey: string, presets: SavedEntry[] | undefin
 }
 
 export function applySavedEntry(current: BaziInputData, entry: SavedEntry): BaziInputData {
-  return {
-    ...current,
-    mode: 'bazi',
-    bazi: entry.bazi,
-    sex: entry.sex,
+  const base = { ...current, sex: entry.sex }
+  switch (entry.mode) {
+    case 'bazi':
+      return { ...base, mode: 'bazi', bazi: entry.bazi }
+    case 'gregorian':
+      return {
+        ...base,
+        mode: 'gregorian',
+        year: entry.year,
+        month: entry.month,
+        day: entry.day,
+        hour: entry.hour,
+        minute: entry.minute,
+        longitude: entry.longitude,
+      }
+    case 'trueSolar':
+      return {
+        ...base,
+        mode: 'trueSolar',
+        year: entry.year,
+        month: entry.month,
+        day: entry.day,
+        hour: entry.hour,
+        minute: entry.minute,
+      }
+    default:
+      return base
+  }
+}
+
+/** 已存命例的展示摘要：按存储类型给出标签 + 详情。对异常/旧格式数据兜底，避免渲染崩溃。 */
+export function describeEntry(entry: SavedEntry): { tag: string; detail: string } {
+  switch (entry.mode) {
+    case 'bazi': {
+      const arr = Array.isArray(entry.bazi) ? entry.bazi : []
+      return {
+        tag: '八字直输',
+        detail: arr.filter((g) => g && g.length === 2).join(' '),
+      }
+    }
+    case 'gregorian':
+    case 'trueSolar': {
+      const tag = entry.mode === 'gregorian' ? '公历' : '真太阳时'
+      const hm = entry.hour === HOUR_UNKNOWN ? '时辰未知' : `${String(entry.hour ?? 0).padStart(2, '0')}:${String(entry.minute ?? 0).padStart(2, '0')}`
+      return {
+        tag,
+        detail: `${entry.year}-${String(entry.month ?? 0).padStart(2, '0')}-${String(entry.day ?? 0).padStart(2, '0')} ${hm}`,
+      }
+    }
+    default:
+      return { tag: '未知', detail: '' }
   }
 }
 

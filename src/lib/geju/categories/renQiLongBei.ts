@@ -16,18 +16,18 @@ export function isRenQiLongBei(): GejuHit | null {
   const extras = readExtras()
 
   if (bazi.dayGz !== '壬辰') return null
-  const hasXu = bazi.mainArr.some((p) => p.zhi === '戌')
+  const hasXu = bazi.mainArr.some((p) => p.zhi.name === '戌')
   if (hasXu) return null
   const { year, month, hour } = bazi.pillars
-  const baseOtherRen = [year, month, hour].some((p) => p.gan === '壬')
-  const baseOtherChen = ([year.zhi, month.zhi, hour.zhi] as string[]).includes('辰')
+  const baseOtherRen = [year, month, hour].some((p) => p.gan.name === '壬')
+  const baseOtherChen = [year.zhi.name, month.zhi.name, hour.zhi.name].includes('辰')
   const baseJin = bazi.touWx('金') || bazi.rootWx('金')
   const baseMu = bazi.touWx('木')
   const baseStruct3 = baseOtherRen || baseOtherChen || baseJin || baseMu
 
   // 岁运补: 透壬 / 见辰 / 透金 / 透木
-  const extOtherRen = baseOtherRen || extras.extraArr.some((p) => p.gan === '壬')
-  const extOtherChen = baseOtherChen || extras.extraArr.some((p) => p.zhi === '辰')
+  const extOtherRen = baseOtherRen || extras.extraArr.some((p) => p.gan.name === '壬')
+  const extOtherChen = baseOtherChen || extras.extraArr.some((p) => p.zhi.name === '辰')
   const extJin = baseJin || extras.extraGanWxCount('金') > 0
   const extMu = baseMu || extras.extraGanWxCount('木') > 0
   const extStruct3 = extOtherRen || extOtherChen || extJin || extMu
@@ -41,7 +41,7 @@ export function isRenQiLongBei(): GejuHit | null {
   const extClean4 = allHuoN < 2 && allTuN < 2
 
   // 岁运地支戌冲 → Break
-  const extraXu = extras.extraArr.some((p) => p.zhi === '戌')
+  const extraXu = extras.extraArr.some((p) => p.zhi.name === '戌')
 
   const baseFormed = baseStruct3 && baseClean4
   const withExtrasFormed = extStruct3 && extClean4 && !extraXu

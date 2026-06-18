@@ -3,6 +3,7 @@
  * 通过 setGejuSnapshot 设置快照后调用 detectGeju() 纯函数。
  */
 import type { Detector, GejuHit, GejuQuality, GejuCategory, DaYunMeta } from './types'
+import type { Shishen } from '@jabberwocky238/bazi-engine'
 import { EMPTY_SUIYUN, deriveVisibility } from './types'
 import { setGejuSnapshot, clearGejuSnapshot } from './snapshot'
 import { createBaziSnapshot, createShishenSnapshot, createStrengthSnapshot, createExtrasSnapshot } from './snapshot'
@@ -140,14 +141,16 @@ export function detectGejuWith(
   strengthDerived: StrengthDerived,
   extras?: { dayun?: DetailedPillar; liunian?: DetailedPillar },
 ): GejuOutput[] {
+  // 空排盘 (如初始化 EMPTY_RESULT) 无柱可判，直接返回空命中，避免 createBaziSnapshot 解构 undefined。
+  if (baziDerived.mainArr.length === 0) return []
   const bazi = createBaziSnapshot(baziDerived, extras)
   const shishen = createShishenSnapshot({
     dayGan: baziDerived.dayGan,
-    byPillar: baziDerived.mainArr.map((p) => p.shishen),
+    byPillar: baziDerived.mainArr.map((p) => (p.gan.shishen !== '日主' ? p.gan.shishen : '') as Shishen),
     hideByPillar: baziDerived.mainArr.map((p) => p.hideShishen),
-    ganSs: baziDerived.mainArr.filter((_, i) => i !== 2).map((p) => p.shishen).filter((s) => s && s !== '日主'),
-    mainZhiArr: baziDerived.mainArr.map((p) => p.hideShishen[0] ?? ''),
-    allZhiArr: baziDerived.mainArr.flatMap((p) => p.hideShishen),
+    ganSs: baziDerived.mainArr.filter((_, i) => i !== 2).map((p) => p.gan.shishen).filter((s) => s && s !== '日主') as Shishen[],
+    mainZhiArr: baziDerived.mainArr.map((p) => p.zhi.name),
+    allZhiArr: baziDerived.mainArr.flatMap((p) => p.zhi.cangGan.map((c) => c.shishen)),
   }, baziDerived.mainArr)
   const strength = createStrengthSnapshot(strengthDerived)
   const extrasSnap = createExtrasSnapshot(extras)

@@ -24,7 +24,7 @@ export function isShangGuanPeiYin(): GejuHit | null {
   if (!strength.shenRuo) return null
 
   // —— 条件 1: 伤官显 ——
-  const monthMainShang = bazi.pillars.month.hideShishen[0] === '伤官'
+  const monthMainShang = bazi.pillars.month.zhi.cangGan[0]?.shishen === '伤官'
   const shangTouRoot = shishen.tou('伤官') && shishen.zang('伤官')
   const baseStruct1 = (monthMainShang || shangTouRoot) && shishen.tou('伤官')
   const extStruct1 = baseStruct1 || ((monthMainShang || shangTouRoot) && extras.tou('伤官'))

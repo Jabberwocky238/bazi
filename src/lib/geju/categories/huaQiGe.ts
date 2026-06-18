@@ -26,20 +26,20 @@ export function isHuaQiGe(): GejuHit | null {
   const extras = readExtras()
   const info = HE_MAP[bazi.dayGan]
   if (!info) return null
-  const monthGan = bazi.pillars.month.gan
-  const hourGan = bazi.pillars.hour.gan
+  const monthGan = bazi.pillars.month.gan.name
+  const hourGan = bazi.pillars.hour.gan.name
   if (monthGan !== info.partner && hourGan !== info.partner) return null
   if (bazi.dayWx && bazi.rootWx(bazi.dayWx as WuXing)) return null
-  const monthWx = ganWuxing((bazi.pillars.month.hideGans[0] ?? '') as never)
+  const monthWx = bazi.pillars.month.zhi.cangGan[0]?.wuxing ?? ''
   const huaStrong = monthWx === info.huaWx || bazi.zhiMainWxCount(info.huaWx as WuXing) >= 2
   if (!huaStrong) return null
-  const sameN = bazi.mainArr.filter((p) => p.gan === bazi.dayGan).length
+  const sameN = bazi.mainArr.filter((p) => p.gan.name === bazi.dayGan).length
   if (sameN > 1) return null
 
   // 岁运透日主原五行 → 复根 Break; 岁运透同方与化干争合 → Break
   const dayWx = bazi.dayWx as WuXing
   const breakBy = extras.extraGanWxCount(dayWx) > 0 ||
-    extras.extraArr.some((p) => p.gan === bazi.dayGan)
+    extras.extraArr.some((p) => p.gan.name === bazi.dayGan)
 
   return emitGeju(
     { name: '化气格', note: `${bazi.dayGan}${info.partner} 合化${info.huaWx} · 化干无根 · 化神旺` },

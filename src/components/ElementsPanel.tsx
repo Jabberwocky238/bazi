@@ -13,7 +13,8 @@ import {
   type Zhi,
   type WuXing,
 } from '@jabberwocky238/bazi-engine'
-import { type Pillar } from '@/lib'
+import { type ExtendedDetailedPillar } from '@/lib'
+type Pillar = ExtendedDetailedPillar
 import { useBazi, useBaziStore, type ExtraPillar } from '@@/stores'
 import { WUXING_BG_STRONG, WUXING_BG_SOFT, WUXING_BORDER, WUXING_TEXT } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
@@ -79,10 +80,10 @@ function constituents(
     const p = pillars[i]
     if (!p) continue
     if (isGanKind) {
-      const wx = ganWuxing(p.gan as Gan) as WuXing | undefined
+      const wx = ganWuxing(p.gan.name as Gan) as WuXing | undefined
       if (wx) out.push({ wx, ss: p.shishen })
     } else {
-      const wx = zhiWuxing(p.zhi as Zhi) as WuXing | undefined
+      const wx = zhiWuxing(p.zhi.name as Zhi) as WuXing | undefined
       if (wx) out.push({ wx, ss: p.hideShishen[0] ?? '' })
     }
   }
@@ -145,9 +146,9 @@ function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Comp
       ensureSs(ss, '藏干'); ssW[ss] += w
     })
   }
-  pillars.forEach((p) => ingest(p.gan, p.hideGans, p.shishen, p.hideShishen))
+  pillars.forEach((p) => ingest(p.gan.name, p.hideGans, p.shishen, p.hideShishen))
   extras.forEach((e) => {
-    const cangs = (CANG_GAN[e.zhi as Zhi] ?? []) as string[]
+    const cangs = (CANG_GAN[e.zhi] ?? []) as string[]
     ingest(e.gan, cangs, e.shishen, e.hideShishen)
   })
 
@@ -174,7 +175,7 @@ function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Comp
   }
 
   const a = analyzeGanZhi(
-    pillars,
+    pillars.map((p) => ({ gan: p.gan.name as Gan, zhi: p.zhi.name as Zhi })),
     extras.map((e) => ({ label: e.label, gan: e.gan, zhi: e.zhi })),
   )
   if (!a) return { wxWeight: wxW, ssWeight: ssW, ssOrder, ssGroup, adjustments }

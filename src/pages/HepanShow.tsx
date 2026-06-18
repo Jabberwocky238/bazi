@@ -10,6 +10,7 @@ import { GenericLayout } from '@@/GenericLayout'
 import { HepanCrossPanel } from '@@/HepanCrossPanel'
 import { HepanXiyongMatch } from '@@/HepanXiyongMatch'
 import type { HepanState } from '@@/HepanInput'
+import type { ExtendedDetailedPillar } from '@/lib'
 
 interface LocationState {
   a: HepanState
@@ -94,7 +95,7 @@ export default function HepanShow() {
 
 interface SideProps {
   label: string
-  result: { solarStr: string; trueSolarStr: string; lunarStr: string; pillars: DetailedPillar[] }
+  result: { solarStr: string; trueSolarStr: string; lunarStr: string; pillars: ExtendedDetailedPillar[] }
 }
 
 function Side({ label, result }: SideProps) {

@@ -1,5 +1,5 @@
 import type { SkillCategory } from './skills'
-import Calculator from '@jabberwocky238/bazi-engine/calculator'
+import {Calculator} from '@jabberwocky238/bazi-engine'
 import type {
   PillarType,
   Gan,
@@ -12,17 +12,40 @@ import type {
   BaziInput,
 } from '@jabberwocky238/bazi-engine'
 
-export type { Gan, Zhi, WuXing, Shishen, ShishenCat, Season, PillarType, BaziInput }
-import type { DetailedPillar } from '@jabberwocky238/bazi-engine/calculator'
+export type { Gan, Zhi, WuXing, Shishen, ShishenCat, Season, PillarType, BaziInput, Sex }
+import type { DetailedPillar } from '@jabberwocky238/bazi-engine'
 
+// 注意：engine 的 Pillar 是 { gan: Gan, zhi: Zhi } 简单结构
+// 而 DetailedPillar 是包含 { name, wuxing, shishen } 的详细结构
 export type Pillar = DetailedPillar
+export type { DetailedPillar }
+
+// 为兼容前端旧代码，扩展 DetailedPillar 添加衍生字段
+// 在 fillDerivedFields 或相关函数中需要填充这些字段
+export interface ExtendedDetailedPillar extends DetailedPillar {
+  // 十神快捷访问（与 gan.shishen 一致，方便旧代码）
+  shishen: Shishen | '日主' | ''
+  shishenWuxing: WuXing | ''
+  // 五行快捷访问（与 gan.wuxing / zhi.wuxing 一致）
+  ganWuxing: WuXing | ''
+  zhiWuxing: WuXing | ''
+  // 隐藏标记（用于格局判定时临时隐藏某柱）
+  hideGans: Gan[]
+  hideShishen: Shishen[]
+  hideShishenWuxings: WuXing[]
+  // 自坐（天干在地支的状态）
+  zizuo: string
+}
+
+// 兼容旧代码的 BaziDerived 名称，实际就是 BaziResult
+export type BaziDerived = BaziResult
 
 export type BaziResult = {
   // 基础信息
   solarStr: string
   trueSolarStr: string
   lunarStr: string
-  pillars: DetailedPillar[]
+  pillars: ExtendedDetailedPillar[]
   hourKnown: boolean
 
   // BaziDerived 合并字段
@@ -36,7 +59,7 @@ export type BaziResult = {
   season: Season | ''
   monthCat: ShishenCat | ''
   monthZhiBeingChong: boolean
-  mainArr: DetailedPillar[]
+  mainArr: ExtendedDetailedPillar[]
   ganSet: Set<Gan>
 }
 
@@ -78,14 +101,22 @@ export function shishenWuxing(dayGan: string, shishen: string): WuXing | '' {
 }
 
 /** 时辰未知时的占位时柱 (UI 应依 hourKnown 跳过渲染)。 */
-export const EMPTY_PILLAR: DetailedPillar = {
+export const EMPTY_PILLAR: ExtendedDetailedPillar = {
   label: '时柱' as PillarType,
   gan: { name: '', wuxing: '', shishen: '' },
   zhi: { name: '', wuxing: '', cangGan: [] },
   nayin: '',
   shensha: [],
   changsheng: '',
-} as unknown as DetailedPillar
+  shishen: '',
+  shishenWuxing: '',
+  ganWuxing: '',
+  zhiWuxing: '',
+  hideGans: [],
+  hideShishen: [],
+  hideShishenWuxings: [],
+  zizuo: '',
+} as unknown as ExtendedDetailedPillar
 
 /** 空排盘结果占位 */
 export const EMPTY_RESULT: BaziResult = {
@@ -108,7 +139,7 @@ export const EMPTY_RESULT: BaziResult = {
   ganSet: new Set(),
 }
 
-/** 填充派生命段到 BaziResult */
+/** 填充派生命段到 BaziResult，并为每个 pillar 添加扩展字段 */
 export function fillDerivedFields(result: {
   solarStr: string
   trueSolarStr: string
@@ -116,10 +147,27 @@ export function fillDerivedFields(result: {
   pillars: DetailedPillar[]
   hourKnown: boolean
 }): BaziResult {
-  const yearPillar = result.pillars[0]
-  const monthPillar = result.pillars[1]
-  const dayPillar = result.pillars[2]
-  const hourPillar = result.pillars[3]
+  // 为每个 pillar 添加扩展字段，兼容旧代码访问方式
+  const pillars = result.pillars.map((p) => ({
+    ...p,
+    // 十神快捷访问
+    shishen: p.gan.shishen,
+    shishenWuxing: p.gan.wuxing,
+    // 五行快捷访问
+    ganWuxing: p.gan.wuxing,
+    zhiWuxing: p.zhi.wuxing,
+    // 隐藏标记默认值
+    hideGans: p.zhi.cangGan.map(c => c.name as Gan),
+    hideShishen: p.zhi.cangGan.map(c => c.shishen),
+    hideShishenWuxings: p.zhi.cangGan.map(c => c.wuxing),
+    // 自坐（简化实现，后续可完善）
+    zizuo: `${p.gan.name}坐${p.zhi.name}`,
+  })) as ExtendedDetailedPillar[]
+
+  const yearPillar = pillars[0]
+  const monthPillar = pillars[1]
+  const dayPillar = pillars[2]
+  const hourPillar = pillars[3]
 
   const dayGan = dayPillar?.gan?.name ?? ''
   const dayZhi = dayPillar?.zhi?.name ?? ''
@@ -131,11 +179,12 @@ export function fillDerivedFields(result: {
   const season: Season | '' = monthZhi ? (seasonOf(monthZhi as Zhi) ?? '') : ''
   const monthCat = monthPillar?.gan?.shishen ? (SHI_SHEN_CAT[monthPillar.gan.shishen] ?? '') : ''
   const monthZhiBeingChong = CHONG_PAIR[monthZhi] === (dayPillar?.zhi?.name ?? '')
-  const mainArr = result.pillars.slice()
-  const ganSet = new Set(result.pillars.map((p) => p.gan.name).filter(Boolean) as Gan[])
+  const mainArr = pillars.slice()
+  const ganSet = new Set(pillars.map((p) => p.gan.name).filter(Boolean) as Gan[])
 
   return {
     ...result,
+    pillars,
     dayGan: dayGan as Gan | '',
     dayZhi: dayZhi as Zhi | '',
     dayGz,

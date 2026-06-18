@@ -19,7 +19,10 @@ import {
   type Cat,
   type WuXing,
   type XiyongAnalysis,
+  type GanZhiType,
 } from './types'
+
+export type { Cat, WuXing, XiyongAnalysis, GanZhiType }
 import { analyzePillarsGanZhi } from './pillar'
 import { analyzeJiuying } from './jiuying'
 import { countWxStrength, analyzeTongguan } from './tongguan'
@@ -45,14 +48,14 @@ export function analyzeXiyong(
   gejuHits?: GejuOutput[],
 ): XiyongAnalysis | null {
   if (pillars.length !== 4) return null
-  const dayGan = pillars[2].gan
+  const dayGan = pillars[2].gan.name
   const dayWx = ganWuxing(dayGan) as WuXing
   if (!dayWx) return null
   if (!strength) return null
 
   const level = strength.level
   const side = sideOf(level)
-  const monthZhi = pillars[1].zhi
+  const monthZhi = pillars[1].zhi.name
 
   // ② 扶抑
   const fy = pickFuYi(pillars, side)

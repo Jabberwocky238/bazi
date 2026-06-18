@@ -1,7 +1,6 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { HOUR_UNKNOWN, type Sex, type BaziInputMode } from '@/lib'
 import type { BaziInputData } from '@@/stores/compute'
-import { computeFromState } from '@@/stores/compute'
 import { CommonButton } from '@@/CommonButton'
 import { useDialog } from '@@/Dialog'
 import { LoadDialog } from '@@/LoadDialog'
@@ -158,29 +157,34 @@ export function BaziForm({
     const name = raw.trim()
     if (!name) return
 
-    let baziToSave: [string, string, string, string] | undefined
+    const common = { name, sex: state.sex as 0 | 1, savedAt: Date.now() }
+    let entry: SavedEntry
 
     if (state.mode === 'bazi') {
-      baziToSave = state.bazi
+      if (!state.bazi.every((g) => g.length === 2)) {
+        alert('无法保存：无效的八字')
+        return
+      }
+      entry = { ...common, mode: 'bazi', bazi: state.bazi }
     } else {
-      const computed = computeFromState(state)
-      if (computed) {
-        baziToSave = computed.bazi.pillars.map((p) => `${p.gan}${p.zhi}`) as [string, string, string, string]
+      if (!isValidDate(state.year, state.month, state.day)) {
+        alert('无法保存：无效的日期')
+        return
+      }
+      const fields = {
+        year: state.year,
+        month: state.month,
+        day: state.day,
+        hour: state.hour,
+        minute: state.minute,
+      }
+      if (state.mode === 'gregorian') {
+        entry = { ...common, mode: 'gregorian', ...fields, longitude: state.longitude }
+      } else {
+        entry = { ...common, mode: 'trueSolar', ...fields }
       }
     }
 
-    if (!baziToSave || !baziToSave.every((g) => g.length === 2)) {
-      alert('无法保存：无效的八字')
-      return
-    }
-
-    const entry: SavedEntry = {
-      name,
-      mode: 'bazi',
-      bazi: baziToSave,
-      sex: state.sex as 0 | 1,
-      savedAt: Date.now(),
-    }
     save(entry)
   }
 
@@ -213,7 +217,7 @@ export function BaziForm({
       <CommonButton onClick={handleSave} width="flex-1">保存</CommonButton>
       <CommonButton onClick={handleLoad} width="flex-1">加载</CommonButton>
       <CommonButton variant="danger" onClick={handleReset} width="flex-2">恢复出厂设置</CommonButton>
-      <CommonButton variant="primary" width="flex-2" type="submit">排盘</CommonButton>
+      <CommonButton variant="primary" width="w-full md:w-auto md:flex-2" type="submit">排盘</CommonButton>
     </div>
   )
 

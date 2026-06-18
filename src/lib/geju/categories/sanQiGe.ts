@@ -1,7 +1,7 @@
 import { readBazi, readExtras } from '../snapshot'
 import { CHONG_PAIR } from '../types'
 import type { GejuHit } from '../types'
-import type { Gan } from '@jabberwocky238/bazi-engine'
+import type { Gan, Zhi } from '@jabberwocky238/bazi-engine'
 import { emitGeju } from '../_emit'
 
 /**
@@ -18,14 +18,14 @@ import { emitGeju } from '../_emit'
  *
  *  本 detector 实现: 主局严判结构 + 岁运地支冲三奇所在天干对应支 → Break.
  */
-const SAN_QI: Array<[string, string, string]> = [
+const SAN_QI: Array<[Gan, Gan, Gan]> = [
   ['乙', '丙', '丁'],
   ['甲', '戊', '庚'],
   ['壬', '癸', '辛'],
 ]
 
 // 天干对应禄支 (查冲)
-const GAN_LU: Record<string, string> = {
+const GAN_LU: Record<Gan, Zhi> = {
   甲: '寅', 乙: '卯', 丙: '巳', 丁: '午',
   戊: '巳', 己: '午', 庚: '申', 辛: '酉',
   壬: '亥', 癸: '子',
@@ -34,18 +34,18 @@ const GAN_LU: Record<string, string> = {
 export function isSanQiGe(): GejuHit | null {
   const bazi = readBazi()
   const extras = readExtras()
-  const gans = bazi.mainArr.map((p) => p.gan)
+  const gans = bazi.mainArr.map((p) => p.gan.name)
   for (const trio of SAN_QI) {
-    const positions = trio.map((g) => gans.indexOf(g as Gan))
+    const positions = trio.map((g) => gans.indexOf(g))
     if (positions.some((p) => p < 0)) continue
     const sorted = [...positions].sort((a, b) => a - b)
     if (positions.join() !== sorted.join()) return null
 
     // 岁运地支冲三奇之禄支 → Break
-    const extraZhis = extras.extraArr.map((p) => p.zhi as string)
+    const extraZhis = extras.extraArr.map((p) => p.zhi.name)
     const breakByChong = trio.some((g) => {
       const lu = GAN_LU[g]
-      return lu && extraZhis.includes(CHONG_PAIR[lu])
+      return extraZhis.includes(CHONG_PAIR[lu] as Zhi)
     })
 
     return emitGeju(

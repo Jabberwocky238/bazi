@@ -74,8 +74,8 @@ function checkZhuanWang(
 
   const selfWx = bazi.dayWx
   const yinWx = WX_GENERATED_BY[selfWx] as WuXing
-  const mainZhis = bazi.mainArr.map((p) => p.zhi as Zhi)
-  const extraZhis = extras.extraArr.map((p) => p.zhi as Zhi)
+  const mainZhis = bazi.mainArr.map((p) => p.zhi.name as Zhi)
+  const extraZhis = extras.extraArr.map((p) => p.zhi.name as Zhi)
   const allZhis = [...mainZhis, ...extraZhis]
 
   // —— 条件 2: 三合 / 三会 / (土) 四库齐 (可被岁运补齐) ——
@@ -123,7 +123,7 @@ function checkZhuanWang(
   const base4 = base4TouN === 0 && base4MainN < 2
   const ext4TouN = base4TouN + (extras.tou('正官') ? 1 : 0) + (extras.tou('七杀') ? 1 : 0)
   const ext4MainAdd = extras.extraArr.filter(
-    (p) => p.hideShishen[0] === '正官' || p.hideShishen[0] === '七杀',
+    (p) => p.zhi.cangGan[0]?.shishen === '正官' || p.zhi.cangGan[0]?.shishen === '七杀',
   ).length
   const ext4 = ext4TouN === 0 && (base4MainN + ext4MainAdd) < 2
 
@@ -134,14 +134,14 @@ function checkZhuanWang(
   const base6 = (base6TouN + base6MainN) <= 1
   const ext6TouAdd = (extras.tou('食神') ? 1 : 0) + (extras.tou('伤官') ? 1 : 0)
   const ext6MainAdd = extras.extraArr.filter(
-    (p) => p.hideShishen[0] === '食神' || p.hideShishen[0] === '伤官',
+    (p) => p.zhi.cangGan[0]?.shishen === '食神' || p.zhi.cangGan[0]?.shishen === '伤官',
   ).length
   const ext6 = (base6TouN + ext6TouAdd + base6MainN + ext6MainAdd) <= 1
 
   // —— 条件 5: 财透 ≤ maxCaiTou (附属克气控量) ——
   const baseCaiTou = (shishen.tou('正财') ? 1 : 0) + (shishen.tou('偏财') ? 1 : 0)
   const extraCaiTouAdd = extras.extraArr.filter(
-    (p) => CAI_SHISHENS.includes(p.shishen as Shishen),
+    (p) => CAI_SHISHENS.includes(p.gan.shishen as Shishen),
   ).length
   const base5 = baseCaiTou <= maxCaiTou
   const ext5 = baseCaiTou + extraCaiTouAdd <= maxCaiTou
@@ -154,7 +154,7 @@ function checkZhuanWang(
       (s) => s === '正财' || s === '偏财',
     ).length
     const extraCaiMainZhi = extras.extraArr.filter(
-      (p) => p.hideShishen[0] === '正财' || p.hideShishen[0] === '偏财',
+      (p) => p.zhi.cangGan[0]?.shishen === '正财' || p.zhi.cangGan[0]?.shishen === '偏财',
     ).length
     base5b = (baseCaiTou + mainCaiMainZhi) < 2
     ext5b = (baseCaiTou + extraCaiTouAdd + mainCaiMainZhi + extraCaiMainZhi) < 2
@@ -258,7 +258,7 @@ function isJiaSeGe(): GejuHit | null {
   // 若 distinct 库 < 3 (重复库, 层次薄) 则需 干土 ≥ 3 以"一气遍布"补足。
   const SI_KU = new Set(['辰', '戌', '丑', '未'])
   const baseDistinctKu = new Set(
-    bazi.mainArr.map((p) => p.zhi as string).filter((z) => SI_KU.has(z)),
+    bazi.mainArr.map((p) => p.zhi.name).filter((z) => SI_KU.has(z)),
   ).size
   const requireTuGan = baseDistinctKu < 3 ? 3 : 2
   const baseTuGan = bazi.ganWxCount('土')

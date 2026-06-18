@@ -1,16 +1,38 @@
 /**
  * 格局判定用 — 快照上下文。直接使用 @jabberwocky238/bazi-engine 的 Calculator。
  */
-import Calculator, { type DetailedPillar, type ShishenCalculator } from '@jabberwocky238/bazi-engine/calculator'
-import type { BaziDerived } from '../base'
+import {Calculator, type DetailedPillar, type ShishenCalculator } from '@jabberwocky238/bazi-engine'
+import type { ExtendedDetailedPillar } from '../base'
 import type { StrengthDerived } from '../strength'
-import type { Gan, Season, ShishenCat, WuXing, Zhi, Shishen } from '@jabberwocky238/bazi-engine'
+import type { Gan, Season, ShishenCat, WuXing, Zhi, Shishen, Sex } from '@jabberwocky238/bazi-engine'
 import { ganWuxing, zhiWuxing } from '@jabberwocky238/bazi-engine'
 import type { DaYunMeta } from './types'
 import { SHI_SHEN_CAT } from '../base'
 
-export interface BaziSnapshot extends BaziDerived {
-  pillars: { year: DetailedPillar; month: DetailedPillar; day: DetailedPillar; hour: DetailedPillar; dayun?: DetailedPillar; liunian?: DetailedPillar }
+// BaziSnapshot 不继承 BaziResult，而是单独定义
+// 因为 BaziResult.pillars 是数组，而这里 pillars 是命名对象
+export interface BaziSnapshot {
+  // 基础信息
+  solarStr: string
+  trueSolarStr: string
+  lunarStr: string
+  hourKnown: boolean
+  // 派生命段
+  dayGan: Gan | ''
+  dayZhi: Zhi | ''
+  dayGz: string
+  dayWx: WuXing | ''
+  dayYang: boolean
+  yearZhi: Zhi | ''
+  monthZhi: Zhi | ''
+  season: Season | ''
+  monthCat: ShishenCat | ''
+  monthZhiBeingChong: boolean
+  mainArr: ExtendedDetailedPillar[]
+  ganSet: Set<Gan>
+
+  // 额外字段
+  pillars: { year: ExtendedDetailedPillar; month: ExtendedDetailedPillar; day: ExtendedDetailedPillar; hour: ExtendedDetailedPillar; dayun?: ExtendedDetailedPillar; liunian?: ExtendedDetailedPillar }
   calc: Calculator
   ganWxCount: (wx: WuXing) => number
   zhiMainWxCount: (wx: WuXing) => number
@@ -20,7 +42,24 @@ export interface BaziSnapshot extends BaziDerived {
 }
 
 export function createBaziSnapshot(
-  derived: BaziDerived,
+  derived: {
+    solarStr: string
+    trueSolarStr: string
+    lunarStr: string
+    hourKnown: boolean
+    dayGan: Gan | ''
+    dayZhi: Zhi | ''
+    dayGz: string
+    dayWx: WuXing | ''
+    dayYang: boolean
+    yearZhi: Zhi | ''
+    monthZhi: Zhi | ''
+    season: Season | ''
+    monthCat: ShishenCat | ''
+    monthZhiBeingChong: boolean
+    mainArr: ExtendedDetailedPillar[]
+    ganSet: Set<Gan>
+  },
   extras?: { dayun?: DetailedPillar; liunian?: DetailedPillar },
 ): BaziSnapshot {
   const [year, month, day, hour] = derived.mainArr
@@ -30,9 +69,9 @@ export function createBaziSnapshot(
     month: { gan: month.gan.name, zhi: month.zhi.name },
     day: { gan: day.gan.name, zhi: day.zhi.name },
     hour: hour.gan.name ? { gan: hour.gan.name, zhi: hour.zhi.name } : undefined,
-    sex: 1,
+    sex: 1 as Sex,
   }
-  const calc = new Calculator(input, 1)
+  const calc = new Calculator(input, 1 as Sex)
 
   return {
     ...derived,
@@ -41,8 +80,8 @@ export function createBaziSnapshot(
       month: month!,
       day: day!,
       hour: hour!,
-      dayun: extras?.dayun,
-      liunian: extras?.liunian,
+      dayun: extras?.dayun as ExtendedDetailedPillar | undefined,
+      liunian: extras?.liunian as ExtendedDetailedPillar | undefined,
     },
     calc,
     ganWxCount: (wx: WuXing) => calc.ganWxCount(wx),
@@ -82,9 +121,9 @@ export function createShishenSnapshot(derived: { dayGan: Gan | ''; byPillar: Shi
     month: { gan: month.gan.name, zhi: month.zhi.name },
     day: { gan: day.gan.name, zhi: day.zhi.name },
     hour: hour.gan.name ? { gan: hour.gan.name, zhi: hour.zhi.name } : undefined,
-    sex: 1,
+    sex: 1 as Sex,
   }
-  const calc = new Calculator(input, 1)
+  const calc = new Calculator(input, 1 as Sex)
   const ssCalc = calc.shishen()
 
   return {

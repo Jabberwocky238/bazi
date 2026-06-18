@@ -85,9 +85,16 @@ function extraToPillar(e: ExtraPillar, dayGan: Gan): Pillar {
   const fallbackWx = ganWuxing(dayGan)
   return {
     label: e.label as PillarType,
-    gan: e.gan,
-    zhi: e.zhi,
-    shishen: e.shishen,
+    gan: {
+      name: e.gan,
+      wuxing: ganWuxing(e.gan),
+      shishen: e.shishen,
+    },
+    zhi: {
+      name: e.zhi,
+      wuxing: zhiWuxing(e.zhi),
+      cangGan: [],
+    },
     hideGans,
     hideShishen: e.hideShishen,
     nayin: '',
@@ -99,7 +106,8 @@ function extraToPillar(e: ExtraPillar, dayGan: Gan): Pillar {
     ),
     shensha: [],
     zizuo: changshengState(e.gan, e.zhi),
-  }
+    changsheng: '',
+  } as unknown as Pillar
 }
 
 export function GejuPanel() {
@@ -107,7 +115,7 @@ export function GejuPanel() {
   const hits = useBazi((s) => s.gejuHits)
   const setGejuExtras = useBazi((s) => s.setGejuExtras)
   const extras = useBaziStore((s) => s.extraPillars)
-  const dayGan = pillars[2]?.gan as Gan | undefined
+  const dayGan = pillars[2]?.gan.name as Gan | undefined
 
   const activeDaYun = extras.find((e) => e.label === '大运') ?? null
   const activeLiuNian = extras.find((e) => e.label === '流年') ?? null

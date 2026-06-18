@@ -22,7 +22,7 @@ export function isJianLuGe(): GejuHit | null {
   if (bazi.monthZhi !== LU[bazi.dayGan as Gan]) return null
 
   const baseChong = bazi.monthZhiBeingChong
-  const extrasChong = extras.extraArr.some((p) => CHONG_PAIR[bazi.monthZhi] === p.zhi)
+  const extrasChong = extras.extraArr.some((p) => CHONG_PAIR[bazi.monthZhi] === p.zhi.name)
 
   const officerRooted = shishen.touCat('官杀') && (shishen.zang('正官') || shishen.zang('七杀'))
   const caiRooted = shishen.touCat('财') && (shishen.zang('正财') || shishen.zang('偏财'))

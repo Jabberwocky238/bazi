@@ -17,9 +17,9 @@ export function isLiangQiChengXiang(): GejuHit | null {
   const bazi = readBazi()
   const wxSet = new Set<string>()
   for (const p of bazi.mainArr) {
-    const gw = ganWuxing(p.gan)
+    const gw = ganWuxing(p.gan.name)
     if (gw) wxSet.add(gw)
-    const zw = ganWuxing((p.hideGans[0] ?? '') as never)
+    const zw = p.zhi.cangGan[0]?.name ? ganWuxing(p.zhi.cangGan[0].name) : undefined
     if (zw) wxSet.add(zw)
   }
   if (wxSet.size !== 2) return null

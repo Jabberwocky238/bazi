@@ -24,20 +24,20 @@ export function isYangRenJiaSha(): GejuHit | null {
   if (!bazi.dayYang) return null
   const yr = YANG_REN[bazi.dayGan as Gan]
   if (!yr) return null
-  const yrPos = [bazi.pillars.month.zhi, bazi.pillars.day.zhi, bazi.pillars.hour.zhi].includes(yr)
+  const yrPos = [bazi.pillars.month.zhi.name, bazi.pillars.day.zhi.name, bazi.pillars.hour.zhi.name].includes(yr)
   if (!yrPos) return null
   if (!shishen.tou('七杀')) return null
   if (!shishen.zang('七杀')) return null
   if (!strength.shenWang) return null
   // md 条件 4: 无重印
   const yinGanCount = bazi.mainArr.filter(
-    (p, i) => i !== 2 && (p.shishen === '正印' || p.shishen === '偏印'),
+    (p, i) => i !== 2 && (p.gan.shishen === '正印' || p.gan.shishen === '偏印'),
   ).length
   const yinMainCount = shishen.mainAt('正印').length + shishen.mainAt('偏印').length
   if (yinGanCount >= 2 || yinMainCount >= 2) return null
   // md 条件 5: 无重食伤
   const ssGanCount = bazi.mainArr.filter(
-    (p, i) => i !== 2 && (p.shishen === '食神' || p.shishen === '伤官'),
+    (p, i) => i !== 2 && (p.gan.shishen === '食神' || p.gan.shishen === '伤官'),
   ).length
   const ssMainCount = shishen.mainAt('食神').length + shishen.mainAt('伤官').length
   if (ssGanCount >= 2 || ssMainCount >= 2) return null

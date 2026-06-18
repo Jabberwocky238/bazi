@@ -4,6 +4,8 @@ import {
   zhiWuxing,
   GENERATES as GEN,
   CONTROLS as CON,
+  type Gan,
+  type Zhi,
 } from '@jabberwocky238/bazi-engine'
 import type { DetailedPillar } from '../base'
 import type { GanZhiInteraction, WuXing } from './types'
@@ -11,9 +13,9 @@ import type { GanZhiInteraction, WuXing } from './types'
 const POS_LABELS: GanZhiInteraction['pos'][] = ['年', '月', '日', '时']
 
 function analyzeOne(p: DetailedPillar, pos: GanZhiInteraction['pos']): GanZhiInteraction {
-  const gw = ganWuxing(p.gan)
-  const zw = zhiWuxing(p.zhi)
-  const base = { pos, gan: p.gan, zhi: p.zhi, ganWx: gw, zhiWx: zw }
+  const gw = ganWuxing(p.gan.name as Gan)
+  const zw = zhiWuxing(p.zhi.name as Zhi)
+  const base = { pos, gan: p.gan.name, zhi: p.zhi.name, ganWx: gw, zhiWx: zw }
   if (!gw || !zw) return { ...base, type: '中性', note: '' }
   if (gw === zw) return { ...base, type: '覆载(同气)', note: '天地同气，力量集中' }
   if (GEN[gw as WuXing] === zw) return { ...base, type: '覆载(得覆)', note: '天干生地支，地支受生' }

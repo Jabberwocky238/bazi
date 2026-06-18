@@ -4,7 +4,6 @@ import { BaziMeta } from '@@/BaziMeta'
 import { BaziChart } from '@@/chart/BaziChart'
 import { BaziRelationsPanel } from '@@/BaziRelationsPanel'
 import { SkillIndex } from '@@/SkillIndex'
-import { SkillPanel } from '@@/SkillPanel'
 import { ElementsPanel } from '@@/ElementsPanel'
 import { GejuPanel } from '@@/GejuPanel'
 import { DaYunPanel } from '@@/DaYunPanel'
@@ -41,7 +40,7 @@ export default function BaziShow() {
     >
       <DisclaimerDialog open={disclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
 
-      <div className="grid gap-5 md:gap-6 md:grid-cols-[minmax(0,6fr)_minmax(0,4fr)]">
+      <div className="grid gap-5 md:gap-6">
         <section className="min-w-0">
           <ErrorBoundary name="BaziMeta"><BaziMeta solar={solarStr} trueSolar={trueSolarStr} lunar={lunarStr} /></ErrorBoundary>
           <ErrorBoundary name="BaziChart"><BaziChart pillars={pillars} /></ErrorBoundary>
@@ -53,10 +52,6 @@ export default function BaziShow() {
           <ErrorBoundary name="GanZhiPanel"><GanZhiPanel /></ErrorBoundary>
           <ErrorBoundary name="XiyongPanel"><XiyongPanel /></ErrorBoundary>
           <ErrorBoundary name="SkillIndex"><SkillIndex pillars={pillars} /></ErrorBoundary>
-        </section>
-
-        <section className="min-w-0">
-          <ErrorBoundary name="SkillPanel"><SkillPanel /></ErrorBoundary>
         </section>
       </div>
     </GenericLayout>

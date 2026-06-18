@@ -5,7 +5,6 @@ import { EMPTY_PILLAR } from '@/lib'
 import { BaziChart } from '@@/chart/BaziChart'
 import { BaziMeta } from '@@/BaziMeta'
 import { ErrorBoundary } from '@@/ErrorBoundary'
-import { SkillPanel } from '@@/SkillPanel'
 import { GenericLayout } from '@@/GenericLayout'
 import { HepanCrossPanel } from '@@/HepanCrossPanel'
 import { HepanXiyongMatch } from '@@/HepanXiyongMatch'
@@ -86,8 +85,6 @@ export default function HepanShow() {
         <p className="text-[10px] text-slate-400 dark:text-slate-600 text-right leading-relaxed">
           合盘仅供参考 · 用神 / 互动只是其中两层 · 实际配偶 / 合伙考量仍需综合岁运、宫位、神煞与现实磨合
         </p>
-
-        <ErrorBoundary name="SkillPanel"><SkillPanel /></ErrorBoundary>
       </div>
     </GenericLayout>
   )

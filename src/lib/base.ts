@@ -1,4 +1,3 @@
-import type { SkillCategory } from './skills'
 import {Calculator} from '@jabberwocky238/bazi-engine'
 import type {
   PillarType,
@@ -63,11 +62,6 @@ export type BaziResult = {
   ganSet: Set<Gan>
 }
 
-export interface SkillFocus {
-  category: SkillCategory
-  name: string
-  subtitle?: string
-}
 
 /** 时辰未知占位 (BaziInputState.hour 取这个值即代表"时柱未知")。 */
 export const HOUR_UNKNOWN = -1

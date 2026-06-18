@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import type { Gan, Zhi, Shishen } from '@jabberwocky238/bazi-engine'
-import type { SkillFocus } from '@/lib'
 import { useBaziInput } from './bazi'
 
 /** 大运/流年/流月叠加柱 —— UI 层临时数据，不含纳音/神煞等派生字段。 */
@@ -17,16 +16,12 @@ export interface ExtraPillar {
 }
 
 interface UiState {
-  focused: SkillFocus | null
   extraPillars: ExtraPillar[]
-  setFocused: (f: SkillFocus | null) => void
   setExtraPillars: (p: ExtraPillar[]) => void
 }
 
 export const useBaziStore = create<UiState>((set) => ({
-  focused: null,
   extraPillars: [],
-  setFocused: (f) => set({ focused: f }),
   setExtraPillars: (p) => set({ extraPillars: p }),
 }))
 

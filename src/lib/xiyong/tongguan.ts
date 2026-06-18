@@ -3,8 +3,8 @@ import {
   ganWuxing,
   zhiWuxing,
   GENERATED_BY as GEN_BY,
+  type DetailedPillar,
 } from '@jabberwocky238/bazi-engine'
-import type { DetailedPillar } from '../base'
 import type { TongguanInfo, WuXing } from './types'
 
 /**

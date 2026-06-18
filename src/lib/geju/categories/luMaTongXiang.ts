@@ -1,6 +1,7 @@
 import { readBazi, readExtras, readStrength } from '../snapshot'
 import { LU, CHONG_PAIR, yimaFrom } from '../types'
 import type { GejuHit } from '../types'
+import type { Gan } from '@jabberwocky238/bazi-engine'
 import { emitGeju } from '../_emit'
 
 /**
@@ -17,7 +18,7 @@ export function isLuMaTongXiang(): GejuHit | null {
   const bazi = readBazi()
   const strength = readStrength()
   const extras = readExtras()
-  const lu = LU[bazi.dayGan]
+  const lu = LU[bazi.dayGan as Gan]
   const ymY = yimaFrom(bazi.yearZhi)
   const ymD = yimaFrom(bazi.dayZhi)
   const pillars = bazi.mainArr

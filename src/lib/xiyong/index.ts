@@ -25,12 +25,6 @@ import { analyzeJiuying } from './jiuying'
 import { countWxStrength, analyzeTongguan } from './tongguan'
 import { sideOf, pickFuYi, computeTiaohou } from './fuyi'
 
-export * from './types'
-export { analyzePillarsGanZhi } from './pillar'
-export { analyzeJiuying } from './jiuying'
-export { analyzeTongguan, countWxStrength } from './tongguan'
-export { sideOf, pickFuYi, pickSickCat, computeTiaohou } from './fuyi'
-
 function pickCongOverride(gejuHits: GejuOutput[]): string | null {
   const congHit = gejuHits.find((h) => h.category === '从格')
   if (congHit) return `命中 ${congHit.name} → 日主已极弱顺从所从之神；扶抑结论需反向取用`

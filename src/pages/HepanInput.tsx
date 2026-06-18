@@ -46,7 +46,7 @@ export default function HepanInput() {
   })
   const [activeTab, setActiveTab] = useState<'a' | 'b'>('a')
   const { open } = useDialog()
-  const { init, entries } = useSavedEntries()
+  const { init, entries, delete: deleteEntry } = useSavedEntries()
 
   useEffect(() => {
     init(DEFAULT_STORAGE_KEY, MAIN_PRESETS)
@@ -85,12 +85,14 @@ export default function HepanInput() {
         onClose={onClose}
         entries={entries}
         onLoad={(entry) => {
-          const next = applySavedEntry(activeState, entry)
-          if (entry.name) {
-            next.name = entry.name
-          }
+          const next = applySavedEntry(activeState, entry) as HepanState
+          next.name = entry.name
           setActiveState(next)
           onClose()
+        }}
+        onDelete={(name, ev) => {
+          ev.stopPropagation()
+          deleteEntry(name)
         }}
       />
     ))
@@ -124,7 +126,7 @@ export default function HepanInput() {
           {/* BaziForm 输入 */}
           <BaziForm
             state={activeState}
-            onChange={setActiveState}
+            onChange={(next) => setActiveState(next as HepanState)}
             hideButtons
           />
 

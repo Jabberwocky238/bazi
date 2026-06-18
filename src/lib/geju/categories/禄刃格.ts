@@ -1,6 +1,7 @@
 import { readBazi, readExtras, readShishen } from '../snapshot'
 import { CHONG_PAIR, LU, YANG_REN } from '../types'
 import type { GejuHit } from '../types'
+import type { Gan } from '@jabberwocky238/bazi-engine'
 import { emitGeju } from '../_emit'
 
 /**
@@ -18,7 +19,7 @@ export function isJianLuGe(): GejuHit | null {
   const bazi = readBazi()
   const shishen = readShishen()
   const extras = readExtras()
-  if (bazi.monthZhi !== LU[bazi.dayGan]) return null
+  if (bazi.monthZhi !== LU[bazi.dayGan as Gan]) return null
 
   const baseChong = bazi.monthZhiBeingChong
   const extrasChong = extras.extraArr.some((p) => CHONG_PAIR[bazi.monthZhi] === p.zhi)
@@ -54,7 +55,7 @@ export function isYangRenGe(): GejuHit | null {
   const bazi = readBazi()
   const shishen = readShishen()
   const extras = readExtras()
-  if (bazi.monthZhi !== YANG_REN[bazi.dayGan]) return null
+  if (bazi.monthZhi !== YANG_REN[bazi.dayGan as Gan]) return null
 
   const baseGuanSha = shishen.touCat('官杀')
   const extrasGuanSha = baseGuanSha || extras.touCat('官杀')

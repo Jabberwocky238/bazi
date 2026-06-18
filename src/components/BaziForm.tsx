@@ -1,6 +1,5 @@
 import { useState, useEffect, type ReactNode } from 'react'
-import { HOUR_UNKNOWN } from '@/lib'
-import type { BaziInputMode } from '@@/stores'
+import { HOUR_UNKNOWN, type Sex, type BaziInputMode } from '@/lib'
 import type { BaziInputData } from '@@/stores/compute'
 import { computeFromState } from '@@/stores/compute'
 import { CommonButton } from '@@/CommonButton'
@@ -116,7 +115,7 @@ export function BaziForm({
       day: d,
       hour: nextHour,
       minute: hourUnknown ? 0 : Number(f.get('minute')),
-      sex: Number(f.get('sex')) === 0 ? 0 : 1,
+      sex: (Number(f.get('sex')) === 0 ? 0 : 1) as Sex,
     }
     if (mode === 'gregorian') {
       const lngVal = f.get('lng')

@@ -6,7 +6,7 @@ import type { Detector, GejuHit, GejuQuality, GejuCategory, DaYunMeta } from './
 import { EMPTY_SUIYUN, deriveVisibility } from './types'
 import { setGejuSnapshot, clearGejuSnapshot } from './snapshot'
 import { createBaziSnapshot, createShishenSnapshot, createStrengthSnapshot, createExtrasSnapshot } from './snapshot'
-import type { BaziDerived, ShishenDerived } from '../base'
+import type { BaziDerived } from '../base'
 import type { StrengthDerived } from '../strength'
 import type { DetailedPillar } from '../base'
 
@@ -137,12 +137,18 @@ export function detectGeju(): GejuOutput[] {
  */
 export function detectGejuWith(
   baziDerived: BaziDerived,
-  shishenDerived: ShishenDerived,
   strengthDerived: StrengthDerived,
   extras?: { dayun?: DetailedPillar; liunian?: DetailedPillar },
 ): GejuOutput[] {
   const bazi = createBaziSnapshot(baziDerived, extras)
-  const shishen = createShishenSnapshot(shishenDerived, baziDerived.mainArr)
+  const shishen = createShishenSnapshot({
+    dayGan: baziDerived.dayGan,
+    byPillar: baziDerived.mainArr.map((p) => p.shishen),
+    hideByPillar: baziDerived.mainArr.map((p) => p.hideShishen),
+    ganSs: baziDerived.mainArr.filter((_, i) => i !== 2).map((p) => p.shishen).filter((s) => s && s !== '日主'),
+    mainZhiArr: baziDerived.mainArr.map((p) => p.hideShishen[0] ?? ''),
+    allZhiArr: baziDerived.mainArr.flatMap((p) => p.hideShishen),
+  }, baziDerived.mainArr)
   const strength = createStrengthSnapshot(strengthDerived)
   const extrasSnap = createExtrasSnapshot(extras)
 

@@ -4,27 +4,18 @@
  */
 import { Solar } from 'lunar-typescript'
 import {
-  computeShensha,
-  computeShishen,
-  ganWuxing,
-  zhiWuxing,
-  changshengState,
-  nayinOf,
-  CANG_GAN,
   type Pillar as EnginePillar,
   type Gan,
   type Zhi,
   type Sex,
-  type Shishen,
-  type WuXing,
 } from '@jabberwocky238/bazi-engine'
 import {
   HOUR_UNKNOWN,
   EMPTY_PILLAR,
-  shishenWuxing,
+  buildDetailedPillars,
+  parseBazi,
   type Bazi,
   type Pillar,
-  type PillarType,
   type BaziResult,
 } from '@/lib'
 
@@ -83,41 +74,10 @@ export function computeBazi(
   const dayP:   EnginePillar = { gan: ec.getDayGan() as Gan,   zhi: ec.getDayZhi()   as Zhi }
   const hourP:  EnginePillar = { gan: ec.getTimeGan() as Gan,  zhi: ec.getTimeZhi()  as Zhi }
 
-  const shensha = computeShensha(
+  const pillars = buildDetailedPillars(
     [yearP, monthP, dayP, hourKnown ? hourP : undefined],
     sex,
   )
-  const dayGan = dayP.gan
-
-  const base = [
-    { label: '年柱' as const, p: yearP,  nayin: ec.getYearNaYin(),  hide: ec.getYearHideGan(),  ssKey: 'year'  as const },
-    { label: '月柱' as const, p: monthP, nayin: ec.getMonthNaYin(), hide: ec.getMonthHideGan(), ssKey: 'month' as const },
-    { label: '日柱' as const, p: dayP,   nayin: ec.getDayNaYin(),   hide: ec.getDayHideGan(),   ssKey: 'day'   as const },
-    { label: '时柱' as const, p: hourP,  nayin: ec.getTimeNaYin(),  hide: ec.getTimeHideGan(),  ssKey: 'hour'  as const },
-  ]
-
-  const pillars = base.map<Pillar>((b) => {
-    const r = computeShishen(dayP, b.p)
-    const ss = r.十神
-    const hideSs = r.藏干十神
-    return {
-      label: b.label,
-      gan: b.p.gan,
-      zhi: b.p.zhi,
-      ganWuxing: ganWuxing(b.p.gan),
-      zhiWuxing: zhiWuxing(b.p.zhi),
-      nayin: b.nayin,
-      hideGans: [...b.hide] as Gan[],
-      shishen: ss as Shishen,
-      shishenWuxing: shishenWuxing(dayGan, ss) as WuXing,
-      hideShishen: hideSs,
-      hideShishenWuxings: hideSs.map((s) => shishenWuxing(dayGan, s)) as WuXing[],
-      shensha: shensha[b.ssKey],
-      zizuo: changshengState(b.p.gan, b.p.zhi),
-    }
-  })
-
-  if (!hourKnown) pillars[3] = EMPTY_PILLAR
 
   return {
     solarStr: hourKnown
@@ -133,44 +93,9 @@ export function computeBazi(
 }
 
 // ————————————————————————————————————————————————————————
-// baziToPillars —— 直接由 4 干支构造 Pillar[]; 跳过公历/农历计算。
-// 神煞依赖四柱干支 + 性别, 不依赖具体日期。
+// 直接由 4 干支构造 Pillar[] 的逻辑已迁移到 @/lib 的 buildDetailedPillars
+// (基于 engine Calculator)。本文件不再手写十神/神煞/藏干派生。
 // ————————————————————————————————————————————————————————
-
-const PILLAR_LABELS: PillarType[] = ['年柱', '月柱', '日柱', '时柱']
-const SS_KEYS = ['year', 'month', 'day', 'hour'] as const
-
-function parseGz(gz: string): EnginePillar {
-  if (gz.length !== 2) throw new Error(`bad ganzhi: ${gz}`)
-  return { gan: gz[0] as Gan, zhi: gz[1] as Zhi }
-}
-
-export function baziToPillars(bazi: Bazi, sex: Sex): Pillar[] {
-  const parsed = bazi.map(parseGz) as [EnginePillar, EnginePillar, EnginePillar, EnginePillar]
-  const [y, m, d, h] = parsed
-  const shensha = computeShensha([y, m, d, h], sex)
-  const dayGan = d.gan
-  return parsed.map((p, i): Pillar => {
-    const r = computeShishen(d, p)
-    const ss = r.十神
-    const hideSs = r.藏干十神
-    return {
-      label: PILLAR_LABELS[i]!,
-      gan: p.gan,
-      zhi: p.zhi,
-      ganWuxing: ganWuxing(p.gan),
-      zhiWuxing: zhiWuxing(p.zhi),
-      nayin: nayinOf(p.gan, p.zhi),
-      hideGans: [...CANG_GAN[p.zhi]] as Gan[],
-      shishen: ss as Shishen,
-      shishenWuxing: shishenWuxing(dayGan, ss) as WuXing,
-      hideShishen: hideSs,
-      hideShishenWuxings: hideSs.map((s) => shishenWuxing(dayGan, s)) as WuXing[],
-      shensha: shensha[SS_KEYS[i]!],
-      zizuo: changshengState(p.gan, p.zhi),
-    }
-  })
-}
 
 // ————————————————————————————————————————————————————————
 // computeFromState — 输入 state (mode + dates / longitude / bazi / sex) 一站式
@@ -178,7 +103,7 @@ export function baziToPillars(bazi: Bazi, sex: Sex): Pillar[] {
 // 主盘 pushBazi 与 合盘 共享此函数, 0 复刻.
 // ————————————————————————————————————————————————————————
 
-import type { BaziInputMode } from './bazi'
+import type { BaziInputMode } from '@/lib'
 
 export interface BaziInputData {
   mode: BaziInputMode
@@ -214,12 +139,7 @@ export function computeFromState(s: BaziInputData): ComputedFromState | null {
     const hourGz = s.bazi[3]
     const hourKnown = hourGz.length === 2
     try {
-      const fullBazi: Bazi = [
-        s.bazi[0], s.bazi[1], s.bazi[2],
-        hourKnown ? hourGz : '甲子',
-      ]
-      const pillars = baziToPillars(fullBazi, s.sex)
-      if (!hourKnown) pillars[3] = EMPTY_PILLAR
+      const pillars = buildDetailedPillars(parseBazi(s.bazi), s.sex)
       return {
         bazi: {
           solarStr: '',

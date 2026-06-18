@@ -44,7 +44,7 @@ function analyzeGz(dayPillar: EnginePillar | null, gz: string): GzCell {
     ganSsWx: '', zhiSsWx: '', hideSs: [],
   }
   if (!gan || !zhi || !dayPillar) return empty
-  const r = computeShishen(dayPillar, { gan: gan as Gan, zhi: zhi as Zhi })
+  const r = computeShishen(dayPillar.gan, { gan: gan as Gan, zhi: zhi as Zhi })
   const ganSs = r.十神 === '日主' ? '比肩' : r.十神
   const zhiSs = r.藏干十神[0] ?? ''
   return {

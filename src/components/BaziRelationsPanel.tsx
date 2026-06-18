@@ -69,14 +69,14 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
   const stems: BaziChar[] = pillars.map((p) => ({
     key: `${p.label}-gan`,
     label: `${p.label[0]}干`,
-    value: p.gan,
-    wuxing: p.ganWuxing,
+    value: p.gan.name,
+    wuxing: p.gan.wuxing,
   }))
   const branches: BaziChar[] = pillars.map((p) => ({
     key: `${p.label}-zhi`,
     label: `${p.label[0]}支`,
-    value: p.zhi,
-    wuxing: p.zhiWuxing,
+    value: p.zhi.name,
+    wuxing: p.zhi.wuxing,
   }))
 
   const extraStems: BaziChar[] = extraList.map((p) => ({

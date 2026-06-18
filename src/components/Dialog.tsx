@@ -3,10 +3,10 @@ import {
   useContext,
   useState,
   useCallback,
-  Fragment,
+  useEffect,
   type ReactNode,
 } from 'react'
-import { Dialog as HeadlessDialog, Transition } from '@headlessui/react'
+import { createPortal } from 'react-dom'
 
 // ============= 基础 UI 组件 =============
 
@@ -65,7 +65,7 @@ interface DialogProps {
 }
 
 /**
- * 标准受控 Dialog —— 居中 modal，支持动画、无障碍、自动焦点管理
+ * 标准受控 Dialog —— 居中 modal，支持动画、自动锁定滚动、ESC关闭
  */
 export function Dialog({
   open,
@@ -77,55 +77,47 @@ export function Dialog({
   closeOnBackdropClick = true,
   closeOnEscape = true
 }: DialogProps) {
-  return (
-    <Transition appear show={open} as={Fragment}>
-      <HeadlessDialog
-        as="div"
-        className="relative z-[1000]"
-        onClose={closeOnBackdropClick ? onClose : () => {}}
-        closeOnEscape={closeOnEscape}
-      >
-        {/* 背景遮罩动画 */}
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-        </Transition.Child>
+  // ESC关闭
+  useEffect(() => {
+    if (!open || !closeOnEscape) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open, onClose, closeOnEscape])
 
-        {/* 居中容器 */}
-        <div className="fixed inset-0 overflow-y-auto p-3 md:p-6">
-          <div className="flex min-h-full items-center justify-center text-center">
-            {/* 弹窗内容动画 */}
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <HeadlessDialog.Panel
-                className={[
-                  'flex max-h-[85vh] w-[min(720px,92vw)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 text-inherit shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-left',
-                  className ?? '',
-                ].join(' ')}
-              >
-                <DialogShell title={title} subtitle={subtitle} onClose={onClose}>
-                  {children}
-                </DialogShell>
-              </HeadlessDialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </HeadlessDialog>
-    </Transition>
+  // 锁定背景滚动
+  useEffect(() => {
+    if (!open) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prevOverflow
+    }
+  }, [open])
+
+  if (!open) return null
+
+  // 简单淡入动画（不需要额外依赖）
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-3 md:p-6 animate-fade-in">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+        onClick={(e) => e.stopPropagation()}
+        className={[
+          'flex max-h-[85vh] w-[min(720px,92vw)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 text-inherit shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-scale-in',
+          className ?? '',
+        ].join(' ')}
+      >
+        <DialogShell title={title} subtitle={subtitle} onClose={onClose}>
+          {children}
+        </DialogShell>
+      </div>
+    </div>,
+    document.body
   )
 }
 
@@ -163,14 +155,12 @@ export function DialogPanel({ title, subtitle, onClose, children, className }: D
 interface DialogInstance {
   id: string
   content: (onClose: () => void) => ReactNode
-  container?: HTMLElement | null
 }
 
 interface DialogContextValue {
   /** 打开一个 dialog，返回该 dialog 的 id（用于手动关闭）。 */
   open: (
     content: (onClose: () => void) => ReactNode,
-    options?: { container?: HTMLElement | null }
   ) => string
   /** 关闭指定 id 的 dialog。 */
   close: (id: string) => void
@@ -184,30 +174,8 @@ interface DialogContextValue {
 
 const DialogContext = createContext<DialogContextValue | null>(null)
 
-/** 全局默认挂载点的 id。如果存在该元素，默认挂载到这里。 */
-const GLOBAL_DIALOG_CONTAINER_ID = 'dialog-root'
-
-function getDefaultContainer(): HTMLElement {
-  const existing = document.getElementById(GLOBAL_DIALOG_CONTAINER_ID)
-  if (existing) return existing
-  return document.body
-}
-
-interface ManagedDialogProps {
-  instance: DialogInstance
-  onClose: () => void
-}
-
-function ManagedDialog({ instance, onClose }: ManagedDialogProps) {
-  const content = instance.content(onClose)
-  // 直接返回内容，不需要额外Portal，由Dialog组件内部自己处理Portal
-  return content
-}
-
 interface DialogProviderProps {
   children: ReactNode
-  /** 默认挂载容器（优先级低于 open 时手动指定）。 */
-  defaultContainer?: HTMLElement | null
 }
 
 export function DialogProvider({ children }: DialogProviderProps) {
@@ -291,11 +259,9 @@ export function DialogProvider({ children }: DialogProviderProps) {
       {children}
       {/* 渲染所有命令式打开的Dialog */}
       {dialogs.map((instance) => (
-        <ManagedDialog
-          key={instance.id}
-          instance={instance}
-          onClose={() => close(instance.id)}
-        />
+        <div key={instance.id}>
+          {instance.content(() => close(instance.id))}
+        </div>
       ))}
     </DialogContext.Provider>
   )

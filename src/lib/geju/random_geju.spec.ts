@@ -8,8 +8,8 @@
  */
 
 import type { Sex } from '@jabberwocky238/bazi-engine'
-import { baziToPillars } from '../../components/stores/compute'
-import { type Bazi } from '../base'
+import { buildDetailedPillars, parseBazi } from '../compute'
+type Bazi = [string, string, string, string]
 import { detectGeju, DETECTORS } from './index'
 import type { GejuCategory } from './types'
 
@@ -46,7 +46,7 @@ for (let i = 0; i < N; i++) {
   const sex: Sex = Math.random() < 0.5 ? 0 : 1
   const bazi = randomBazi()
   try {
-    const pillars = baziToPillars(bazi, sex)
+    const pillars = buildDetailedPillars(parseBazi(bazi), sex)
     useBazi.getState().setBazi({
       pillars,
       solarStr: '',

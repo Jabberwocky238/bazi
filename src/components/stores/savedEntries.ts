@@ -21,7 +21,9 @@ function convertPreset(year: number, month: number, day: number, hour: number, m
     bazi: ['', '', '', ''],
   }
   const computed = computeFromState(temp)
-  const bazi = computed ? (computed.bazi.pillars.map((p) => `${p.gan}${p.zhi}`) as [string, string, string, string]) : ['甲子', '甲子', '甲子', '甲子']
+  const bazi: [string, string, string, string] = computed
+    ? (computed.bazi.pillars.map((p) => `${p.gan}${p.zhi}`) as [string, string, string, string])
+    : ['甲子', '甲子', '甲子', '甲子']
   return { name, mode: 'bazi', bazi, sex, savedAt: 0 }
 }
 

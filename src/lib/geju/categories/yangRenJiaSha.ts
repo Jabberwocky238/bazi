@@ -1,6 +1,7 @@
 import { readBazi, readExtras, readShishen, readStrength } from '../snapshot'
 import { YANG_REN } from '../types'
 import type { GejuHit } from '../types'
+import type { Gan } from '@jabberwocky238/bazi-engine'
 import { emitGeju } from '../_emit'
 
 /**
@@ -21,7 +22,7 @@ export function isYangRenJiaSha(): GejuHit | null {
   const strength = readStrength()
   const extras = readExtras()
   if (!bazi.dayYang) return null
-  const yr = YANG_REN[bazi.dayGan]
+  const yr = YANG_REN[bazi.dayGan as Gan]
   if (!yr) return null
   const yrPos = [bazi.pillars.month.zhi, bazi.pillars.day.zhi, bazi.pillars.hour.zhi].includes(yr)
   if (!yrPos) return null

@@ -29,7 +29,7 @@ export function isHuaQiGe(): GejuHit | null {
   const monthGan = bazi.pillars.month.gan
   const hourGan = bazi.pillars.hour.gan
   if (monthGan !== info.partner && hourGan !== info.partner) return null
-  if (bazi.rootWx(bazi.dayWx)) return null
+  if (bazi.dayWx && bazi.rootWx(bazi.dayWx as WuXing)) return null
   const monthWx = ganWuxing((bazi.pillars.month.hideGans[0] ?? '') as never)
   const huaStrong = monthWx === info.huaWx || bazi.zhiMainWxCount(info.huaWx as WuXing) >= 2
   if (!huaStrong) return null

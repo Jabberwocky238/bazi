@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useBazi } from '@/lib'
+import { useBazi } from '@@/stores'
 import { BaziMeta } from '@@/BaziMeta'
 import { BaziChart } from '@@/chart/BaziChart'
 import { BaziRelationsPanel } from '@@/BaziRelationsPanel'

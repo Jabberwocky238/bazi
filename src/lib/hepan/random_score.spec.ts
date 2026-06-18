@@ -10,8 +10,8 @@
 
 import { test } from 'bun:test'
 import type { Sex } from '@jabberwocky238/bazi-engine'
-import { baziToPillars } from '../../components/stores/compute'
-import { type Bazi } from '../base'
+import { buildDetailedPillars, parseBazi } from '../compute'
+type Bazi = [string, string, string, string]
 import { analyzeSide, computeXiyongMatch, scoreMatch } from './index'
 
 const YANG_GAN = ['甲', '丙', '戊', '庚', '壬'] as const
@@ -50,8 +50,8 @@ for (let i = 0; i < N; i++) {
   const sexA: Sex = Math.random() < 0.5 ? 0 : 1
   const sexB: Sex = Math.random() < 0.5 ? 0 : 1
   try {
-    const aPillars = baziToPillars(randomBazi(), sexA)
-    const bPillars = baziToPillars(randomBazi(), sexB)
+    const aPillars = buildDetailedPillars(parseBazi(randomBazi()), sexA)
+    const bPillars = buildDetailedPillars(parseBazi(randomBazi()), sexB)
     const aSide = analyzeSide(aPillars)
     const bSide = analyzeSide(bPillars)
     if (!aSide || !bSide) { errored++; continue }

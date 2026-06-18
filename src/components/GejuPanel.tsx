@@ -10,14 +10,13 @@ import {
 import {
   type Pillar,
   type PillarType,
-  useBazi,
   shishenWuxing,
   type GejuQuality,
   type GejuCategory,
   type GejuOutput,
   skillNames,
 } from '@/lib'
-import { useBaziStore, type ExtraPillar } from '@@/stores'
+import { useBaziStore, type ExtraPillar, useBazi } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
 // 配色 (按"是否引化"区分颜色饱和度, 边框样式不变):

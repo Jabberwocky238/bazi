@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useBazi, type StrengthLevel } from '@/lib'
+import { type StrengthLevel } from '@/lib'
+import { useBazi } from '@@/stores'
 import { WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
 

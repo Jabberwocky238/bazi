@@ -40,7 +40,7 @@ export interface ByPillarCross {
   时: CrossFindings
 }
 
-const POS_LIST: DetailedPillarPos[] = ['年', '月', '日', '时']
+const POS_LIST: PillarPos[] = ['年', '月', '日', '时']
 
 function emptyCross(): CrossFindings {
   return { he: [], chong: [], xinghaipo: [], ke: [], total: 0 }
@@ -112,7 +112,7 @@ function inPair<T>(t: [T, T], a: T, b: T): boolean {
 }
 
 interface PairCtx {
-  aPos: DetailedPillarPos; bPos: DetailedPillarPos
+  aPos: PillarPos; bPos: PillarPos
   aName: string; bName: string
   aGan: Gan; bGan: Gan
   aZhi: Zhi; bZhi: Zhi
@@ -324,7 +324,7 @@ export function analyzeHepanCross(
     for (const seg of selfSegs) {
       const m = seg.match(new RegExp(`${selfName}-(.)柱`))
       if (m && (POS_LIST as string[]).includes(m[1])) {
-        byPillar[m[1] as DetailedPillarPos].he.push(f)
+        byPillar[m[1] as PillarPos].he.push(f)
       }
     }
   }

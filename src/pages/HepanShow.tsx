@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { computeFromState } from '@@/stores/compute'
-import type { Pillar } from '@jabberwocky238/bazi-engine'
 import { EMPTY_PILLAR } from '@/lib'
 import { BaziChart } from '@@/chart/BaziChart'
 import { BaziMeta } from '@@/BaziMeta'
@@ -95,7 +94,7 @@ export default function HepanShow() {
 
 interface SideProps {
   label: string
-  result: { solarStr: string; trueSolarStr: string; lunarStr: string; pillars: Pillar[] }
+  result: { solarStr: string; trueSolarStr: string; lunarStr: string; pillars: DetailedPillar[] }
 }
 
 function Side({ label, result }: SideProps) {

@@ -1,5 +1,6 @@
 import { readBazi, readExtras, readShishen, readStrength } from '../snapshot'
 import type { GejuHit } from '../types'
+import type { WuXing } from '@jabberwocky238/bazi-engine'
 import { emitGeju } from '../_emit'
 
 /**
@@ -21,7 +22,7 @@ export function isShenShaLiangTing(): GejuHit | null {
   const extras = readExtras()
 
   if (!strength.shenWang) return null
-  if (!bazi.rootExt(bazi.dayWx)) return null
+  if (!bazi.dayWx || !bazi.rootExt(bazi.dayWx as WuXing)) return null
 
   // —— 条件 2: 七杀透 + 通根 ——
   const baseStruct2 = shishen.tou('七杀') && shishen.zang('七杀')

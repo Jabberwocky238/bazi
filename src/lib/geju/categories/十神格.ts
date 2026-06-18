@@ -6,7 +6,7 @@ import type { Gan, Shishen } from '@jabberwocky238/bazi-engine'
 /** 正格通用钩子：月支若是日主的阳刃/阴刃位 → 所有正格让位给阳刃格。 */
 function deferToYangRen(): boolean {
   const bazi = readBazi()
-  return bazi.monthZhi === YANG_REN[bazi.dayGan]
+  return bazi.monthZhi === YANG_REN[bazi.dayGan as Gan]
 }
 
 /**
@@ -73,8 +73,8 @@ const ZHENG_GUAN: Record<Gan, Gan> = {
 /** 正官透干且被日干合去 (阴日: 乙庚/丁壬/己甲/辛丙/癸戊)。 */
 function zhengGuanHeQu(): boolean {
   const bazi = readBazi()
-  const heTarget = HE_GAN[bazi.dayGan]
-  const guanGan = ZHENG_GUAN[bazi.dayGan]
+  const heTarget = HE_GAN[bazi.dayGan as Gan]
+  const guanGan = ZHENG_GUAN[bazi.dayGan as Gan]
   if (heTarget !== guanGan) return false
   return bazi.pillars.month.gan === guanGan || bazi.pillars.hour.gan === guanGan
 }
@@ -109,7 +109,7 @@ function isQiShaGe(): GejuHit | null {
   const foodControl = shishen.tou('食神') && shishen.zang('食神') && shishen.adjacentTou('食神', '七杀')
   const yinHua = shishen.touCat('印') && (shishen.zang('正印') || shishen.zang('偏印'))
   const renDiSha = bazi.dayYang && bazi.mainArr.some(
-    (p, i) => i !== 2 && p.zhi === (YANG_REN[bazi.dayGan] ?? ''),
+    (p, i) => i !== 2 && p.zhi === (YANG_REN[bazi.dayGan as Gan] ?? ''),
   )
   const details: string[] = []
   if (heQu) details.push('合官留杀')

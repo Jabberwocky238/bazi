@@ -1,5 +1,5 @@
 import { Dialog } from '@@/Dialog'
-import type { SavedEntry } from '@@/BaziForm'
+import type { SavedEntry } from '@@/stores/savedEntries'
 
 interface LoadDialogProps {
   open: boolean

@@ -1,7 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
-import { useBazi } from '@/lib'
-import { useBaziInput } from '@@/stores'
+import { useBazi, useBaziInput } from '@@/stores'
 import { BaziForm } from '@@/BaziForm'
 import { CommonButton } from '@@/CommonButton'
 import { GenericLayout } from '@@/GenericLayout'

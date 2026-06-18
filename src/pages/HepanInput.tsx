@@ -106,7 +106,12 @@ export default function HepanInput() {
   }
 
   return (
-    <GenericLayout errorBoundaryName="HepanInput" title="八字合盘" link={<Link to="/">← 首页</Link>}>
+    <GenericLayout
+      errorBoundaryName="HepanInput"
+      title="八字合盘"
+      link={<Link to="/">← 首页</Link>}
+      description="分别输入两人信息后，点击开始合盘"
+    >
       <div className="space-y-6">
         {/* Tab 切换 */}
         <div className="grid grid-cols-2 gap-1.5 border-b border-slate-100 bg-slate-50/80 p-2 dark:border-slate-800 dark:bg-slate-950/40 rounded-2xl">

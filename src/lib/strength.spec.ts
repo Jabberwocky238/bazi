@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import type { Pillar } from './store'
+import type { DetailedPillar } from './base'
 import { analyzeStrength } from './strength'
 
-function pillar(gan: string, zhi: string, shishen: string, label: Pillar['label']): Pillar {
+function pillar(gan: string, zhi: string, shishen: string, label: DetailedPillar['label']): DetailedPillar {
   return {
     label,
     gan,
@@ -17,11 +17,11 @@ function pillar(gan: string, zhi: string, shishen: string, label: Pillar['label'
     hideShishenWuxings: [],
     shensha: [],
     zizuo: '',
-  } as Pillar
+  } as DetailedPillar
 }
 
-function pillars(parts: Array<[string, string, string]>): Pillar[] {
-  const labels: Pillar['label'][] = ['年柱', '月柱', '日柱', '时柱']
+function pillars(parts: Array<[string, string, string]>): DetailedPillar[] {
+  const labels: DetailedPillar['label'][] = ['年柱', '月柱', '日柱', '时柱']
   return parts.map(([gan, zhi, shishen], i) => pillar(gan, zhi, shishen, labels[i]))
 }
 

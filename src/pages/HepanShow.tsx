@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { computeFromState } from '@@/stores/compute'
-import type { Pillar } from '@/lib'
+import type { Pillar } from '@jabberwocky238/bazi-engine'
 import { EMPTY_PILLAR } from '@/lib'
 import { BaziChart } from '@@/chart/BaziChart'
 import { BaziMeta } from '@@/BaziMeta'

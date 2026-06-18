@@ -1,4 +1,4 @@
-import { readBazi, readExtras, readShishen } from '../hooks'
+import { readBazi, readExtras, readShishen } from '../snapshot'
 import { SHI_SHEN_CAT } from '../types'
 import type { GejuHit } from '../types'
 import { emitGeju } from '../_emit'

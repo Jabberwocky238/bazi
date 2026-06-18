@@ -11,7 +11,7 @@
 import { test } from 'bun:test'
 import type { Sex } from '@jabberwocky238/bazi-engine'
 import { baziToPillars } from '../../components/stores/compute'
-import { type Bazi } from '../shared'
+import { type Bazi } from '../base'
 import { analyzeSide, computeXiyongMatch, scoreMatch } from './index'
 
 const YANG_GAN = ['甲', '丙', '戊', '庚', '壬'] as const

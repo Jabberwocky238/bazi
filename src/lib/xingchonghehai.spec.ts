@@ -18,7 +18,7 @@ const YANG_ZHI = ['子', '寅', '辰', '午', '申', '戌'] as const
 const YIN_ZHI = ['丑', '卯', '巳', '未', '酉', '亥'] as const
 const EXTRA_LABELS: ExtraSourceLabel[] = ['大运', '流年', '流月']
 
-function randomPillar(): Pillar {
+function randomPillar(): DetailedPillar {
   const yang = Math.random() < 0.5
   const gans = yang ? YANG_GAN : YIN_GAN
   const zhis = yang ? YANG_ZHI : YIN_ZHI

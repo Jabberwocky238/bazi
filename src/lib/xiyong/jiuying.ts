@@ -6,10 +6,10 @@ import {
   CONTROLS as CON,
   GENERATED_BY as GEN_BY,
 } from '@jabberwocky238/bazi-engine'
-import type { Pillar } from '../store'
+import type { DetailedPillar } from '../base'
 import { catToWx, type Cat, type JiuyingInfo, type JiuyingMethod, type WuXing } from './types'
 
-function findWxInPillars(pillars: Pillar[], wx: WuXing): string[] {
+function findWxInPillars(pillars: DetailedPillar[], wx: WuXing): string[] {
   const hits: string[] = []
   pillars.forEach((p, i) => {
     const pos = ['年', '月', '日', '时'][i]
@@ -20,7 +20,7 @@ function findWxInPillars(pillars: Pillar[], wx: WuXing): string[] {
 }
 
 export function analyzeJiuying(
-  pillars: Pillar[],
+  pillars: DetailedPillar[],
   dayWx: WuXing,
   side: 'strong' | 'weak' | 'neutral',
   sickCat: Cat | null,

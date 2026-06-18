@@ -1,4 +1,4 @@
-import { readBazi, readStrength } from '../hooks'
+import { readBazi, readStrength } from '../snapshot'
 import { KUIGANG_DAY } from '../types'
 import type { GejuHit } from '../types'
 import type { WuXing } from '@jabberwocky238/bazi-engine'

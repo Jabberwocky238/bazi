@@ -1,4 +1,4 @@
-import { readBazi, readExtras } from '../hooks'
+import { readBazi, readExtras } from '../snapshot'
 import { EMPTY_SUIYUN, deriveVisibility, type GejuHit } from '../types'
 
 /**

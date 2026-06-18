@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useXiyong, type Cat, type WuXing } from '@/lib'
+import { useBazi, type Cat, type WuXing } from '@/lib'
 import { WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
 
@@ -21,7 +21,7 @@ const TONE: Record<'用神' | '喜神' | '忌神' | '调候', string> = {
 const SECTION_LABEL = 'text-[11px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400 uppercase'
 
 export function XiyongPanel() {
-  const a = useXiyong((s) => s.analysis)
+  const a = useBazi((s) => s.xiyongAnalysis)
   const [open, setOpen] = useState(true)
   if (!a) return null
 

@@ -5,12 +5,12 @@ import {
   GENERATES as GEN,
   CONTROLS as CON,
 } from '@jabberwocky238/bazi-engine'
-import type { Pillar } from '../store'
+import type { DetailedPillar } from '../base'
 import type { GanZhiInteraction, WuXing } from './types'
 
 const POS_LABELS: GanZhiInteraction['pos'][] = ['年', '月', '日', '时']
 
-function analyzeOne(p: Pillar, pos: GanZhiInteraction['pos']): GanZhiInteraction {
+function analyzeOne(p: DetailedPillar, pos: GanZhiInteraction['pos']): GanZhiInteraction {
   const gw = ganWuxing(p.gan)
   const zw = zhiWuxing(p.zhi)
   const base = { pos, gan: p.gan, zhi: p.zhi, ganWx: gw, zhiWx: zw }
@@ -23,6 +23,6 @@ function analyzeOne(p: Pillar, pos: GanZhiInteraction['pos']): GanZhiInteraction
   return { ...base, type: '中性', note: '' }
 }
 
-export function analyzePillarsGanZhi(pillars: Pillar[]): GanZhiInteraction[] {
+export function analyzePillarsGanZhi(pillars: DetailedPillar[]): GanZhiInteraction[] {
   return pillars.slice(0, 4).map((p, i) => analyzeOne(p, POS_LABELS[i]))
 }

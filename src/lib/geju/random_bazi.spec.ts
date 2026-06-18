@@ -6,7 +6,7 @@
  *  - 每个格局的命中次数 + 命中率 + 在所属类别里的占比（从多到少）
  *  - 每个类别的命中次数 + 占总命中比
  */
-import { type Bazi } from '../shared'
+import { type Bazi } from '../base'
 
 const YANG_GAN = ['甲', '丙', '戊', '庚', '壬'] as const
 const YIN_GAN = ['乙', '丁', '己', '辛', '癸'] as const

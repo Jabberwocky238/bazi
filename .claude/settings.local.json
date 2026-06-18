@@ -1,30 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bun add *)",
       "Bash(bun *)",
-      "Bash(bun remove *)",
-      "Bash(git submodule *)",
       "Bash(grep -E \"\\\\.md$\")",
-      "Bash(echo \"---exit:$?---\")",
-      "Bash(git commit -m ' *)",
-      "Bash(git push *)",
-      "Bash(git mv *)",
-      "Bash(echo \"---exit $?---\")",
-      "Bash(git add *)",
       "Bash(bun test *)",
-      "Bash(git diff *)",
-      "Bash(git ls-tree *)",
       "Bash(python3 *)",
-      "Bash(npm exec *)",
       "WebSearch",
-      "Bash(git switch *)",
-      "Bash(git commit *)",
       "Bash(bunx tsc *)",
-      "Bash(git config *)",
       "Bash(git *)",
       "Bash(bunx cap *)",
-      "Bash(npx cap *)"
+      "Bash(npx cap *)",
+      "Bash(node *)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx\\)$\")"
     ],
     "deny": [
       "Bash(tsc *)",

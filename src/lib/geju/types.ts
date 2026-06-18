@@ -11,7 +11,7 @@ import {
   type ShishenCat,
   type WuXing,
 } from '@jabberwocky238/bazi-engine'
-import type { Pillar } from '../store'
+import type { DetailedPillar } from '../base'
 import type { StrengthAnalysis, StrengthLevel } from '../strength'
 
 export type { ShishenCat }
@@ -79,12 +79,12 @@ export interface DaYunMeta {
 }
 
 export interface CtxPillars {
-  year: Pillar
-  month: Pillar
-  day: Pillar
-  hour: Pillar
-  dayun?: Pillar
-  liunian?: Pillar
+  year: DetailedPillar
+  month: DetailedPillar
+  day: DetailedPillar
+  hour: DetailedPillar
+  dayun?: DetailedPillar
+  liunian?: DetailedPillar
 }
 
 /** Detector 不再接收 ctx 参数, 内部通过 composeCtx() 直接拉 store. */
@@ -96,7 +96,7 @@ export type Detector = () => GejuHit | null
 // 旧路径 `from '../../types'`。
 // ————————————————————————————————————————————————————————
 
-export { SHI_SHEN_CAT, CHONG_PAIR } from '../shared'
+export { SHI_SHEN_CAT, CHONG_PAIR } from '../base'
 
 /** 日主禄位（十干禄支）。 */
 export const LU: Record<Gan, Zhi> = {

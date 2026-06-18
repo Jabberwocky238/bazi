@@ -21,6 +21,7 @@
     "@capacitor/android": "^6.0.0",
     "@capacitor/core": "^6.0.0",
     "@capacitor/ios": "^6.0.0",
+    "@headlessui/react": "^2.2.10",
     "@jabberwocky238/bazi-engine": "file:./bazi-engine",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-popover": "^1.1.15",

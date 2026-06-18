@@ -2,7 +2,7 @@
  * 扶抑（依 扶抑.md 五大情况）+ 病根选取 + 调候硬约束 + 强弱归类。
  * 不含从格/专旺格覆写（在 index.ts orchestrator 处理）。
  */
-import type { Pillar } from '../store'
+import type { DetailedPillar } from '../base'
 import { CAT_OF_SHISHEN, type Cat, type WuXing } from './types'
 
 const STRONG_LV = new Set(['身极旺', '身旺', '身中强', '身中(偏强)'])
@@ -15,7 +15,7 @@ export function sideOf(level: string): 'strong' | 'weak' | 'neutral' {
 }
 
 /** 判定五大情况中"病根"最重的那一类。 */
-export function pickSickCat(pillars: Pillar[], side: 'strong' | 'weak'): Cat | null {
+export function pickSickCat(pillars: DetailedPillar[], side: 'strong' | 'weak'): Cat | null {
   const cnt: Record<Cat, number> = { 比劫: 0, 印: 0, 食伤: 0, 财: 0, 官杀: 0 }
   const ganShens = [pillars[0].shishen, pillars[1].shishen, pillars[3].shishen]
   for (const s of ganShens) {
@@ -45,7 +45,7 @@ export interface FuYiResult {
 }
 
 /** 扶抑五大情况：依 side 和 sickCat 选取喜用 / 忌神。 */
-export function pickFuYi(pillars: Pillar[], side: 'strong' | 'weak' | 'neutral'): FuYiResult {
+export function pickFuYi(pillars: DetailedPillar[], side: 'strong' | 'weak' | 'neutral'): FuYiResult {
   if (side === 'strong') {
     const sickCat = pickSickCat(pillars, 'strong')
     if (sickCat === '印') {

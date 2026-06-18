@@ -8,7 +8,7 @@
  *  同时识别跨盘 三合 / 三会 (≥ 1 字来自 self, ≥ 1 字来自 other).
  */
 import type { Gan, Zhi } from '@jabberwocky238/bazi-engine'
-import type { Pillar } from '../store'
+import type { DetailedPillar } from '../base'
 
 export type FindingKind =
   | '天干五合' | '天干相冲' | '天干相克'
@@ -40,7 +40,7 @@ export interface ByPillarCross {
   时: CrossFindings
 }
 
-const POS_LIST: PillarPos[] = ['年', '月', '日', '时']
+const POS_LIST: DetailedPillarPos[] = ['年', '月', '日', '时']
 
 function emptyCross(): CrossFindings {
   return { he: [], chong: [], xinghaipo: [], ke: [], total: 0 }
@@ -112,7 +112,7 @@ function inPair<T>(t: [T, T], a: T, b: T): boolean {
 }
 
 interface PairCtx {
-  aPos: PillarPos; bPos: PillarPos
+  aPos: DetailedPillarPos; bPos: DetailedPillarPos
   aName: string; bName: string
   aGan: Gan; bGan: Gan
   aZhi: Zhi; bZhi: Zhi
@@ -228,8 +228,8 @@ function detectPairFindings(ctx: PairCtx): AnyFinding[] {
 
 // 三合 / 三会 — 跨盘需要 self ≥ 1 字 + other ≥ 1 字
 function detectTripleFindings(
-  self: Pillar[], selfName: string,
-  other: Pillar[], otherName: string,
+  self: DetailedPillar[], selfName: string,
+  other: DetailedPillar[], otherName: string,
 ): AnyFinding[] {
   const out: AnyFinding[] = []
   const allZhis = [
@@ -293,7 +293,7 @@ function classify(f: AnyFinding): 'he' | 'chong' | 'xinghaipo' | 'ke' {
  * @param selfName  self 端的称呼 (默认 "本人"); 用于 positions 标签.
  */
 export function analyzeHepanCross(
-  self: Pillar[], other: Pillar[], otherName: string,
+  self: DetailedPillar[], other: DetailedPillar[], otherName: string,
   selfName: string = '本人',
 ): { all: CrossFindings; byPillar: ByPillarCross } | null {
   if (self.length !== 4 || other.length !== 4) return null
@@ -324,7 +324,7 @@ export function analyzeHepanCross(
     for (const seg of selfSegs) {
       const m = seg.match(new RegExp(`${selfName}-(.)柱`))
       if (m && (POS_LIST as string[]).includes(m[1])) {
-        byPillar[m[1] as PillarPos].he.push(f)
+        byPillar[m[1] as DetailedPillarPos].he.push(f)
       }
     }
   }
@@ -343,8 +343,8 @@ export interface BidirectionalCross {
 }
 
 export function analyzeHepanCrossBoth(
-  a: Pillar[], aName: string,
-  b: Pillar[], bName: string,
+  a: DetailedPillar[], aName: string,
+  b: DetailedPillar[], bName: string,
 ): BidirectionalCross | null {
   const aFromB = analyzeHepanCross(a, b, bName, aName)
   const bFromA = analyzeHepanCross(b, a, aName, bName)

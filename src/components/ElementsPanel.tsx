@@ -13,8 +13,8 @@ import {
   type Zhi,
   type WuXing,
 } from '@jabberwocky238/bazi-engine'
-import { type Pillar, useBazi } from '@/lib'
-import { useBaziStore, type ExtraPillar } from '@@/stores'
+import { type Pillar } from '@/lib'
+import { useBazi, useBaziStore, type ExtraPillar } from '@@/stores'
 import { WUXING_BG_STRONG, WUXING_BG_SOFT, WUXING_BORDER, WUXING_TEXT } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
 

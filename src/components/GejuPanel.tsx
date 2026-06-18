@@ -11,14 +11,12 @@ import {
   type Pillar,
   type PillarType,
   useBazi,
-  useGeju,
   shishenWuxing,
   type GejuQuality,
   type GejuCategory,
   type GejuOutput,
   skillNames,
 } from '@/lib'
-import { useGejuExtras } from '@/lib/geju/hooks'
 import { useBaziStore, type ExtraPillar } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
@@ -107,24 +105,25 @@ function extraToPillar(e: ExtraPillar, dayGan: Gan): Pillar {
 
 export function GejuPanel() {
   const pillars = useBazi((s) => s.pillars)
-  const hits = useGeju((s) => s.hits)
+  const hits = useBazi((s) => s.gejuHits)
+  const setGejuExtras = useBazi((s) => s.setGejuExtras)
   const extras = useBaziStore((s) => s.extraPillars)
   const dayGan = pillars[2]?.gan as Gan | undefined
 
   const activeDaYun = extras.find((e) => e.label === '大运') ?? null
   const activeLiuNian = extras.find((e) => e.label === '流年') ?? null
 
-  // 把 UI 选中的岁运 同步到 useGejuExtras → 触发 useGeju 重算
+  // 把 UI 选中的岁运 同步到 store → 触发 detectGeju 重算
   useEffect(() => {
     if (!dayGan) {
-      useGejuExtras.getState().clearExtras()
+      setGejuExtras({})
       return
     }
-    useGejuExtras.getState().setExtras({
-      dayun: activeDaYun ? extraToPillar(activeDaYun, dayGan) : null,
-      liunian: activeLiuNian ? extraToPillar(activeLiuNian, dayGan) : null,
+    setGejuExtras({
+      dayun: activeDaYun ? extraToPillar(activeDaYun, dayGan) : undefined,
+      liunian: activeLiuNian ? extraToPillar(activeLiuNian, dayGan) : undefined,
     })
-  }, [dayGan, activeDaYun, activeLiuNian])
+  }, [dayGan, activeDaYun, activeLiuNian, setGejuExtras])
 
   const hitSet = new Set(hits.map((h) => h.name))
   const others = skillNames('geju').filter((n) => !hitSet.has(n))

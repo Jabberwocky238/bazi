@@ -1,4 +1,4 @@
-import { readBazi, readShishen, readExtras } from '../hooks'
+import { readBazi, readShishen, readExtras } from '../snapshot'
 import { CHONG_PAIR, EMPTY_SUIYUN, deriveVisibility } from '../types'
 import type { GejuHit } from '../types'
 

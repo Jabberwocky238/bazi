@@ -10,7 +10,7 @@ import { defaultA, defaultB, type HepanState } from '@@/HepanInput'
 import { BaziForm } from '@@/BaziForm'
 import { applySavedEntry, type SavedEntry } from '@@/stores/savedEntries'
 import { CommonButton } from '@@/CommonButton'
-import { useDialog } from '@@/DialogContext'
+import { useDialog } from '@@/Dialog'
 import { LoadDialog } from '@@/LoadDialog'
 import {
   useSavedEntries,

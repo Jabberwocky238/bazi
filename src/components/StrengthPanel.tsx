@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useStrength, type StrengthLevel } from '@/lib'
+import { useBazi, type StrengthLevel } from '@/lib'
 import { WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
 
@@ -22,7 +22,7 @@ function ptClass(n: number) { return n > 0 ? POINT_POS : n < 0 ? POINT_NEG : 'te
 function signed(n: number) { return n > 0 ? `+${n}` : `${n}` }
 
 export function StrengthPanel() {
-  const a = useStrength((s) => s.analysis)
+  const a = useBazi((s) => s.analysis)
   const [open, setOpen] = useState(true)
   if (!a) return null
 

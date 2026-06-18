@@ -1,6 +1,6 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import { GenericLayout } from '@@/GenericLayout'
-import { DialogProvider } from '@/components/DialogContext'
+import { DialogProvider } from '@@/Dialog'
 import { Suspense } from 'react'
 import BaziInput from './BaziInput'
 import BaziShow from './BaziShow'

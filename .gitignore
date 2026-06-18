@@ -30,3 +30,4 @@ _probe
 .dev.vars
 .dev.vars.*
 worker-configuration.d.ts
+build/

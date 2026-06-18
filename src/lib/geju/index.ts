@@ -1,16 +1,14 @@
 /**
- * 格局判定入口。所有 detector 内部直接通过
- * `readBazi() / readShishen() / readStrength() / readExtras()` 拉数据,
- * 不再接收 ctx 参数。
- *
- * detectGeju() 也无参 — 调用方在 `useGejuExtras` 写入岁运后再 detect。
+ * 格局判定入口。
+ * 通过 setGejuSnapshot 设置快照后调用 detectGeju() 纯函数。
  */
-import { create } from 'zustand'
 import type { Detector, GejuHit, GejuQuality, GejuCategory, DaYunMeta } from './types'
 import { EMPTY_SUIYUN, deriveVisibility } from './types'
-import { useBazi, useShishen } from '../shishen'
-import { useStrength } from '../strength'
-import { useGejuExtras } from './hooks'
+import { setGejuSnapshot, clearGejuSnapshot } from './snapshot'
+import { createBaziSnapshot, createShishenSnapshot, createStrengthSnapshot, createExtrasSnapshot } from './snapshot'
+import type { BaziDerived, ShishenDerived } from '../base'
+import type { StrengthDerived } from '../strength'
+import type { DetailedPillar } from '../base'
 
 export type {
   GejuQuality,
@@ -21,7 +19,8 @@ export type {
   DaYunMeta,
 } from './types'
 export { EMPTY_SUIYUN, deriveVisibility } from './types'
-export { useGejuExtras } from './hooks'
+export { setGejuSnapshot, clearGejuSnapshot } from './snapshot'
+export { createBaziSnapshot, createShishenSnapshot, createStrengthSnapshot, createExtrasSnapshot } from './snapshot'
 
 import * as geju from './categories'
 
@@ -102,15 +101,18 @@ export const DETECTORS: Record<string, [Detector, GejuQuality, GejuCategory]> = 
 
 export type GejuOutput = GejuHit & { quality: GejuQuality, category: GejuCategory }
 
+/**
+ * 格局判定纯函数。调用前需先调用 setGejuSnapshot() 设置快照。
+ * 为方便调用，提供 detectGejuWith() 一站式函数。
+ */
 export function detectGeju(): GejuOutput[] {
-  if (useBazi.getState().pillars.length !== 4) return []
   const hits: GejuOutput[] = []
-  for (const [detect, quality, category] of Object.values(DETECTORS)) {
+  for (const [name, [detect, quality, category]] of Object.entries(DETECTORS)) {
     const h = detect()
     if (!h) continue
     // 从格与专旺格理论互斥；若 detector 边界重叠，按当前顺序只保留先命中的一类。
-    if (h.name === '从格' && hits.some((x) => x.name === '专旺格')) continue
-    if (h.name === '专旺格') {
+    if (name === '从格' && hits.some((x) => x.name === '专旺格')) continue
+    if (name === '专旺格') {
       const i = hits.findIndex((x) => x.name === '从格')
       if (i >= 0) hits.splice(i, 1)
     }
@@ -130,29 +132,24 @@ export function detectGeju(): GejuOutput[] {
   return hits
 }
 
-// ————————————————————————————————————————————————————————
-// useGeju — 当前快照下的 hits, 跟随 useBazi / useGejuExtras 自动重算.
-// 其他 store 变更通常由 useBazi 主导 (useShishen / useStrength 都基于 pillars).
-// ————————————————————————————————————————————————————————
+/**
+ * 一站式格局判定纯函数。创建快照后自动 detect。
+ */
+export function detectGejuWith(
+  baziDerived: BaziDerived,
+  shishenDerived: ShishenDerived,
+  strengthDerived: StrengthDerived,
+  extras?: { dayun?: DetailedPillar; liunian?: DetailedPillar },
+): GejuOutput[] {
+  const bazi = createBaziSnapshot(baziDerived, extras)
+  const shishen = createShishenSnapshot(shishenDerived, baziDerived.mainArr)
+  const strength = createStrengthSnapshot(strengthDerived)
+  const extrasSnap = createExtrasSnapshot(extras)
 
-interface GejuStore {
-  hits: GejuOutput[]
+  setGejuSnapshot(bazi, shishen, strength, extrasSnap)
+  try {
+    return detectGeju()
+  } finally {
+    clearGejuSnapshot()
+  }
 }
-
-export const useGeju = create<GejuStore>()(() => ({
-  hits: detectGeju(),
-}))
-
-useBazi.subscribe((s, prev) => {
-  if (s.pillars === prev.pillars) return
-  useGeju.setState({ hits: detectGeju() })
-})
-useShishen.subscribe(() => {
-  useGeju.setState({ hits: detectGeju() })
-})
-useStrength.subscribe(() => {
-  useGeju.setState({ hits: detectGeju() })
-})
-useGejuExtras.subscribe(() => {
-  useGeju.setState({ hits: detectGeju() })
-})

@@ -1,4 +1,4 @@
-import { readBazi, readExtras, readShishen } from '../hooks'
+import { readBazi, readExtras, readShishen } from '../snapshot'
 import type { GejuHit } from '../types'
 import type { Shishen } from '@jabberwocky238/bazi-engine'
 import { emitGeju } from '../_emit'

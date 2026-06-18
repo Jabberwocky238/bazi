@@ -9,8 +9,7 @@ import {
   type FindingMod,
 } from '@jabberwocky238/bazi-engine'
 import { analyzeGanZhiWithExtras, type ExtraInteraction } from '@/lib/xingchonghehai'
-import { useBazi } from '@/lib'
-import { useBaziStore, type ExtraPillar } from '@@/stores'
+import { useBazi, useBaziStore, type ExtraPillar } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
 type AnyFinding = HeFinding | ConflictFinding | MuKuFinding | WholePillarFinding | ZhengHeFinding

@@ -10,8 +10,8 @@ import {
 import {
   HOUR_UNKNOWN,
   shishenWuxing,
-  useBazi,
 } from '@/lib'
+import { useBazi } from '@@/stores'
 import { WUXING_TEXT, WUXING_BORDER, WUXING_FROM } from '@@/css'
 import {
   useBaziStore,

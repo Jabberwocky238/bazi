@@ -1,4 +1,4 @@
-import { readBazi, readExtras, readShishen, readStrength } from '../hooks'
+import { readBazi, readExtras, readShishen, readStrength } from '../snapshot'
 import {
   SHI_SHEN_CAT,
   WX_CONTROLLED_BY,

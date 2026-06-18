@@ -11,19 +11,19 @@
  *  HepanCrossPanel 仍走 lib/hepan/cross 做跨盘.
  */
 import { analyzeGanZhi, type GanZhiAnalysis } from '@jabberwocky238/bazi-engine'
-import type { Pillar } from '../store'
+import type { DetailedPillar } from '../base'
 import { analyzeStrength, type StrengthAnalysis } from '../strength'
 import { analyzeXiyong, type XiyongAnalysis } from '../xiyong'
 
 export interface SideAnalysis {
-  pillars: Pillar[]
+  pillars: DetailedPillar[]
   strength: StrengthAnalysis
   xiyong: XiyongAnalysis
   /** 本盘内部干支互动 (合冲刑害破暗合 / 墓库 / 盖头截脚覆载). */
   ganZhi: GanZhiAnalysis
 }
 
-export function analyzeSide(pillars: Pillar[]): SideAnalysis | null {
+export function analyzeSide(pillars: DetailedPillar[]): SideAnalysis | null {
   if (pillars.length !== 4) return null
   const strength = analyzeStrength(pillars)
   if (!strength) return null
@@ -54,7 +54,7 @@ export interface SideXiyong {
 }
 
 /** @deprecated 用 analyzeSide. */
-export function localXiyong(pillars: Pillar[]): SideXiyong | null {
+export function localXiyong(pillars: DetailedPillar[]): SideXiyong | null {
   const a = analyzeSide(pillars)
   if (!a) return null
   return {

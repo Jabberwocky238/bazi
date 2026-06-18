@@ -9,8 +9,7 @@
 
 import type { Sex } from '@jabberwocky238/bazi-engine'
 import { baziToPillars } from '../../components/stores/compute'
-import { type Bazi } from '../shared'
-import { useBazi } from '../shishen'
+import { type Bazi } from '../base'
 import { detectGeju, DETECTORS } from './index'
 import type { GejuCategory } from './types'
 

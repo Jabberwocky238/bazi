@@ -4,7 +4,7 @@ import type { BaziInputMode } from '@@/stores'
 import type { BaziInputData } from '@@/stores/compute'
 import { computeFromState } from '@@/stores/compute'
 import { CommonButton } from '@@/CommonButton'
-import { useDialog } from '@@/DialogContext'
+import { useDialog } from '@@/Dialog'
 import { LoadDialog } from '@@/LoadDialog'
 import {
   useSavedEntries,
@@ -70,122 +70,6 @@ function Field({
       {children}
     </label>
   )
-}
-
-interface BaziFormChangeInterface {
-  onChange: (next: BaziInputData) => void
-}
-
-function BaziFormDirectMode() {
-  <form
-    key={`bazi-${bazi.join('|')}-${sex}`}
-    onSubmit={onSubmitBazi}
-    className="space-y-4 p-4 md:p-5"
-  >
-    <div className="space-y-2">
-      {/* 第一行：年月日时柱 */}
-      <div className="grid gap-2 grid-cols-[repeat(4,minmax(0,1fr))]">
-        <Field label="年柱"><input name="bazi-y" defaultValue={bazi[0]} placeholder="甲子" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
-        <Field label="月柱"><input name="bazi-m" defaultValue={bazi[1]} placeholder="甲子" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
-        <Field label="日柱"><input name="bazi-d" defaultValue={bazi[2]} placeholder="甲子" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
-        <Field label="时柱"><input name="bazi-h" defaultValue={bazi[3]} placeholder="甲子" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
-      </div>
-      {/* 第二行：性别 */}
-      <div className="grid gap-2 grid-cols-[7rem]">
-        <Field label="性别"><select name="sex" defaultValue={sex} className={fieldInput}><option value={1}>男</option><option value={0}>女</option></select></Field>
-      </div>
-    </div>
-    {renderButtons()}
-  </form>
-}
-
-function BaziFormGregorianLikeMode() {
-  <form
-    key={`${mode}-${year}-${month}-${day}-${hour}-${minute}-${longitude}-${sex}`}
-    onSubmit={onSubmitGregorianLike}
-    className="space-y-4 p-4 md:p-5"
-  >
-    <div className="space-y-2">
-      {/* 第一行：年月日时分 */}
-      <div className="grid gap-2 grid-cols-[1.15fr_0.75fr_0.75fr_0.75fr_0.75fr]">
-        <Field label="年份"><input name="year" type="number" defaultValue={year} className={fieldInput} /></Field>
-        <Field label="月份"><input name="month" type="number" min={1} max={12} defaultValue={month} className={fieldInput} /></Field>
-        <Field label="日期"><input name="day" type="number" min={1} max={31} defaultValue={day} className={fieldInput} /></Field>
-        <Field label="小时"><input name="hour" type="number" min={0} max={23} defaultValue={hourInputValue} disabled={hourUnknown} className={fieldInput} /></Field>
-        <Field label="分钟"><input name="minute" type="number" min={0} max={59} defaultValue={minute} disabled={hourUnknown} className={fieldInput} /></Field>
-      </div>
-      {/* 第二行：其他选项 */}
-      <div className="grid gap-2 grid-cols-[7rem_1fr_1fr]">
-        <Field label="性别"><select name="sex" defaultValue={sex} className={fieldInput}><option value={1}>男</option><option value={0}>女</option></select></Field>
-        {mode === 'gregorian' && (
-          <Field label="出生地经度">
-            <div className="flex items-baseline gap-2">
-              <input name="lng" type="number" step="0.01" min={-180} max={180} defaultValue={longitude || ''} placeholder="留空不校正" className={fieldInput} />
-              <span className="text-xs text-slate-400">°E</span>
-            </div>
-          </Field>
-        )}
-        <label className="flex min-h-[4.25rem] items-center gap-2 rounded-md border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-400">
-          <input
-            type="checkbox"
-            checked={hourUnknown}
-            onChange={(e) => setHourUnknown(e.currentTarget.checked)}
-            className="accent-amber-700"
-          />
-          <span>时柱未知</span>
-        </label>
-      </div>
-    </div>
-    {renderButtons()}
-  </form>
-}
-
-interface BaziFormSolarModeProps extends BaziFormChangeInterface { }
-
-function BaziFormSolarMode({
-  onChange
-}: BaziFormSolarModeProps) {
-  const { year, month, day, hour, minute } = useState({
-    year: 1990,
-    month: 1,
-    day: 1,
-    hour: 0,
-    minute: 0,
-  })
-  return <form
-    onSubmit={onSubmitGregorianLike}
-    className="space-y-4 p-4 md:p-5"
-  >
-    <div className="space-y-2">
-      {/* 第一行：年月日时分 */}
-      <div className="grid gap-2 grid-cols-[1.15fr_0.75fr_0.75fr_0.75fr_0.75fr]">
-        <Field label="年份"><input name="year" type="number" defaultValue={year} className={fieldInput} /></Field>
-        <Field label="月份"><input name="month" type="number" min={1} max={12} defaultValue={month} className={fieldInput} /></Field>
-        <Field label="日期"><input name="day" type="number" min={1} max={31} defaultValue={day} className={fieldInput} /></Field>
-        <Field label="小时"><input name="hour" type="number" min={0} max={23} defaultValue={hourInputValue} disabled={hourUnknown} className={fieldInput} /></Field>
-        <Field label="分钟"><input name="minute" type="number" min={0} max={59} defaultValue={minute} disabled={hourUnknown} className={fieldInput} /></Field>
-      </div>
-      {/* 第二行：其他选项 */}
-      <div className="grid gap-2 grid-cols-[7rem_1fr_1fr]">
-        <Field label="性别">
-          <select name="sex" defaultValue={sex} className={fieldInput}>
-            <option value={1}>男</option>
-            <option value={0}>女</option>
-          </select>
-        </Field>
-        <label className="flex min-h-[4.25rem] items-center gap-2 rounded-md border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-400">
-          <input
-            type="checkbox"
-            checked={hourUnknown}
-            onChange={(e) => setHourUnknown(e.currentTarget.checked)}
-            className="accent-amber-700"
-          />
-          <span>时柱未知</span>
-        </label>
-      </div>
-    </div>
-    {renderButtons()}
-  </form>
 }
 
 export interface BaziFormProps {
@@ -342,6 +226,72 @@ export function BaziForm({
     return defaultButtons()
   }
 
+  // 八字直输模式表单
+  const renderBaziForm = () => (
+    <form
+      key={`bazi-${bazi.join('|')}-${sex}`}
+      onSubmit={onSubmitBazi}
+      className="space-y-4 p-4 md:p-5"
+    >
+      <div className="space-y-2">
+        {/* 第一行：年月日时柱 */}
+        <div className="grid gap-2 grid-cols-[repeat(4,minmax(0,1fr))]">
+          <Field label="年柱"><input name="bazi-y" defaultValue={bazi[0]} placeholder="甲子" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
+          <Field label="月柱"><input name="bazi-m" defaultValue={bazi[1]} placeholder="甲子" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
+          <Field label="日柱"><input name="bazi-d" defaultValue={bazi[2]} placeholder="甲子" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
+          <Field label="时柱"><input name="bazi-h" defaultValue={bazi[3]} placeholder="甲子" maxLength={16} onInput={onBaziInput} className={`${fieldInput} text-center tracking-[0.18em]`} /></Field>
+        </div>
+        {/* 第二行：性别 */}
+        <div className="grid gap-2 grid-cols-[7rem]">
+          <Field label="性别"><select name="sex" defaultValue={sex} className={fieldInput}><option value={1}>男</option><option value={0}>女</option></select></Field>
+        </div>
+      </div>
+      {renderButtons()}
+    </form>
+  )
+
+  // 公历/真太阳时模式表单
+  const renderGregorianLikeForm = () => (
+    <form
+      key={`${mode}-${year}-${month}-${day}-${hour}-${minute}-${longitude}-${sex}`}
+      onSubmit={onSubmitGregorianLike}
+      className="space-y-4 p-4 md:p-5"
+    >
+      <div className="space-y-2">
+        {/* 第一行：年月日时分 */}
+        <div className="grid gap-2 grid-cols-[1.15fr_0.75fr_0.75fr_0.75fr_0.75fr]">
+          <Field label="年份"><input name="year" type="number" defaultValue={year} className={fieldInput} /></Field>
+          <Field label="月份"><input name="month" type="number" min={1} max={12} defaultValue={month} className={fieldInput} /></Field>
+          <Field label="日期"><input name="day" type="number" min={1} max={31} defaultValue={day} className={fieldInput} /></Field>
+          <Field label="小时"><input name="hour" type="number" min={0} max={23} defaultValue={hourInputValue} disabled={hourUnknown} className={fieldInput} /></Field>
+          <Field label="分钟"><input name="minute" type="number" min={0} max={59} defaultValue={minute} disabled={hourUnknown} className={fieldInput} /></Field>
+        </div>
+        {/* 第二行：其他选项 */}
+        <div className="grid gap-2 grid-cols-[7rem_1fr_1fr]">
+          <Field label="性别"><select name="sex" defaultValue={sex} className={fieldInput}><option value={1}>男</option><option value={0}>女</option></select></Field>
+          {mode === 'gregorian' && (
+            <Field label="出生地经度">
+              <div className="flex items-baseline gap-2">
+                <input name="lng" type="number" step="0.01" min={-180} max={180} defaultValue={longitude || ''} placeholder="留空不校正" className={fieldInput} />
+                <span className="text-xs text-slate-400">°E</span>
+              </div>
+            </Field>
+          )}
+          <label className="flex min-h-[4.25rem] items-center gap-2 rounded-md border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-400">
+            <input
+              type="checkbox"
+              checked={hourUnknown}
+              onChange={(e) => setHourUnknown(e.currentTarget.checked)}
+              className="accent-amber-700"
+            />
+            <span>时柱未知</span>
+          </label>
+        </div>
+      </div>
+      {renderButtons()}
+    </form>
+  )
+
   return (
     <div className="relative z-30 mb-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/75 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/75">
       <div className="grid gap-1.5 border-b border-slate-100 bg-slate-50/80 p-2 dark:border-slate-800 dark:bg-slate-950/40 grid-cols-3">
@@ -366,13 +316,7 @@ export function BaziForm({
         })}
       </div>
 
-      {mode === 'bazi' ? (
-
-      ): (
-
-        )
-}
+      {mode === 'bazi' ? renderBaziForm() : renderGregorianLikeForm()}
     </div >
   )
 }
-

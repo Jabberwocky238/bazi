@@ -1,4 +1,4 @@
-import { readBazi, readExtras } from '../hooks'
+import { readBazi, readExtras } from '../snapshot'
 import { CHONG_PAIR } from '../types'
 import type { GejuHit } from '../types'
 import type { Gan } from '@jabberwocky238/bazi-engine'

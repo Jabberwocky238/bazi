@@ -1,4 +1,4 @@
-import { readExtras, readShishen } from '../hooks'
+import { readExtras, readShishen } from '../snapshot'
 import type { GejuHit } from '../types'
 import { emitGeju } from '../_emit'
 

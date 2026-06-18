@@ -7,8 +7,7 @@
  * 印星/比劫为 +1，官杀/财星/食伤为 -1；暂不纳入合冲刑害动态修正。
  */
 
-import { create } from 'zustand'
-import type { Pillar } from './store'
+import type { DetailedPillar } from './base'
 import {
   CANG_GAN,
   changshengState,
@@ -19,7 +18,6 @@ import {
   type WuXing,
   type Zhi,
 } from '@jabberwocky238/bazi-engine'
-import { useBazi } from './shishen'
 
 const HIDDEN_STEM_STRENGTH = [10, 4, 2] as const
 const BRANCH_WEIGHTS = { 年: 0.8, 月: 1.5, 日: 1.2, 时: 1.0 } as const
@@ -192,7 +190,7 @@ function analyzeStem(
 // 4. 主函数
 // ————————————————————————————————————————————————————————
 
-export function analyzeStrength(pillars: Pillar[]): StrengthAnalysis | null {
+export function analyzeStrength(pillars: DetailedPillar[]): StrengthAnalysis | null {
   if (pillars.length !== 4) return null
   const [yearP, monthP, dayP, hourP] = pillars
   const dayGan = dayP.gan as Gan
@@ -249,7 +247,7 @@ function levelOf(s: number): StrengthLevel {
   return '近从弱'
 }
 
-interface StrengthStore {
+export interface StrengthDerived {
   analysis: StrengthAnalysis | null
   level: StrengthLevel | ''
   deLing: boolean
@@ -259,7 +257,8 @@ interface StrengthStore {
   shenRuo: boolean
 }
 
-function deriveStrength(pillars: Pillar[]): StrengthStore {
+/** 身强弱派生计算（含得令/得地/得势/身旺/身弱判定）。 */
+export function deriveStrength(pillars: DetailedPillar[]): StrengthDerived {
   const analysis = analyzeStrength(pillars)
   const rootPoints = analysis?.rootPoints ?? 0
   const ganPoints = analysis?.ganPoints ?? 0
@@ -274,10 +273,3 @@ function deriveStrength(pillars: Pillar[]): StrengthStore {
     shenRuo: !!analysis && score <= -30,
   }
 }
-
-export const useStrength = create<StrengthStore>()(() => deriveStrength(useBazi.getState().pillars))
-
-useBazi.subscribe((s, prev) => {
-  if (s.pillars === prev.pillars) return
-  useStrength.setState(deriveStrength(s.pillars))
-})

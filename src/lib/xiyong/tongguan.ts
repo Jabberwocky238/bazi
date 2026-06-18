@@ -4,7 +4,7 @@ import {
   zhiWuxing,
   GENERATED_BY as GEN_BY,
 } from '@jabberwocky238/bazi-engine'
-import type { Pillar } from '../store'
+import type { DetailedPillar } from '../base'
 import type { TongguanInfo, WuXing } from './types'
 
 /**
@@ -12,7 +12,7 @@ import type { TongguanInfo, WuXing } from './types'
  *  - 四天干各 +1，月干 +0.5 (月令透干加重)
  *  - 四地支各 +2，月支 +1 (月令加重)；藏干本气已在其中
  */
-export function countWxStrength(pillars: Pillar[]): Record<WuXing, number> {
+export function countWxStrength(pillars: DetailedPillar[]): Record<WuXing, number> {
   const cnt: Record<WuXing, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 }
   pillars.forEach((p, i) => {
     const w = ganWuxing(p.gan) as WuXing
@@ -25,7 +25,7 @@ export function countWxStrength(pillars: Pillar[]): Record<WuXing, number> {
   return cnt
 }
 
-function findWxInPillars(pillars: Pillar[], wx: WuXing): string[] {
+function findWxInPillars(pillars: DetailedPillar[], wx: WuXing): string[] {
   const hits: string[] = []
   pillars.forEach((p, i) => {
     const pos = ['年', '月', '日', '时'][i]
@@ -37,7 +37,7 @@ function findWxInPillars(pillars: Pillar[], wx: WuXing): string[] {
 
 /** 判断两股力量"势均" —— 双方都达到阈值且比例不失衡。 */
 export function analyzeTongguan(
-  pillars: Pillar[],
+  pillars: DetailedPillar[],
   wxCnt: Record<WuXing, number>,
 ): TongguanInfo {
   const THRESHOLD = 4        // 两方都需 ≥ 4 算旺

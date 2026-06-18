@@ -1,4 +1,4 @@
-import { readBazi, readStrength, readExtras } from '../hooks'
+import { readBazi, readStrength, readExtras } from '../snapshot'
 import { EMPTY_SUIYUN, deriveVisibility, type GejuHit } from '../types'
 import { isCaiGuanYinQuan } from './caiGuanYinQuan'
 import { isGuanShaHunZa } from './guanShaHunZa'

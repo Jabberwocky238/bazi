@@ -1,7 +1,19 @@
 import { create } from 'zustand'
 import type { Sex } from '@jabberwocky238/bazi-engine'
-import { HOUR_UNKNOWN, useBazi } from '@/lib'
-import { computeFromState } from './compute'
+import {
+  deriveAll,
+  EMPTY_RESULT,
+  type BaziDerived,
+  type ShishenDerived,
+  type StrengthDerived,
+  type Pillar,
+  type BaziResult,
+  type GejuOutput,
+  type XiyongAnalysis,
+  type DeriveAllResult,
+} from '@/lib'
+import { HOUR_UNKNOWN } from '@/lib'
+import { computeFromState, type BaziInputMode } from '@/lib'
 import { computeDaYun, useDayun } from './dayun'
 
 /**
@@ -10,8 +22,6 @@ import { computeDaYun, useDayun } from './dayun'
  *   trueSolar      真太阳时 (用户已自行修正): 输入即真太阳时, 引擎按真太阳时分时柱。
  *   bazi           八字直输: 4 干支 + 性别, 跳过公历/农历计算。
  */
-export type BaziInputMode = 'gregorian' | 'trueSolar' | 'bazi'
-
 export interface BaziInputState {
   mode: BaziInputMode
   year: number
@@ -21,7 +31,7 @@ export interface BaziInputState {
   minute: number
   /** 出生地经度, 单位 °E (东经为正). 仅 gregorian 模式可选. */
   longitude?: number
-  /** 4 干支字符串, 仅 bazi 模式用. 时柱可空串(代表未知). */
+  /** 4 干支字符串, 仅 bazi 模式用. 时柱可空串(代表未知)。 */
   bazi: [string, string, string, string]
   sex: Sex
   setMode: (m: BaziInputMode) => void
@@ -90,7 +100,10 @@ const initial = readQuery()
 
 export const useBaziInput = create<BaziInputState>((set, get) => ({
   ...initial,
-  setBazi: (bazi, sex) => set({ bazi, sex }),
+  setMode: (mode) => set({ mode }),
+  setDate: (d) => set(d),
+  setLongitude: (longitude) => set({ longitude }),
+  setBaziGz: (bazi, sex) => set({ bazi, sex }),
   syncToUrl: () => {
     if (typeof window === 'undefined') return
     const { mode, year, month, day, hour, minute, sex, longitude, bazi } = get()
@@ -114,3 +127,46 @@ export const useBaziInput = create<BaziInputState>((set, get) => ({
     window.history.replaceState(null, '', next)
   },
 }))
+
+// ————————————————————————————————————————————————————————
+// useBazi — 主排盘结果 store，持有 BaziResult + 所有派生数据
+// ————————————————————————————————————————————————————————
+
+interface BaziStore extends BaziResult, DeriveAllResult {
+  gejuExtras: { dayun?: Pillar; liunian?: Pillar }
+  setResult: (r: BaziResult) => void
+  setGejuExtras: (e: { dayun?: Pillar; liunian?: Pillar }) => void
+  clearGejuExtras: () => void
+}
+
+export const useBazi = create<BaziStore>((set, get) => ({
+  ...EMPTY_RESULT,
+  ...deriveAll(EMPTY_RESULT),
+  gejuExtras: {},
+  setResult: (r) => {
+    const gejuExtras = get().gejuExtras
+    set({ ...r, ...deriveAll(r, gejuExtras) })
+  },
+  setGejuExtras: (e) => {
+    const r = { pillars: get().pillars, solarStr: get().solarStr, trueSolarStr: get().trueSolarStr, lunarStr: get().lunarStr, hourKnown: get().hourKnown }
+    set({ gejuExtras: e, ...deriveAll(r, e) })
+  },
+  clearGejuExtras: () => {
+    const r = { pillars: get().pillars, solarStr: get().solarStr, trueSolarStr: get().trueSolarStr, lunarStr: get().lunarStr, hourKnown: get().hourKnown }
+    set({ gejuExtras: {}, ...deriveAll(r, {}) })
+  },
+}))
+
+// 输入变化 → 重新计算排盘
+useBaziInput.subscribe((s) => {
+  const result = computeFromState(s)
+  if (result) {
+    useBazi.getState().setResult(result.bazi)
+  }
+})
+
+// 初始计算
+const initialResult = computeFromState(useBaziInput.getState())
+if (initialResult) {
+  useBazi.getState().setResult(initialResult.bazi)
+}

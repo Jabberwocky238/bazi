@@ -13,14 +13,14 @@
  *  scoreMatch 综合上述指标输出 0-100 的合度分.
  */
 import { ganWuxing, zhiWuxing, type WuXing } from '@jabberwocky238/bazi-engine'
-import type { Pillar } from '../store'
+import type { DetailedPillar } from '../base'
 import type { XiyongAnalysis } from '../xiyong'
 import { analyzeHepanCross } from './cross'
 
 /**
- * 统计某 Pillar[] 中天干 + 地支本气 中各五行的出现位数 (不含藏中/余气).
+ * 统计某 DetailedPillar[] 中天干 + 地支本气 中各五行的出现位数 (不含藏中/余气).
  */
-export function wxDistribution(pillars: Pillar[]): Record<WuXing, number> {
+export function wxDistribution(pillars: DetailedPillar[]): Record<WuXing, number> {
   const cnt: Record<WuXing, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 }
   for (const p of pillars) {
     const gw = ganWuxing(p.gan) as WuXing | undefined
@@ -32,7 +32,7 @@ export function wxDistribution(pillars: Pillar[]): Record<WuXing, number> {
 }
 
 /** 一方对另一方"贡献"指定五行的位数 (干 + 地支本气). */
-export function wxSupply(provider: Pillar[], target: WuXing): number {
+export function wxSupply(provider: DetailedPillar[], target: WuXing): number {
   return wxDistribution(provider)[target] ?? 0
 }
 
@@ -60,12 +60,12 @@ export interface XiyongMatch {
 }
 
 export function computeXiyongMatch(
-  aPillars: Pillar[], aXy: XiyongAnalysis | null, aName: string,
-  bPillars: Pillar[], bXy: XiyongAnalysis | null, bName: string,
+  aPillars: DetailedPillar[], aXy: XiyongAnalysis | null, aName: string,
+  bPillars: DetailedPillar[], bXy: XiyongAnalysis | null, bName: string,
 ): XiyongMatch {
-  const safeSupply = (provider: Pillar[], wx: WuXing | null) =>
+  const safeSupply = (provider: DetailedPillar[], wx: WuXing | null) =>
     wx ? wxSupply(provider, wx) : 0
-  const sumAvoid = (provider: Pillar[], wxs: WuXing[]) =>
+  const sumAvoid = (provider: DetailedPillar[], wxs: WuXing[]) =>
     wxs.reduce((s, w) => s + wxSupply(provider, w), 0)
 
   // 跨盘干支 finding (单向, 合冲刑害破对称, 不需双向去重)

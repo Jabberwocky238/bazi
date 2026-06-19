@@ -6,6 +6,7 @@ import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
+import { cloudflare } from '@cloudflare/vite-plugin'
 
 const root = path.dirname(fileURLToPath(import.meta.url))
 
@@ -75,5 +76,9 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
+    // 仅 worker:dev (WITH_WORKER=1) 时挂载 cloudflare 插件,
+    // 让 vite dev 直接托管 worker 的 /api/* 路由 (免 build, 免单独 wrangler dev);
+    // 普通 `dev` 保持纯前端, 不依赖 worker。
+    ...(process.env.WITH_WORKER ? [cloudflare()] : []),
   ],
 })

@@ -6,7 +6,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "scripts": {
-    "worker:dev": "bun run build && wrangler dev",
+    "worker:dev": "WITH_WORKER=1 vite dev",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -36,8 +36,9 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.0.0",
     "@babel/core": "^7.29.0",
+    "@capacitor/cli": "^6.0.0",
+    "@cloudflare/vite-plugin": "^1.42.0",
     "@cloudflare/workers-types": "^4.20250923.0",
     "@eslint/js": "^9.39.4",
     "@rolldown/plugin-babel": "^0.2.2",

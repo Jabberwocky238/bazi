@@ -1,6 +1,7 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import { GenericLayout } from '@@/GenericLayout'
 import { DialogProvider } from '@@/Dialog'
+import { ChatWidget } from '@@/ChatWidget'
 import { Suspense } from 'react'
 import BaziInput from './BaziInput'
 import BaziShow from './BaziShow'
@@ -44,5 +45,6 @@ export default function App() {
         </Routes>
       </Suspense>
     </BrowserRouter>
+    <ChatWidget />
   </DialogProvider>
 }

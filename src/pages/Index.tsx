@@ -10,7 +10,7 @@ import HepanShow from './HepanShow'
 
 function Index() {
   return (
-    <GenericLayout errorBoundaryName="Index" title="八字补完计划" description="选择功能，开始排盘 / 合盘">
+    <GenericLayout errorBoundaryName="Index" title="八字补完计划">
       <div className="space-y-4 py-8">
         <Link
           to="/bazi-input"

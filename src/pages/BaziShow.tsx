@@ -24,7 +24,6 @@ export default function BaziShow() {
       errorBoundaryName="BaziShow"
       title="八字补完计划"
       link={<Link to="/bazi-input">← 修改输入</Link>}
-      description="点击任意词条查看释义"
     >
       <div className="grid gap-5 md:gap-6">
         <section className="min-w-0">

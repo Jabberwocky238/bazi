@@ -124,14 +124,6 @@ export function GanZhiPanel() {
               <ExtraFindingList list={extraHits} />
             </Section>
           )}
-
-          <div className="text-[10px] text-slate-400 dark:text-slate-600 text-right leading-5 pt-2 border-t border-slate-100 dark:border-slate-800">
-            依 @jabberwocky238/bazi-engine analyzeGanZhi + pairwiseGan/pairwiseZhi · 定性判断，不加权打分
-            <br />
-            md 明文：三会 &gt; 三合 &gt; 六合 &gt; 六冲 &gt; 三刑 &gt; 六害 &gt; 六破 · 合冲同现需人工裁断
-            <br />
-            岁运 引化 / 冲克 / 冲开 状态由 detector 直接挂在 finding 上 (化解 / 冲克 / 冲开 标签)
-          </div>
         </div>
       )}
     </section>

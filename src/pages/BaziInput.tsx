@@ -19,7 +19,6 @@ export default function BaziInput() {
       errorBoundaryName="BaziInput"
       title="八字排盘"
       link={<Link to="/">← 首页</Link>}
-      description="输入出生时间或四柱，点击排盘查看命盘"
     >
       <div className="py-6 space-y-4">
         <BaziForm

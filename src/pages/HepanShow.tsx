@@ -37,7 +37,7 @@ export default function HepanShow() {
 
   if (!a || !b) {
     return (
-      <GenericLayout errorBoundaryName="HepanShow" title="八字合盘" link={<Link to="/hepan-input">← 输入信息</Link>} description="干支互动 / 用神配对 自动比对">
+      <GenericLayout errorBoundaryName="HepanShow" title="八字合盘" link={<Link to="/hepan-input">← 输入信息</Link>}>
         <div className="text-center py-8 text-slate-500">
           请先输入两人的出生信息
         </div>
@@ -50,7 +50,6 @@ export default function HepanShow() {
       errorBoundaryName="HepanShow"
       title="八字合盘"
       link={<Link to="/hepan-input">← 修改输入</Link>}
-      description="干支互动 / 用神配对 自动比对"
     >
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-2 md:gap-6">

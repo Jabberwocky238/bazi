@@ -110,7 +110,6 @@ export default function HepanInput() {
       errorBoundaryName="HepanInput"
       title="八字合盘"
       link={<Link to="/">← 首页</Link>}
-      description="分别输入两人信息后，点击开始合盘"
     >
       <div className="space-y-6">
         {/* Tab 切换 */}

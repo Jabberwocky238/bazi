@@ -1,9 +1,5 @@
 import { chatStream, type ChatEnv } from './chat'
 
-export interface Env extends ChatEnv {
-  ASSETS: Fetcher
-}
-
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)

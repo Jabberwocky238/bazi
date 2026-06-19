@@ -14,5 +14,11 @@
   "vars": {
     "OPENAI_BASE_URL": "https://api.deepseek.com/v1",
     "OPENAI_MODEL": "deepseek-chat"
-  }
+  },
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "5570fc682b144cefa1f04fa8719fd45d"
+    }
+  ]
 }

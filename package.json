@@ -7,6 +7,7 @@
   "type": "module",
   "scripts": {
     "worker:dev": "WITH_WORKER=1 vite dev",
+    "worker:build": "tsc -b && WITH_WORKER=1 vite build",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

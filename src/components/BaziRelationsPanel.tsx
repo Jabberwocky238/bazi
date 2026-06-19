@@ -13,7 +13,8 @@ import {
   type PairResult,
 } from '@jabberwocky238/bazi-engine'
 import { WUXING_SVG_COLOR } from '@@/css'
-import type { WuXing } from '@/lib'
+import { Description } from './Description'
+import type { WuXing, SkillCategory } from '@/lib'
 
 interface BaziChar {
   key: string
@@ -52,6 +53,64 @@ function verticalRelationOf(gan: BaziChar, zhi: BaziChar): { type: string; kind:
 
 // 复用全局定义的五行颜色
 const WUXING_COLORS = WUXING_SVG_COLOR
+
+const CARD_WIDTH = 60
+const CARD_HEIGHT = 72
+
+interface CharBlockProps {
+  x: number
+  y: number
+  char: BaziChar
+  isExtra?: boolean
+  category: SkillCategory
+}
+
+function CharBlock({ x, y, char, isExtra = false, category }: CharBlockProps) {
+  const color = WUXING_COLORS[char.wuxing] || '#64748b'
+  const borderColor = isExtra ? '#a78bfa' : color
+
+  return (
+    <foreignObject
+      x={x - CARD_WIDTH / 2}
+      y={y}
+      width={CARD_WIDTH}
+      height={CARD_HEIGHT}
+      style={{ overflow: 'visible' }}
+    >
+      <div
+        style={{
+          width: CARD_WIDTH,
+          height: CARD_HEIGHT,
+          border: `2px solid ${borderColor}`,
+          borderRadius: 12,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 2,
+        }}
+      >
+        <div className="text-[10px] text-slate-500" style={{ letterSpacing: '0.1em' }}>
+          {char.label}
+        </div>
+        {/* 字符本身用 Description 包裹 → 点击唤起该天干/地支的 skill 详情 */}
+        <div style={{ color }}>
+          <Description
+            category={category}
+            name={char.value}
+            glow={false}
+            className="text-2xl font-bold leading-none"
+          >
+            {char.value}
+          </Description>
+        </div>
+        <div className="text-[11px] font-medium" style={{ color }}>
+          {char.wuxing}
+        </div>
+      </div>
+    </foreignObject>
+  )
+}
 
 export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
   if (pillars.length !== 4) return null
@@ -177,8 +236,6 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
   // SVG布局参数 - 增加列宽给箭头留空间
   const colWidth = 75
   const gap = extraCount > 0 ? 15 : 0
-  const cardWidth = 60
-  const cardHeight = 72
   const rowGap = 36
 
   const totalCols = extraCount + 4 + (extraCount > 0 ? 1 : 0)
@@ -190,42 +247,13 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
   const bottomSpace = zhiPairs.length * lineHeight + 30
 
   const ganY = topSpace
-  const zhiY = ganY + cardHeight + rowGap
-  const svgHeight = zhiY + cardHeight + bottomSpace
+  const zhiY = ganY + CARD_HEIGHT + rowGap
+  const svgHeight = zhiY + CARD_HEIGHT + bottomSpace
 
   const getColX = (colIdx: number, isExtra: boolean) => {
     if (isExtra) return 20 + colIdx * colWidth + colWidth / 2
     const extraWidth = extraCount * colWidth + gap
     return 20 + extraWidth + (colIdx - extraCount) * colWidth + colWidth / 2
-  }
-
-  const renderCharBlock = (x: number, y: number, char: BaziChar, isExtra: boolean) => {
-    const color = WUXING_COLORS[char.wuxing] || '#64748b'
-    const borderColor = isExtra ? '#a78bfa' : color
-
-    return (
-      <g key={`${char.key}-${x}-${y}`}>
-        <rect
-          x={x - cardWidth / 2}
-          y={y}
-          width={cardWidth}
-          height={cardHeight}
-          rx="12"
-          fill="none"
-          stroke={borderColor}
-          strokeWidth="2"
-        />
-        <text x={x} y={y + 18} textAnchor="middle" className="fill-slate-500 text-[10px]" style={{ letterSpacing: '0.1em' }}>
-          {char.label}
-        </text>
-        <text x={x} y={y + 50} textAnchor="middle" className="text-2xl font-bold" style={{ fill: color }}>
-          {char.value}
-        </text>
-        <text x={x} y={y + 70} textAnchor="middle" className="text-[11px] font-medium" style={{ fill: color }}>
-          {char.wuxing}
-        </text>
-      </g>
-    )
   }
 
   return (
@@ -253,7 +281,7 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
             x1={20 + extraCount * colWidth + gap / 2}
             y1={topSpace - 20}
             x2={20 + extraCount * colWidth + gap / 2}
-            y2={zhiY + cardHeight + 20}
+            y2={zhiY + CARD_HEIGHT + 20}
             stroke="#e2e8f0"
             strokeWidth="1"
             strokeDasharray="4,4"
@@ -284,7 +312,7 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
           if (!pair) return null
           const x1 = getColX(from, from < extraCount)
           const x2 = getColX(to, to < extraCount)
-          const y = zhiY + cardHeight + 15 + idx * 22
+          const y = zhiY + CARD_HEIGHT + 15 + idx * 22
 
           return (
             <g key={`zhi-line-${idx}`}>
@@ -299,16 +327,20 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
         })}
 
         {/* 额外列 - 天干 */}
-        {extraStems.map((char, i) => renderCharBlock(getColX(i, true), ganY, char, true))}
+        {extraStems.map((char, i) => (
+          <CharBlock key={`extra-gan-${i}`} x={getColX(i, true)} y={ganY} char={char} isExtra category="tiangan" />
+        ))}
 
         {/* 主局天干 */}
-        {stems.map((char, i) => renderCharBlock(getColX(extraCount + i, false), ganY, char, false))}
+        {stems.map((char, i) => (
+          <CharBlock key={`stem-${i}`} x={getColX(extraCount + i, false)} y={ganY} char={char} category="tiangan" />
+        ))}
 
         {/* 天干相邻之间的箭头 */}
         {adjacentGanRels.map(({ col, rel }, idx) => {
           if (!rel) return null
           const x = getColX(col, false) + colWidth / 2
-          const y = ganY + cardHeight / 2
+          const y = ganY + CARD_HEIGHT / 2
           const color = rel.kind === '克' ? '#f43f5e' : '#10b981'
 
           return (
@@ -333,7 +365,7 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
         {verticalRels.map(({ col, rel }, idx) => {
           if (!rel) return null
           const x = getColX(col, false)
-          const y = ganY + cardHeight + 5
+          const y = ganY + CARD_HEIGHT + 5
           const color = rel.kind === '克' ? '#f43f5e' : '#10b981'
 
           return (
@@ -348,16 +380,20 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
         })}
 
         {/* 额外列 - 地支 */}
-        {extraBranches.map((char, i) => renderCharBlock(getColX(i, true), zhiY, char, true))}
+        {extraBranches.map((char, i) => (
+          <CharBlock key={`extra-zhi-${i}`} x={getColX(i, true)} y={zhiY} char={char} isExtra category="dizhi" />
+        ))}
 
         {/* 主局地支 */}
-        {branches.map((char, i) => renderCharBlock(getColX(extraCount + i, false), zhiY, char, false))}
+        {branches.map((char, i) => (
+          <CharBlock key={`branch-${i}`} x={getColX(extraCount + i, false)} y={zhiY} char={char} category="dizhi" />
+        ))}
 
         {/* 地支相邻之间的箭头 */}
         {adjacentZhiRels.map(({ col, rel }, idx) => {
           if (!rel) return null
           const x = getColX(col, false) + colWidth / 2
-          const y = zhiY + cardHeight / 2
+          const y = zhiY + CARD_HEIGHT / 2
           const color = rel.kind === '克' ? '#f43f5e' : '#10b981'
 
           return (

@@ -14,6 +14,12 @@ const GLOW_CLASSES = [
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-600/40',
 ]
 
+// 无光晕版本: 仅保留可点击指针与焦点环, 用于 foreignObject/SVG 等会因 hover 重排而抖动的场景
+const PLAIN_CLASSES = [
+  'cursor-pointer rounded',
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-600/40',
+]
+
 interface Props {
   /** single 模式: 词条类别。 */
   category?: SkillCategory
@@ -25,6 +31,8 @@ interface Props {
   items?: SkillItem[]
   /** multiple 模式: 列表 dialog 标题, 默认取 children 文本。 */
   listTitle?: string
+  /** 是否启用 hover 光晕动画 (默认启用); foreignObject/SVG 内建议关闭以防重排抖动。 */
+  glow?: boolean
   children: ReactNode
   className?: string
 }
@@ -38,8 +46,9 @@ interface Props {
  *
  * 无对应 skill 时降级为纯文本, 不渲染可点击元素。
  */
-export function Description({ category, name, subtitle, items, listTitle, children, className }: Props) {
+export function Description({ category, name, subtitle, items, listTitle, glow = true, children, className }: Props) {
   const { open } = useDialog()
+  const base = glow ? GLOW_CLASSES : PLAIN_CLASSES
 
   const validItems = (items ?? []).filter((i) => skillUrl(i.category, i.name))
 
@@ -52,7 +61,7 @@ export function Description({ category, name, subtitle, items, listTitle, childr
         onClick={() => open((onClose) => (
           <MultiSkillDialog items={validItems} title={title} onClose={onClose} />
         ))}
-        className={[...GLOW_CLASSES, className ?? ''].join(' ')}
+        className={[...base, className ?? ''].join(' ')}
       >
         {children}
       </button>
@@ -77,7 +86,7 @@ export function Description({ category, name, subtitle, items, listTitle, childr
           onClose={onClose}
         />
       ))}
-      className={[...GLOW_CLASSES, className ?? ''].join(' ')}
+      className={[...base, className ?? ''].join(' ')}
     >
       {children}
     </button>

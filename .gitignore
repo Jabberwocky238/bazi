@@ -29,5 +29,6 @@ _probe
 .wrangler/
 .dev.vars
 .dev.vars.*
+!.dev.vars.example
 worker-configuration.d.ts
 build/

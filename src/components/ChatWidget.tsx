@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 // ————————————————————————————————————————————————————————
-// 聊天 echo 模拟器前端 —— 右下角浮动按钮 + 聊天面板。
-// 所有通信逻辑 (fetch /api/chat + 会话状态) 均封装在此组件内。
+// 八字助手聊天前端 —— 右下角浮动按钮 + 聊天面板。
+// 所有通信逻辑 (fetch /api/chat 流式 SSE + 会话状态) 均封装在此组件内。
 // ————————————————————————————————————————————————————————
 
 interface ChatMessage {
@@ -13,7 +15,7 @@ interface ChatMessage {
 
 const INITIAL_MESSAGE: ChatMessage = {
   role: 'assistant',
-  content: '你好，这是一个 echo 模拟器 —— 你发什么，我就回什么。',
+  content: '你好，我是八字命理助手，有什么可以帮你的？',
 }
 
 export function ChatWidget() {
@@ -45,17 +47,75 @@ export function ChatWidget() {
     setInput('')
     setLoading(true)
 
+    // 先占位一条空 assistant 消息, 流式增量追加
+    setMessages((m) => [...m, { role: 'assistant', content: '' }])
+    let acc = ''
+    const append = (delta: string) => {
+      acc += delta
+      setMessages((m) => {
+        const copy = [...m]
+        copy[copy.length - 1] = { role: 'assistant', content: acc }
+        return copy
+      })
+    }
+
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ messages: next }),
       })
-      const data = (await res.json()) as { reply?: string; error?: string }
-      const reply = data.reply ?? (data.error ? `⚠️ ${data.error}` : '⚠️ 无响应')
-      setMessages((m) => [...m, { role: 'assistant', content: reply }])
+
+      // 非流式错误 (如未配置 key): JSON 响应
+      if (!res.ok || !res.body) {
+        let msg = `⚠️ 请求失败 (${res.status})`
+        try {
+          const data = (await res.json()) as { error?: string }
+          if (data.error) msg = `⚠️ ${data.error}`
+        } catch { /* ignore */ }
+        setMessages((m) => {
+          const copy = [...m]
+          copy[copy.length - 1] = { role: 'assistant', content: msg }
+          return copy
+        })
+        return
+      }
+
+      // 消费 SSE 流: data: {"content":"..."}\n\n, 末尾 data: [DONE]
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop() ?? ''
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed.startsWith('data:')) continue
+          const payload = trimmed.slice(5).trim()
+          if (payload === '[DONE]') continue
+          try {
+            const frame = JSON.parse(payload) as { content?: string; error?: string }
+            if (frame.error) {
+              append(`⚠️ ${frame.error}`)
+            } else if (frame.content) {
+              append(frame.content)
+            }
+          } catch { /* 忽略半截帧 */ }
+        }
+      }
+      if (acc === '') append('⚠️ 空响应')
     } catch {
-      setMessages((m) => [...m, { role: 'assistant', content: '⚠️ 网络错误，请稍后重试。' }])
+      setMessages((m) => {
+        const copy = [...m]
+        copy[copy.length - 1] = {
+          role: 'assistant',
+          content: acc || '⚠️ 网络错误，请稍后重试。',
+        }
+        return copy
+      })
     } finally {
       setLoading(false)
     }
@@ -93,8 +153,8 @@ export function ChatWidget() {
           {/* header */}
           <header className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
             <div>
-              <div className="text-[11px] tracking-[0.25em] uppercase text-slate-400">Echo</div>
-              <h2 className="text-sm font-medium tracking-[0.1em] text-slate-700 dark:text-slate-200">聊天模拟器</h2>
+              <div className="text-[11px] tracking-[0.25em] uppercase text-slate-400">Assistant</div>
+              <h2 className="text-sm font-medium tracking-[0.1em] text-slate-700 dark:text-slate-200">八字助手</h2>
             </div>
             <button
               type="button"
@@ -108,10 +168,17 @@ export function ChatWidget() {
 
           {/* 消息列表 */}
           <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-            {messages.map((m, i) => (
-              <Bubble key={i} message={m} />
-            ))}
-            {loading && <Bubble pending />}
+            {messages.map((m, i) => {
+              // 流式占位的空 assistant 消息不直接渲染, 由下方 pending 动画代替
+              const isPlaceholder =
+                m.role === 'assistant' && m.content === '' && i === messages.length - 1
+              if (isPlaceholder) return null
+              return <Bubble key={i} message={m} />
+            })}
+            {loading &&
+              messages.length > 0 &&
+              messages[messages.length - 1].role === 'assistant' &&
+              messages[messages.length - 1].content === '' && <Bubble pending />}
           </div>
 
           {/* 输入区 */}
@@ -166,10 +233,15 @@ function Bubble({ message, pending }: { message?: ChatMessage; pending?: boolean
         className={
           isUser
             ? 'max-w-[80%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-amber-600 px-3 py-2 text-sm text-white'
-            : 'max-w-[80%] whitespace-pre-wrap break-words rounded-2xl rounded-bl-sm bg-slate-100 px-3 py-2 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+            : 'prose-chat max-w-[85%] break-words rounded-2xl rounded-bl-sm bg-slate-100 px-3 py-2 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200'
         }
       >
-        {message!.content}
+        {/* 用户消息纯文本; 助手消息走 markdown (remark-gfm) 渲染 */}
+        {isUser ? (
+          message!.content
+        ) : (
+          <Markdown remarkPlugins={[remarkGfm]}>{message!.content}</Markdown>
+        )}
       </div>
     </div>
   )

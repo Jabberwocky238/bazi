@@ -162,8 +162,8 @@ export function fillDerivedFields(result: {
     hideGans: p.zhi.cangGan.map(c => c.name as Gan),
     hideShishen: p.zhi.cangGan.map(c => c.shishen),
     hideShishenWuxings: p.zhi.cangGan.map(c => c.wuxing),
-    // 自坐（简化实现，后续可完善）
-    zizuo: `${p.gan.name}坐${p.zhi.name}`,
+    // 自坐 = 日干在该柱地支的十二长生状态 (engine 已算好 changsheng)
+    zizuo: p.changsheng,
   })) as ExtendedDetailedPillar[]
 
   const yearPillar = pillars[0]

@@ -9,6 +9,7 @@ import {
   ganWuxing,
   zhiWuxing,
   nayinOf,
+  nayinNameOf,
   changshengState,
   type Gan,
   type Zhi,
@@ -221,7 +222,7 @@ function gzToDetailedPillar(gz: string, dayGan: Gan): DetailedPillar | null {
         wuxing: computeShishenWuxing(dayGan, cangGanSs[idx]!),
       })),
     },
-    nayin: nayinOf(p.gan, p.zhi),
+    nayin: nayinNameOf(p.gan, p.zhi),
     shensha: [],
     changsheng: changshengState(p.gan, p.zhi),
   } as DetailedPillar

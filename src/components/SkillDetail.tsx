@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { loadSkill, skillUrl, type SkillCategory } from '@/lib'
-import { Dialog } from '@@/Dialog'
+import type { DialogContentApi } from '@@/Dialog'
 
 const CATEGORY_LABEL: Record<string, string> = {
   shishen: '十神',
@@ -29,7 +29,7 @@ function catSubtitle(category: SkillCategory, subtitle?: string): string {
 
 /**
  * 纯正文 —— 给定 category/name 拉取 skill markdown 并渲染。
- * 不含 Dialog 外壳，供 single / multiple 复用。
+ * 不含外壳, 供 single / multiple 复用。
  */
 export function SkillBody({ category, name }: { category: SkillCategory; name: string }) {
   const [md, setMd] = useState<string | null>(null)
@@ -60,63 +60,68 @@ export function SkillBody({ category, name }: { category: SkillCategory; name: s
 }
 
 // ————————————————————————————————————————————————————————
-// single —— 点击即打开词条详情 (无返回箭头)
+// single —— 词条详情 (无返回箭头)。
+// 外壳标题/副标题在打开时设定; 这里仅渲染正文。
 // ————————————————————————————————————————————————————————
 
 interface SingleProps {
   category: SkillCategory
   name: string
-  subtitle?: string
-  onClose: () => void
 }
 
-export function SkillDialogContent({ category, name, subtitle, onClose }: SingleProps) {
-  return (
-    <Dialog open onClose={onClose} title={name} subtitle={catSubtitle(category, subtitle)}>
-      <SkillBody category={category} name={name} />
-    </Dialog>
-  )
+/** 单词条正文; 调用方 open(<SkillDetail .../>, { title: name, subtitle: catSubtitle(...) })。 */
+export function SkillDetail({ category, name }: SingleProps) {
+  return <SkillBody category={category} name={name} />
+}
+
+/** 调用方计算副标题用。 */
+export function skillSubtitle(category: SkillCategory, subtitle?: string): string {
+  return catSubtitle(category, subtitle)
 }
 
 // ————————————————————————————————————————————————————————
-// multiple —— 列表 ↔ 详情, 详情左上角 ← 返回列表, 右上角 ✕ 关闭
+// multiple —— 列表 ↔ 详情, 详情左上角 ← 返回列表, 右上角 ✕ 关闭。
+// 标题/副标题/返回箭头随选中状态动态变化, 通过 api 改写外壳。
 // ————————————————————————————————————————————————————————
 
 interface MultiProps {
   items: SkillItem[]
   /** 列表视图标题。 */
   title: string
-  onClose: () => void
+  api: DialogContentApi
 }
 
-export function MultiSkillDialog({ items, title, onClose }: MultiProps) {
+export function SkillListModal({ items, title, api }: MultiProps) {
   const [selected, setSelected] = useState<SkillItem | null>(null)
 
-  return (
-    <Dialog
-      open
-      onClose={onClose}
-      title={selected ? selected.name : title}
-      subtitle={selected ? catSubtitle(selected.category, selected.subtitle) : '选择词条'}
-      onBack={selected ? () => setSelected(null) : undefined}
-    >
-      {selected ? (
-        <SkillBody category={selected.category} name={selected.name} />
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
-          {items.map((it) => (
-            <button
-              key={`${it.category}:${it.name}`}
-              type="button"
-              onClick={() => setSelected(it)}
-              className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"
-            >
-              <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{it.name}</span>
-              <span className="text-xs text-slate-400 dark:text-slate-500 truncate">{it.subtitle ?? CATEGORY_LABEL[it.category] ?? it.category}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </Dialog>
+  // 选中态 → 外壳切到"详情"; 清空 → 切回"列表"。
+  useEffect(() => {
+    if (selected) {
+      api.setTitle(selected.name)
+      api.setSubtitle(catSubtitle(selected.category, selected.subtitle))
+      api.setOnBack(() => setSelected(null))
+    } else {
+      api.setTitle(title)
+      api.setSubtitle('选择词条')
+      api.setOnBack(undefined)
+    }
+  }, [selected, title, api])
+
+  return selected ? (
+    <SkillBody category={selected.category} name={selected.name} />
+  ) : (
+    <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
+      {items.map((it) => (
+        <button
+          key={`${it.category}:${it.name}`}
+          type="button"
+          onClick={() => setSelected(it)}
+          className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"
+        >
+          <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{it.name}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 truncate">{it.subtitle ?? CATEGORY_LABEL[it.category] ?? it.category}</span>
+        </button>
+      ))}
+    </div>
   )
 }

@@ -3,7 +3,7 @@ import { HOUR_UNKNOWN, type Sex, type BaziInputMode } from '@/lib'
 import type { BaziInputData } from '@@/stores/compute'
 import { CommonButton } from '@@/CommonButton'
 import { useDialog } from '@@/Dialog'
-import { LoadDialog } from '@@/LoadDialog'
+import { LoadModal } from '@@/LoadModal'
 import {
   useSavedEntries,
   type SavedEntry,
@@ -189,22 +189,24 @@ export function BaziForm({
   }
 
   const handleLoad = () => {
-    open((onClose) => (
-      <LoadDialog
-        open={true}
-        onClose={onClose}
-        entries={entries}
-        onLoad={(entry) => {
-          onChange(applySavedEntry(state, entry))
-          onClose()
-        }}
-        onDelete={(name: string, ev: React.MouseEvent) => {
-          ev.stopPropagation()
-          if (!window.confirm('删除"' + name + '"？')) return
-          deleteEntry(name)
-        }}
-      />
-    ))
+    open(
+      (api) => (
+        <LoadModal
+          onClose={api.close}
+          entries={entries}
+          onLoad={(entry) => {
+            onChange(applySavedEntry(state, entry))
+            api.close()
+          }}
+          onDelete={(name: string, ev: React.MouseEvent) => {
+            ev.stopPropagation()
+            if (!window.confirm('删除"' + name + '"？')) return
+            deleteEntry(name)
+          }}
+        />
+      ),
+      { title: '已保存命例' },
+    )
   }
 
   const handleReset = () => {

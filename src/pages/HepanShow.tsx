@@ -5,7 +5,6 @@ import { EMPTY_PILLAR } from '@/lib'
 import { BaziChart } from '@@/chart/BaziChart'
 import { BaziMeta } from '@@/BaziMeta'
 import { ErrorBoundary } from '@@/ErrorBoundary'
-import { GenericLayout } from '@@/GenericLayout'
 import { HepanCrossPanel } from '@@/HepanCrossPanel'
 import { HepanXiyongMatch } from '@@/HepanXiyongMatch'
 import type { HepanState } from '@@/HepanInput'
@@ -37,20 +36,32 @@ export default function HepanShow() {
 
   if (!a || !b) {
     return (
-      <GenericLayout errorBoundaryName="HepanShow" title="八字合盘" link={<Link to="/hepan-input">← 输入信息</Link>}>
+      <ErrorBoundary name="HepanShow">
+        <div className="mb-3">
+          <Link
+            to="/hepan-input"
+            className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 underline decoration-dotted underline-offset-2"
+          >
+            ← 输入信息
+          </Link>
+        </div>
         <div className="text-center py-8 text-slate-500">
           请先输入两人的出生信息
         </div>
-      </GenericLayout>
+      </ErrorBoundary>
     )
   }
 
   return (
-    <GenericLayout
-      errorBoundaryName="HepanShow"
-      title="八字合盘"
-      link={<Link to="/hepan-input">← 修改输入</Link>}
-    >
+    <ErrorBoundary name="HepanShow">
+      <div className="mb-3">
+        <Link
+          to="/hepan-input"
+          className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 underline decoration-dotted underline-offset-2"
+        >
+          ← 修改输入
+        </Link>
+      </div>
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-2 md:gap-6">
           <Side
@@ -85,7 +96,7 @@ export default function HepanShow() {
           合盘仅供参考 · 用神 / 互动只是其中两层 · 实际配偶 / 合伙考量仍需综合岁运、宫位、神煞与现实磨合
         </p>
       </div>
-    </GenericLayout>
+    </ErrorBoundary>
   )
 }
 

@@ -1,9 +1,9 @@
 import { type ReactNode } from 'react'
 import { skillUrl, type SkillCategory } from '@/lib'
 import { useDialog } from '@@/Dialog'
-import { SkillDialogContent, MultiSkillDialog, type SkillItem } from './SkillDialogContent'
+import { SkillDetail, SkillListModal, skillSubtitle, type SkillItem } from './SkillDetail'
 
-export type { SkillItem } from './SkillDialogContent'
+export type { SkillItem } from './SkillDetail'
 
 const GLOW_CLASSES = [
   'cursor-pointer rounded transition-[box-shadow,filter] duration-150',
@@ -40,8 +40,8 @@ interface Props {
 /**
  * 释义入口 —— 包裹任意词条。
  *
- * - single (默认): 传 category + name, 点击直接打开该词条详情 Dialog。
- * - multiple: 传 items (≥2 项有效 skill), 点击先打开"词条列表" Dialog,
+ * - single (默认): 传 category + name, 点击直接打开该词条详情 Modal。
+ * - multiple: 传 items (≥2 项有效 skill), 点击先打开"词条列表" Modal,
  *   再点某条才进入详情; 详情左上角 ← 返回列表, 右上角 ✕ 关闭。
  *
  * 无对应 skill 时降级为纯文本, 不渲染可点击元素。
@@ -58,9 +58,10 @@ export function Description({ category, name, subtitle, items, listTitle, glow =
     return (
       <button
         type="button"
-        onClick={() => open((onClose) => (
-          <MultiSkillDialog items={validItems} title={title} onClose={onClose} />
-        ))}
+        onClick={() => open(
+          (api) => <SkillListModal items={validItems} title={title} api={api} />,
+          { title, subtitle: '选择词条' },
+        )}
         className={[...base, className ?? ''].join(' ')}
       >
         {children}
@@ -78,14 +79,13 @@ export function Description({ category, name, subtitle, items, listTitle, glow =
   return (
     <button
       type="button"
-      onClick={() => open((onClose) => (
-        <SkillDialogContent
-          category={single.category}
-          name={single.name}
-          subtitle={single.subtitle}
-          onClose={onClose}
-        />
-      ))}
+      onClick={() => open(
+        <SkillDetail category={single.category} name={single.name} />,
+        {
+          title: single.name,
+          subtitle: skillSubtitle(single.category, single.subtitle),
+        },
+      )}
       className={[...base, className ?? ''].join(' ')}
     >
       {children}

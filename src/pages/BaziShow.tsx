@@ -11,7 +11,6 @@ import { StrengthPanel } from '@@/StrengthPanel'
 import { XiyongPanel } from '@@/XiyongPanel'
 import { GanZhiPanel } from '@@/GanZhiPanel'
 import { ErrorBoundary } from '@@/ErrorBoundary'
-import { GenericLayout } from '@@/GenericLayout'
 
 export default function BaziShow() {
   const solarStr = useBazi((s) => s.solarStr)
@@ -20,11 +19,15 @@ export default function BaziShow() {
   const pillars = useBazi((s) => s.pillars)
 
   return (
-    <GenericLayout
-      errorBoundaryName="BaziShow"
-      title="八字补完计划"
-      link={<Link to="/bazi-input">← 修改输入</Link>}
-    >
+    <ErrorBoundary name="BaziShow">
+      <div className="mb-3">
+        <Link
+          to="/"
+          className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 underline decoration-dotted underline-offset-2"
+        >
+          ← 修改输入
+        </Link>
+      </div>
       <div className="grid gap-5 md:gap-6">
         <section className="min-w-0">
           <ErrorBoundary name="BaziMeta"><BaziMeta solar={solarStr} trueSolar={trueSolarStr} lunar={lunarStr} /></ErrorBoundary>
@@ -39,6 +42,6 @@ export default function BaziShow() {
           <ErrorBoundary name="SkillIndex"><SkillIndex pillars={pillars} /></ErrorBoundary>
         </section>
       </div>
-    </GenericLayout>
+    </ErrorBoundary>
   )
 }

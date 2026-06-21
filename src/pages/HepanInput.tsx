@@ -5,13 +5,12 @@ import type { Pillar } from '@/lib'
 import { emptyPillars } from '@/lib'
 import { BaziChart } from '@@/chart/BaziChart'
 import { ErrorBoundary } from '@@/ErrorBoundary'
-import { GenericLayout } from '@@/GenericLayout'
 import { defaultA, defaultB, type HepanState } from '@@/HepanInput'
 import { BaziForm } from '@@/BaziForm'
 import { applySavedEntry, type SavedEntry } from '@@/stores/savedEntries'
 import { CommonButton } from '@@/CommonButton'
 import { useDialog } from '@@/Dialog'
-import { LoadDialog } from '@@/LoadDialog'
+import { LoadModal } from '@@/LoadModal'
 import {
   useSavedEntries,
   DEFAULT_STORAGE_KEY,
@@ -86,31 +85,29 @@ export default function HepanInput() {
   const tabBName = state.b.name || '右侧人物'
 
   const handleLoad = () => {
-    open((onClose) => (
-      <LoadDialog
-        open={true}
-        onClose={onClose}
-        entries={entries}
-        onLoad={(entry) => {
-          const next = applySavedEntry(activeState, entry) as HepanState
-          next.name = entry.name
-          setActiveState(next)
-          onClose()
-        }}
-        onDelete={(name, ev) => {
-          ev.stopPropagation()
-          deleteEntry(name)
-        }}
-      />
-    ))
+    open(
+      (api) => (
+        <LoadModal
+          onClose={api.close}
+          entries={entries}
+          onLoad={(entry) => {
+            const next = applySavedEntry(activeState, entry) as HepanState
+            next.name = entry.name
+            setActiveState(next)
+            api.close()
+          }}
+          onDelete={(name, ev) => {
+            ev.stopPropagation()
+            deleteEntry(name)
+          }}
+        />
+      ),
+      { title: '已保存命例' },
+    )
   }
 
   return (
-    <GenericLayout
-      errorBoundaryName="HepanInput"
-      title="八字合盘"
-      link={<Link to="/">← 首页</Link>}
-    >
+    <ErrorBoundary name="HepanInput">
       <div className="space-y-6">
         {/* Tab 切换 */}
         <div className="grid grid-cols-2 gap-1.5 border-b border-slate-100 bg-slate-50/80 p-2 dark:border-slate-800 dark:bg-slate-950/40 rounded-2xl">
@@ -174,6 +171,6 @@ export default function HepanInput() {
           </div>
         </div>
       </div>
-    </GenericLayout>
+    </ErrorBoundary>
   )
 }

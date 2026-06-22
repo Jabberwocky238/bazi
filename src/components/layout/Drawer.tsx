@@ -54,8 +54,8 @@ function NavList({
 }) {
   const active = activeSection(pathname)
   return (
-    <div className="flex flex-col flex-1 min-h-0">
-      <nav className="p-3 space-y-1">
+    <div className="flex flex-col flex-1 min-h-0 pd-3">
+      <nav className="p-3 space-y-1 shrink-0">
         {NAV.map((item) => {
           const isActive = active === item.section
           return (
@@ -72,19 +72,13 @@ function NavList({
         })}
       </nav>
       <div className="mt-auto p-3 border-t border-slate-200 dark:border-slate-800">
-        {/* 来源信息 —— 释义/计算/项目仓库, 从页脚移入抽屉 */}
-        <FooterSources />
-        <div className="space-y-1">
+        {/* 主题切换 + 免责声明 —— 跟随抽屉显示 */}
+        <div className="pb-3">
           {/* 主题切换 —— 三态循环 (亮/暗/跟随系统), 跟随抽屉显示 */}
           <ThemeToggle />
-          <button
-            type="button"
-            onClick={onDisclaimer}
-            className="w-full text-left px-3 py-2.5 rounded-xl text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-          >
-            免责声明
-          </button>
         </div>
+        {/* 来源信息 —— 释义/计算/项目仓库, 从页脚移入抽屉 */}
+        <FooterSources />
       </div>
     </div>
   )
@@ -180,7 +174,7 @@ function MobileOverlay({ pathname }: { pathname: string }) {
       {/* 全宽面板 —— 拖动时禁用 transition 以实时跟手 */}
       <aside
         style={{ transform: dragX !== null ? `translateX(${panelX}px)` : undefined }}
-        className={`absolute left-0 top-0 h-full w-full bg-white dark:bg-slate-900 shadow-xl border-r border-slate-200 dark:border-slate-800 ${dragging ? '' : 'transition-transform duration-300 ease-out'} native:pt-[env(safe-area-inset-top)] ${dragX === null ? (mobileOpen ? 'translate-x-0' : '-translate-x-full') : ''}`}
+        className={`absolute left-0 top-0 h-full w-full flex flex-col bg-white dark:bg-slate-900 shadow-xl border-r border-slate-200 dark:border-slate-800 ${dragging ? '' : 'transition-transform duration-300 ease-out'} native:pt-[env(safe-area-inset-top)] ${dragX === null ? (mobileOpen ? 'translate-x-0' : '-translate-x-full') : ''}`}
       >
         <div className="h-14 shrink-0 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
           <span className="text-base font-semibold">导航</span>

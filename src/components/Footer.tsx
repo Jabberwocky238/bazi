@@ -112,7 +112,7 @@ export function FooterSources() {
       <div>
         本项目 ·{' '}
         <a href="https://github.com/Jabberwocky238/ultimate-bazi" className={linkCls} target="_blank" rel="noreferrer">
-          ultimate-bazi
+          ultrabazi
         </a>{' '}
         <span className="tabular-nums">{__APP_COMMIT__} · {build.display} · {build.label}</span>
       </div>

@@ -215,7 +215,7 @@ export function ChatWidget() {
     <>
       {/* 聊天面板 —— 由 AppBar 右侧按钮开关 (useChat store); 抽屉展开时隐藏 */}
       {open && !mobileOpen && (
-        <div className="fixed bottom-5 right-5 z-40 flex h-[75vh] max-h-[720px] w-[calc(100vw-2.5rem)] max-w-[42rem] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+        <div className="fixed bottom-5 right-5 z-40 flex h-[90vh] md:h-[75vh] md:max-h-[720px] w-[calc(100vw-2.5rem)] max-w-[42rem] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
           {/* header */}
           <header className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
             <div>

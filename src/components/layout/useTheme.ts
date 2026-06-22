@@ -18,7 +18,7 @@ const STORAGE_KEY = 'bazi:theme'
 function readStored(): ThemeMode {
   if (typeof window === 'undefined') return 'system'
   const v = localStorage.getItem(STORAGE_KEY)
-  return v === 'light' || v === 'dark' || v === 'system' ? v : 'system'
+  return v === 'light' || v === 'dark' || v === 'system' ? v : 'dark'
 }
 
 function systemPrefersDark(): boolean {

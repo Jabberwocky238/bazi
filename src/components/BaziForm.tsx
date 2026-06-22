@@ -197,6 +197,7 @@ export function BaziForm({
           onLoad={(entry) => {
             onChange(applySavedEntry(state, entry))
             api.close()
+            onClickExec?.()
           }}
           onDelete={(name: string, ev: React.MouseEvent) => {
             ev.stopPropagation()
@@ -216,9 +217,9 @@ export function BaziForm({
 
   const defaultButtons = () => (
     <div className="flex items-center gap-2 flex-wrap">
-      <CommonButton onClick={handleSave} width="flex-1">保存</CommonButton>
-      <CommonButton onClick={handleLoad} width="flex-1">加载</CommonButton>
-      <CommonButton variant="danger" onClick={handleReset} width="flex-2">恢复出厂设置</CommonButton>
+      <CommonButton type="button" onClick={handleSave} width="flex-1">保存</CommonButton>
+      <CommonButton type="button" onClick={handleLoad} width="flex-1">加载</CommonButton>
+      <CommonButton type="button" variant="danger" onClick={handleReset} width="flex-2">恢复出厂设置</CommonButton>
       <CommonButton variant="primary" width="w-full md:w-auto md:flex-2" type="submit">排盘</CommonButton>
     </div>
   )

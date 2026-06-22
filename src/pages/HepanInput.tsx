@@ -142,6 +142,7 @@ export default function HepanInput() {
           <div className="space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <CommonButton
+                type="button"
                 onClick={handleLoad}
                 width="w-1/2 md:w-[50%]"
               >

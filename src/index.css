@@ -8,6 +8,24 @@
    网页端无 .native, native:* 类全部失效, 零副作用。 */
 @custom-variant native (&:where(.native, .native *));
 
+/* app 原生壳表现: 禁止文本选中/复制, 抑制 WebView 长按 callout 栏 (复制/分享)。
+   全部挂在 .native 下 —— 网页端 <html> 无此类, 规则完全不生效, 网页端照常可选中复制。
+   -webkit-touch-callout:none 是压住 iOS/Android 长按菜单的关键 (仅 user-select:none 不够)。 */
+.native,
+.native * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* 例外: 输入控件仍需可输入/选词, 但继续抑制 callout */
+.native input,
+.native textarea,
+.native [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: none;
+}
+
 @theme {
   --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC",
     "Microsoft YaHei", "HarmonyOS Sans SC", "Noto Sans SC",

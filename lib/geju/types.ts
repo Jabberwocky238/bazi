@@ -8,13 +8,57 @@ import {
   type Zhi,
   type Season,
   type Shishen,
-  type ShishenCat,
   type WuXing,
 } from '@jabberwocky238/bazi-engine'
 import type { DetailedPillar } from '../base'
-import type { StrengthAnalysis, StrengthLevel } from '../strength'
 
-export type { ShishenCat }
+/**
+ * 格局判定用 — 快照上下文。直接使用 @jabberwocky238/bazi-engine 的 Calculator。
+ */
+import { Calculator } from '@jabberwocky238/bazi-engine'
+import type { BaziInput } from '@jabberwocky238/bazi-engine'
+
+export class GejuContext {
+  calc: Calculator
+  state: Record<string, any> = {} // 供各 Detector 存取的任意状态容器
+
+  constructor(
+    public bazi: BaziInput,
+  ) {
+    this.calc = new Calculator(bazi, bazi.sex)
+  }
+
+  get pillars(): DetailedPillar[] {
+    if (!this.state.pillars) this.state.pillars = this.calc.pillars()
+    return this.state.pillars
+  }
+
+  get yueLing(): DetailedPillar['zhi'] {
+    if (!this.state.yueLing) this.state.yueLing = this.pillars[1].zhi
+    return this.state.yueLing
+  }
+
+  touGan(gan: Gan, pos?: 0 | 1 | 2| 3): boolean {
+    if (pos) {
+      return this.pillars[pos].gan.name === gan
+    }
+    for (const pillar of this.pillars) {
+      if (pillar.gan.name === gan) return true
+    }
+    return false
+  }
+  rootGan(gan: Gan, pos?: 0 | 1 | 2 | 3): boolean {
+    if (pos) {
+      const cangGan = this.pillars[pos].zhi.cangGan
+      return cangGan.some(cg => cg.name === gan)
+    }
+    for (const pillar of this.pillars) {
+      if (pillar.zhi.cangGan.some(cg => cg.name === gan)) return true
+    }
+    return false
+  }
+}
+
 
 // ————————————————————————————————————————————————————————
 // 类型
@@ -136,3 +180,4 @@ export function yimaFrom(zhi: string): string | undefined {
     return undefined
   }
 }
+

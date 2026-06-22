@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { loadSkill, skillUrl, type SkillCategory } from '@/lib'
+import { loadSkill, skillUrl, type SkillCategory } from '@LIB'
 import type { DialogContentApi } from '@@/Dialog'
 
 const CATEGORY_LABEL: Record<string, string> = {

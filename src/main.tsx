@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import { initCapacitor } from '@/lib/capacitor'
+import { initCapacitor } from '@/capacitor'
 import './index.css'
 
 import App from './pages/Index'

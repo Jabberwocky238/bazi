@@ -9,9 +9,9 @@ import {
   type GejuOutput,
   type XiyongAnalysis,
   type DeriveAllResult,
-} from '@/lib'
-import { HOUR_UNKNOWN } from '@/lib'
-import { computeFromState, type BaziInputMode } from '@/lib'
+} from '@LIB'
+import { HOUR_UNKNOWN } from '@LIB'
+import { computeFromState, type BaziInputMode } from '@LIB'
 import { computeDaYun, useDayun } from './dayun'
 
 /**

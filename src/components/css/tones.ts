@@ -38,7 +38,7 @@ export const XIYONG_TONE: Record<'用神' | '喜神' | '忌神' | '调候', stri
   调候: 'border-sky-500/40 bg-sky-500/10',
 }
 
-import type { GanZhiType } from '@/lib'
+import type { GanZhiType } from '@LIB'
 
 export const GANZHI_TONE: Record<GanZhiType, string> = {
   盖头: 'border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-400',

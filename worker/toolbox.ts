@@ -22,7 +22,7 @@ import {
   parseBaziToResult,
   deriveAll,
   type BaziResult,
-} from '@/lib'
+} from '@LIB'
 
 // ————————————————————————————————————————————————————————
 // 工具箱 —— 集中定义所有可被 LLM 调用的工具, push 进 toolcall.ts 的全局 tools 数组。

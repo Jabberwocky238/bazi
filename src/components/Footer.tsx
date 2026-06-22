@@ -61,60 +61,73 @@ const TONE_CLS: Record<HostInfo['tone'], string> = {
   dev: 'border-slate-400/40 bg-slate-400/10 text-slate-600 dark:text-slate-400',
 }
 
-export function Footer() {
-  const linkCls = 'text-amber-700 dark:text-amber-400 underline'
-  const [host, setHost] = useState<HostInfo>({ label: '加载中…', tone: 'dev' })
-  useEffect(() => { setHost(detectHost()) }, [])
-  const build = formatBuildTime(__APP_BUILD_TIME__)
-
+/** 当前站点徽章 —— 国际站 / 国内站 / 测试链接, 可点击切换。 */
+export function HostBadge({ host }: { host: HostInfo }) {
+  if (host.switchUrl) {
+    return (
+      <a
+        href={host.switchUrl}
+        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border transition hover:brightness-110 ${TONE_CLS[host.tone]}`}
+        title={host.switchLabel}
+      >
+        {host.icon}
+        <span>您当前位于 <b className="font-medium">{host.label}</b></span>
+        {host.provider && <span>· 托管于 {host.provider}</span>}
+        <span className="ml-1 text-[10px] opacity-80">· 点击{host.switchLabel} →</span>
+      </a>
+    )
+  }
   return (
-    <footer className="mt-10 text-xs text-slate-400 dark:text-slate-600 border-t border-slate-200 dark:border-slate-800 pt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
-      {host.switchUrl ? (
-        <a
-          href={host.switchUrl}
-          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border transition hover:brightness-110 ${TONE_CLS[host.tone]}`}
-          title={host.switchLabel}
-        >
-          {host.icon}
-          <span>您当前位于 <b className="font-medium">{host.label}</b></span>
-          {host.provider && <span>· 托管于 {host.provider}</span>}
-          <span className="ml-1 text-[10px] opacity-80">· 点击{host.switchLabel} →</span>
-        </a>
-      ) : (
-        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border ${TONE_CLS[host.tone]}`}>
-          {host.icon}
-          <span>您当前位于 <b className="font-medium">{host.label}</b></span>
-          {host.provider && <span>· 托管于 {host.provider}</span>}
-        </span>
-      )}
-      <span>
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border ${TONE_CLS[host.tone]}`}>
+      {host.icon}
+      <span>您当前位于 <b className="font-medium">{host.label}</b></span>
+      {host.provider && <span>· 托管于 {host.provider}</span>}
+    </span>
+  )
+}
+
+/**
+ * 释义/计算/项目来源信息 —— 三个仓库链接 + 版本/commit。
+ * 原 Footer 的"其余部分", 现移入抽屉底部 (切换主题上方) 展示。
+ */
+export function FooterSources() {
+  const build = formatBuildTime(__APP_BUILD_TIME__)
+  const linkCls = 'text-amber-700 dark:text-amber-400 underline'
+  return (
+    <div className="mb-2 px-3 space-y-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+      <div>
         释义来源 ·{' '}
         <a href="https://github.com/Jabberwocky238/bazi-skills" className={linkCls} target="_blank" rel="noreferrer">
           bazi-skills
-        </a>
-        {' '}
-        <span className="text-slate-500 dark:text-slate-500 tabular-nums">
-          {__SKILLS_COMMIT__} · {__SKILLS_DATE__.slice(0, 10)}
-        </span>
-      </span>
-      <span>
+        </a>{' '}
+        <span className="tabular-nums">{__SKILLS_COMMIT__} · {__SKILLS_DATE__.slice(0, 10)}</span>
+      </div>
+      <div>
         排盘计算 ·{' '}
         <a href="https://github.com/Jabberwocky238/bazi-engine" className={linkCls} target="_blank" rel="noreferrer">
           bazi-engine
-        </a>
-        {' '}
-        <span className="text-slate-500 dark:text-slate-500 tabular-nums">v{__ENGINE_VERSION__}</span>
-      </span>
-      <span>
+        </a>{' '}
+        <span className="tabular-nums">v{__ENGINE_VERSION__}</span>
+      </div>
+      <div>
         本项目 ·{' '}
         <a href="https://github.com/Jabberwocky238/ultimate-bazi" className={linkCls} target="_blank" rel="noreferrer">
           ultimate-bazi
-        </a>
-        {' '}
-        <span className="text-slate-500 dark:text-slate-500 tabular-nums">
-          {__APP_COMMIT__} · 构建于 {build.display} · {build.label}
-        </span>
-      </span>
+        </a>{' '}
+        <span className="tabular-nums">{__APP_COMMIT__} · {build.display} · {build.label}</span>
+      </div>
+    </div>
+  )
+}
+
+/** 页脚 —— 仅保留"当前所在站点"徽章 (其余来源信息移入抽屉, 见 FooterSources)。 */
+export function Footer() {
+  const [host, setHost] = useState<HostInfo>({ label: '加载中…', tone: 'dev' })
+  useEffect(() => { setHost(detectHost()) }, [])
+
+  return (
+    <footer className="mt-10 text-xs text-slate-400 dark:text-slate-600 border-t border-slate-200 dark:border-slate-800 pt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+      <HostBadge host={host} />
     </footer>
   )
 }

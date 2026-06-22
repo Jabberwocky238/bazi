@@ -1,4 +1,4 @@
-import type { ExtendedDetailedPillar } from '@/lib'
+import type { ExtendedDetailedPillar } from '@LIB'
 type Pillar = ExtendedDetailedPillar
 import { cellBase } from '@@/css'
 import { Row } from './Row'

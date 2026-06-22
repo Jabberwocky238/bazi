@@ -1,11 +1,12 @@
 import { formatBuildTime } from '@@/buildTime'
+import { useChat } from '@@/stores'
 import { useLayout } from './context'
 
 // ————————————————————————————————————————————————————————
-// AppBar —— 常驻顶部 fixed titlebar。
-// 左侧抽屉按钮 + 应用标题，右侧构建信息 + 免责声明。
+// AppBar —— 常驻顶部 sticky titlebar。
+// 左侧抽屉按钮 + 应用标题，右侧聊天按钮 + 构建信息 + 免责声明。
 // 半透明毛玻璃背景，浮于内容之上 (content 通过 pt 偏移避让)。
-// 动作 (打开抽屉 / 免责声明) 通过 useLayout() 上下文调用。
+// 动作 (打开抽屉 / 聊天 / 免责声明) 通过 useLayout() / useChat() 调用。
 // ————————————————————————————————————————————————————————
 
 function MenuIcon() {
@@ -22,8 +23,21 @@ function MenuIcon() {
   )
 }
 
+function RobotIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="8" width="16" height="11" rx="2" />
+      <path d="M12 8V4M9 2h6" />
+      <circle cx="9" cy="13" r="1" />
+      <circle cx="15" cy="13" r="1" />
+      <path d="M2 13v2M22 13v2" />
+    </svg>
+  )
+}
+
 export function AppBar() {
   const { toggleDrawer, openDisclaimer, isDesktop, desktopOpen, mobileOpen } = useLayout()
+  const { chatOpen, toggleChat } = useChat()
   const build = formatBuildTime(__APP_BUILD_TIME__)
   // 当前视口对应的抽屉是否展开 —— 决定按钮 aria 状态。
   const drawerOpen = isDesktop ? desktopOpen : mobileOpen
@@ -43,6 +57,16 @@ export function AppBar() {
           八字补完计划
         </h1>
         <div className="ml-auto flex items-center gap-3">
+          {/* 聊天助手 —— 机器人图标, 与抽屉按钮呼应 */}
+          <button
+            type="button"
+            onClick={toggleChat}
+            aria-label={chatOpen ? '关闭聊天' : '打开聊天'}
+            aria-expanded={chatOpen}
+            className={`shrink-0 p-1.5 rounded-lg transition ${chatOpen ? 'text-amber-700 dark:text-amber-400 bg-amber-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'}`}
+          >
+            <RobotIcon />
+          </button>
           <span className="hidden sm:inline text-[11px] tabular-nums text-slate-400 dark:text-slate-600">
             {build.display} · {build.label}
           </span>

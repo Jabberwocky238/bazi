@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { HOUR_UNKNOWN } from '@/lib'
+import { HOUR_UNKNOWN } from '@LIB'
 import type { BaziInputData } from './compute'
 
 export interface SavedEntryBase {

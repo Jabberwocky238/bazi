@@ -25,9 +25,10 @@
       "@jabberwocky238/bazi-engine": ["./bazi-engine/src/index.ts"],
       "@jabberwocky238/bazi-engine/*": ["./bazi-engine/src/*"],
       "@/*": ["./src/*"],
+      "@LIB": ["./lib/index.ts"],
       "@@/*": ["./src/components/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "lib"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts"]
 }

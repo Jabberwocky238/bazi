@@ -1,14 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { computeFromState } from '@@/stores/compute'
-import { EMPTY_PILLAR } from '@/lib'
+import { EMPTY_PILLAR } from '@LIB'
 import { BaziChart } from '@@/chart/BaziChart'
 import { BaziMeta } from '@@/BaziMeta'
 import { ErrorBoundary } from '@@/ErrorBoundary'
 import { HepanCrossPanel } from '@@/HepanCrossPanel'
 import { HepanXiyongMatch } from '@@/HepanXiyongMatch'
 import type { HepanState } from '@@/HepanInput'
-import type { ExtendedDetailedPillar } from '@/lib'
+import type { ExtendedDetailedPillar } from '@LIB'
 
 interface LocationState {
   a: HepanState

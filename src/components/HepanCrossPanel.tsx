@@ -5,7 +5,7 @@ import {
   type AnyFinding,
   type CrossFindings,
   type PillarPos,
-} from '@/lib'
+} from '@LIB'
 import { KIND_TONE } from '@@/css'
 
 interface Props {

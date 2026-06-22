@@ -49,6 +49,7 @@ export default defineConfig({
     alias: {
       '@jabberwocky238/bazi-engine': path.resolve(root, 'bazi-engine/src/index.ts'),
       '@': path.resolve(root, 'src'),
+      "@LIB": path.resolve(root, 'lib/index.ts'),
       '@@': path.resolve(root, 'src/components'),
     },
   },

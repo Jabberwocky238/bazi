@@ -1,5 +1,5 @@
 import { useState, useEffect, type ReactNode } from 'react'
-import { HOUR_UNKNOWN, type Sex, type BaziInputMode } from '@/lib'
+import { HOUR_UNKNOWN, type Sex, type BaziInputMode } from '@LIB'
 import type { BaziInputData } from '@@/stores/compute'
 import { CommonButton } from '@@/CommonButton'
 import { useDialog } from '@@/Dialog'

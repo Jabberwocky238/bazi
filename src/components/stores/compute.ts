@@ -11,7 +11,7 @@ import {
   type BaziInputData,
   type ComputedFromState,
   type BaziInputMode,
-} from '@/lib'
+} from '@LIB'
 import { type Sex } from '@jabberwocky238/bazi-engine'
 
 // 重新导出 lib 中的函数，保持 stores 层接口不变

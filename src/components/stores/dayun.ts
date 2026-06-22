@@ -6,7 +6,7 @@ import {
   computeDaYun as engineComputeDaYun,
   type Sex,
 } from '@jabberwocky238/bazi-engine'
-import { HOUR_UNKNOWN } from '@/lib'
+import { HOUR_UNKNOWN } from '@LIB'
 
 export interface DaYunStep {
   /** lunar-typescript 的原始 index; 0 表示起运前 */

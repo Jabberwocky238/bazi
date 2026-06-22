@@ -1,4 +1,4 @@
-import { type Pillar, skillUrl, type SkillCategory } from '@/lib'
+import { type Pillar, skillUrl, type SkillCategory } from '@LIB'
 import { SkillLink } from '@@/SkillLink'
 
 interface IndexItem {

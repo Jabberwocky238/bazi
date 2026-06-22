@@ -1,4 +1,5 @@
 export * from './base'
+export * from './xingchonghehai'
 export * from './strength'
 export * from './compute'
 export * from './geju'

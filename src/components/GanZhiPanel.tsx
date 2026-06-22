@@ -10,7 +10,7 @@ import {
   type Gan,
   type Zhi,
 } from '@jabberwocky238/bazi-engine'
-import { analyzeGanZhiWithExtras, type ExtraInteraction } from '@/lib/xingchonghehai'
+import { analyzeGanZhiWithExtras, type ExtraInteraction } from '@LIB'
 import { useBazi, useBaziStore, type ExtraPillar } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 

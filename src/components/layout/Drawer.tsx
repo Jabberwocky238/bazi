@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { type ReactNode } from 'react'
 import { useLayout } from './context'
 import { useDrawerSwipe } from './useDrawerSwipe'
+import { FooterSources } from '@@/Footer'
 import { ThemeToggle } from './BottomBar'
 
 // ————————————————————————————————————————————————————————
@@ -70,16 +71,20 @@ function NavList({
           )
         })}
       </nav>
-      <div className="mt-auto p-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
-        {/* 主题切换 —— 三态循环 (亮/暗/跟随系统), 跟随抽屉显示 */}
-        <ThemeToggle />
-        <button
-          type="button"
-          onClick={onDisclaimer}
-          className="w-full text-left px-3 py-2.5 rounded-xl text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-        >
-          免责声明
-        </button>
+      <div className="mt-auto p-3 border-t border-slate-200 dark:border-slate-800">
+        {/* 来源信息 —— 释义/计算/项目仓库, 从页脚移入抽屉 */}
+        <FooterSources />
+        <div className="space-y-1">
+          {/* 主题切换 —— 三态循环 (亮/暗/跟随系统), 跟随抽屉显示 */}
+          <ThemeToggle />
+          <button
+            type="button"
+            onClick={onDisclaimer}
+            className="w-full text-left px-3 py-2.5 rounded-xl text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            免责声明
+          </button>
+        </div>
       </div>
     </div>
   )

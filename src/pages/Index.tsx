@@ -1,5 +1,4 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { ChatWidget } from '@@/ChatWidget'
 import { AppShell } from '@@/layout'
 import { Suspense } from 'react'
 import BaziInput from './BaziInput'
@@ -20,7 +19,6 @@ export default function App() {
           </Routes>
         </AppShell>
       </Suspense>
-      <ChatWidget />
     </BrowserRouter>
   )
 }

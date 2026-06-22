@@ -28,7 +28,7 @@ export function AppBar() {
   // 当前视口对应的抽屉是否展开 —— 决定按钮 aria 状态。
   const drawerOpen = isDesktop ? desktopOpen : mobileOpen
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/70 dark:border-slate-800/70 bg-[#fafaf7]/80 dark:bg-slate-950/80 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-slate-200/70 dark:border-slate-800/70 bg-[#fafaf7]/80 dark:bg-slate-950/80 backdrop-blur-md native:pt-[env(safe-area-inset-top)]">
       <div className="mx-auto max-w-7xl px-3 md:px-6 h-14 flex items-center gap-2.5">
         <button
           type="button"

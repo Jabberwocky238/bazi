@@ -6,6 +6,7 @@ import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import { cloudflare } from '@cloudflare/vite-plugin'
 
 const root = path.dirname(fileURLToPath(import.meta.url))
@@ -76,6 +77,36 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
+    // PWA —— 仅保留"可安装"能力,不做任何缓存。
+    //   * manifest 满足安装条件 (名称/图标/start_url/display);
+    //   * 一个带 fetch handler 的 SW 仅用于满足浏览器安装门槛,fetch 直接回源,
+    //     globPatterns 为空 ⇒ 不预缓存,runtimeCaching 不配置 ⇒ 不运行时缓存;
+    //   * injectRegister 'auto' 由插件自动注入注册脚本,无需手写注册代码。
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      manifest: {
+        name: '八字补完计划',
+        short_name: 'UltraBazi',
+        description: '在线八字 / 合盘排盘与评分工具：干支互动、格局、通关桥梁一站式分析。',
+        theme_color: '#0f0f10',
+        background_color: '#0f0f10',
+        display: 'standalone',
+        lang: 'zh-CN',
+        start_url: '/',
+        icons: [
+          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+        ],
+      },
+      workbox: {
+        globPatterns: [],              // 不预缓存任何资源
+        cleanupOutdatedCaches: true,   // 清掉历史版本的 precache 缓存
+        clientsClaim: true,
+        // 故意不设 navigateFallback:不返回缓存 index.html,无离线兜底
+      },
+      // dev 不启用 SW (vite dev server 与 SW 会互相打架)
+      devOptions: { enabled: false },
+    }),
     // 仅 worker:dev (WITH_WORKER=1) 时挂载 cloudflare 插件,
     // 让 vite dev 直接托管 worker 的 /api/* 路由 (免 build, 免单独 wrangler dev);
     // 普通 `dev` 保持纯前端, 不依赖 worker。

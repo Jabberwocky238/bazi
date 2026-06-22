@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#0f0f10" />
     <meta name="description" content="八字补完计划：在线排盘 + 单/合盘干支互动评分、格局识别、通关桥梁分析。纯前端，无需注册。" />
     <meta name="keywords" content="八字, 排盘, 合盘, 格局, 干支互动, 通关桥梁, 命理, bazi" />
@@ -22,6 +22,19 @@
     <meta name="twitter:image" content="/favicon.svg" />
 
     <title>八字补完计划</title>
+    <!-- 主题预初始化: 在首帧前据 localStorage 设置 <html>.dark, 避免暗色模式闪烁 (FOUC)。
+         与 useTheme.ts 共享同一 key 'bazi:theme', 取值 light|dark|system。 -->
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem('bazi:theme') || 'system';
+          var dark = m === 'dark' || (m === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var el = document.documentElement;
+          el.classList.toggle('dark', dark);
+          el.style.colorScheme = dark ? 'dark' : 'light';
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <script defer src="https://umami.arunningstar.com/script.js" data-website-id="e0033403-e46f-4732-a917-bc9e0bf4789c"></script>

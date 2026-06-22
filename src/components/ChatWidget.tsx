@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { useBaziInput, useBazi, useBaziStore } from '@@/stores'
+import { useBaziInput, useBazi, useBaziStore, useChat } from '@@/stores'
+import { useLayout } from '@@/layout'
 
 // ————————————————————————————————————————————————————————
 // 八字助手聊天前端 —— 右下角浮动按钮 + 聊天面板。
@@ -29,10 +30,12 @@ const INITIAL_MESSAGE: ChatMessage = {
 }
 
 export function ChatWidget() {
-  const [open, setOpen] = useState(false)
+  const { chatOpen: open, setChatOpen } = useChat()
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const { mobileOpen } = useLayout()
+  const setOpen = setChatOpen
 
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -210,25 +213,9 @@ export function ChatWidget() {
 
   return createPortal(
     <>
-      {/* 浮动按钮 */}
-      <button
-        type="button"
-        aria-label={open ? '关闭聊天' : '打开聊天'}
-        onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-amber-600 text-white shadow-lg shadow-amber-600/30 transition hover:bg-amber-700 active:scale-95"
-      >
-        {open ? (
-          <span className="text-xl leading-none">✕</span>
-        ) : (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-          </svg>
-        )}
-      </button>
-
-      {/* 聊天面板 */}
-      {open && (
-        <div className="fixed bottom-20 right-5 z-50 flex h-[75vh] max-h-[720px] w-[calc(100vw-2.5rem)] max-w-[42rem] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+      {/* 聊天面板 —— 由 AppBar 右侧按钮开关 (useChat store); 抽屉展开时隐藏 */}
+      {open && !mobileOpen && (
+        <div className="fixed bottom-5 right-5 z-40 flex h-[75vh] max-h-[720px] w-[calc(100vw-2.5rem)] max-w-[42rem] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
           {/* header */}
           <header className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
             <div>

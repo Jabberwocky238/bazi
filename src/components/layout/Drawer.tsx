@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { type ReactNode } from 'react'
 import { useLayout } from './context'
+import { useDrawerSwipe } from './useDrawerSwipe'
+import { ThemeToggle } from './BottomBar'
 
 // ————————————————————————————————————————————————————————
 // Drawer —— 最外层布局容器, 内含 AppBar + main (由 children 传入)。
@@ -68,7 +70,9 @@ function NavList({
           )
         })}
       </nav>
-      <div className="mt-auto p-3 border-t border-slate-200 dark:border-slate-800">
+      <div className="mt-auto p-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
+        {/* 主题切换 —— 三态循环 (亮/暗/跟随系统), 跟随抽屉显示 */}
+        <ThemeToggle />
         <button
           type="button"
           onClick={onDisclaimer}
@@ -109,7 +113,7 @@ function SidebarPanel({ pathname }: { pathname: string }) {
   const { desktopOpen, openDisclaimer } = useLayout()
   return (
     <aside
-      className={`hidden md:flex shrink-0 flex-col sticky top-0 h-screen overflow-hidden border-r border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/40 transition-[width] duration-300 ease-out ${desktopOpen ? 'w-72' : 'w-0'}`}
+      className={`hidden md:flex shrink-0 flex-col sticky top-0 h-screen overflow-hidden border-r border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/40 transition-[width] duration-300 ease-out native:pt-[env(safe-area-inset-top)] ${desktopOpen ? 'w-72' : 'w-0'}`}
     >
       <div className="w-72 h-full flex flex-col">
         <div className="h-14 shrink-0 flex items-center px-4 border-b border-slate-200 dark:border-slate-800">
@@ -128,7 +132,15 @@ function SidebarPanel({ pathname }: { pathname: string }) {
 // ————————————————————————————————————————————————————————
 
 function MobileOverlay({ pathname }: { pathname: string }) {
-  const { mobileOpen, closeDrawer, openDisclaimer } = useLayout()
+  const { mobileOpen, closeDrawer, openDrawer, openDisclaimer, isDesktop } = useLayout()
+
+  // 左右滑动手势 (仅移动端)
+  const { dragX, dragging, panelWidth } = useDrawerSwipe({
+    open: mobileOpen,
+    openDrawer,
+    closeDrawer,
+    enabled: !isDesktop,
+  })
 
   useEffect(() => {
     if (!mobileOpen) return
@@ -144,19 +156,26 @@ function MobileOverlay({ pathname }: { pathname: string }) {
     }
   }, [mobileOpen, closeDrawer])
 
+  // 拖动时面板实时位移; 拖动结束 (dragX=null) 交回 CSS 过渡。
+  // 遮罩透明度跟随面板露出比例 (0~1)。
+  const panelX = dragX ?? (mobileOpen ? 0 : -panelWidth)
+  const reveal = Math.max(0, Math.min(1, (panelX + panelWidth) / panelWidth))
+
   return createPortal(
     <div
-      className={`md:hidden fixed inset-0 z-50 ${mobileOpen ? '' : 'pointer-events-none'}`}
+      className={`md:hidden fixed inset-0 z-50 ${mobileOpen || dragging ? '' : 'pointer-events-none'}`}
       aria-hidden={!mobileOpen}
     >
-      {/* 背景遮罩 */}
+      {/* 背景遮罩 —— 透明度跟随面板露出比例 */}
       <div
         onClick={closeDrawer}
-        className={`absolute inset-0 bg-slate-900/40 transition-opacity duration-300 ${mobileOpen ? 'opacity-100' : 'opacity-0'}`}
+        style={{ opacity: dragX !== null ? reveal : undefined }}
+        className={`absolute inset-0 bg-slate-900/40 ${dragging ? '' : 'transition-opacity duration-300'} ${mobileOpen ? 'opacity-100' : 'opacity-0'}`}
       />
-      {/* 全宽面板 */}
+      {/* 全宽面板 —— 拖动时禁用 transition 以实时跟手 */}
       <aside
-        className={`absolute left-0 top-0 h-full w-full bg-white dark:bg-slate-900 shadow-xl border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ transform: dragX !== null ? `translateX(${panelX}px)` : undefined }}
+        className={`absolute left-0 top-0 h-full w-full bg-white dark:bg-slate-900 shadow-xl border-r border-slate-200 dark:border-slate-800 ${dragging ? '' : 'transition-transform duration-300 ease-out'} native:pt-[env(safe-area-inset-top)] ${dragX === null ? (mobileOpen ? 'translate-x-0' : '-translate-x-full') : ''}`}
       >
         <div className="h-14 shrink-0 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
           <span className="text-base font-semibold">导航</span>

@@ -6,6 +6,7 @@ import { DialogProvider, useDialog } from '@@/Dialog'
 import { DisclaimerContent } from '@@/DisclaimerContent'
 import { AppBar } from './AppBar'
 import { Drawer } from './Drawer'
+import { ChatWidget } from '@@/ChatWidget'
 import { LayoutContext, type LayoutContextValue, useIsDesktop } from './context'
 
 // ————————————————————————————————————————————————————————
@@ -84,6 +85,7 @@ function AppShellInner({ children }: AppShellProps) {
           {children}
           <ErrorBoundary name="Footer"><Footer /></ErrorBoundary>
         </main>
+        <ErrorBoundary name="ChatWidget"><ChatWidget /></ErrorBoundary>
       </Drawer>
     </LayoutContext.Provider>
   )

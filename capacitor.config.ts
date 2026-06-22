@@ -1,10 +1,10 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-const isDev = process.env.CAP_ENV === 'development';
+const isDev = !!(process.env.CAP_DEV);
 
 const config: CapacitorConfig = {
-  appId: 'com.ultimatebazi.app',
-  appName: 'UltimateBazi',
+  appId: 'com.ultrabazi.app',
+  appName: 'UltraBazi',
   webDir: 'dist',
   server: {
     androidScheme: isDev ? 'http' : 'https',

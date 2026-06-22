@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* dark 修饰符改为基于 <html>.dark —— 支持手动三态主题 (亮/暗/跟随系统)。
+   .dark 由 useTheme 按 localStorage('light'|'dark'|'system') + 系统偏好设置。 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* native: 修饰符 —— 仅 Capacitor 原生壳 (main.tsx 给 <html> 加 .native) 生效。
+   网页端无 .native, native:* 类全部失效, 零副作用。 */
+@custom-variant native (&:where(.native, .native *));
+
 @theme {
   --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC",
     "Microsoft YaHei", "HarmonyOS Sans SC", "Noto Sans SC",
@@ -35,31 +43,30 @@
   }
   body {
     @apply bg-[#fafaf7] text-slate-700 antialiased dark:bg-slate-950 dark:text-slate-300;
+    /* 禁用双击放大 (touch-action 能拦双击, 拦不住双指; 双指由 viewport meta 管) */
+    touch-action: manipulation;
     font-family: var(--font-sans);
     background-image:
       radial-gradient(1000px 500px at 85% -10%, rgba(180, 83, 9, 0.06), transparent 60%),
       radial-gradient(900px 500px at -10% 110%, rgba(29, 78, 216, 0.05), transparent 60%);
   }
-  @media (prefers-color-scheme: dark) {
-    body {
-      background-image:
-        radial-gradient(900px 500px at 85% -10%, rgba(251, 191, 36, 0.06), transparent 60%),
-        radial-gradient(900px 500px at -10% 110%, rgba(96, 165, 250, 0.05), transparent 60%);
-    }
+  /* 暗色模式下的背景渐变 (由 <html>.dark 控制, 三态主题统一走 class) */
+  html.dark body {
+    background-image:
+      radial-gradient(900px 500px at 85% -10%, rgba(251, 191, 36, 0.06), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(96, 165, 250, 0.05), transparent 60%);
   }
   h1, h2, h3 {
     @apply text-slate-900 font-semibold tracking-tight dark:text-slate-50;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-wood: #4ade80;
-    --color-fire: #f87171;
-    --color-earth: #d97706;
-    --color-metal: #facc15;
-    --color-water: #60a5fa;
-  }
+html.dark {
+  --color-wood: #4ade80;
+  --color-fire: #f87171;
+  --color-earth: #d97706;
+  --color-metal: #facc15;
+  --color-water: #60a5fa;
 }
 
 .prose-bazi {
@@ -151,14 +158,12 @@
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: rgb(100 116 139 / 0.6);
 }
-@media (prefers-color-scheme: dark) {
-  .scrollbar-thin {
-    scrollbar-color: rgb(71 85 105 / 0.55) transparent;
-  }
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgb(71 85 105 / 0.55);
-  }
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(100 116 139 / 0.7);
-  }
+html.dark .scrollbar-thin {
+  scrollbar-color: rgb(71 85 105 / 0.55) transparent;
+}
+html.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(71 85 105 / 0.55);
+}
+html.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(100 116 139 / 0.7);
 }

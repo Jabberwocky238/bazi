@@ -1,6 +1,4 @@
-// @ts-nocheck — 暂时跳过类型检查 (待迁移/待修复 engine 重构)
-import { readBazi, readExtras } from '../snapshot'
-import type { GejuHit } from '../types'
+import { GejuContext, type GejuHit } from '../types'
 import { emitGeju } from '../_emit'
 import type { WuXing } from '@jabberwocky238/bazi-engine'
 
@@ -15,15 +13,14 @@ interface Counts {
   ganShui: number; zhiShui: number
 }
 
-function readCounts(includeExtras: boolean): Counts {
-  const bazi = readBazi()
-  const extras = readExtras()
+function readCounts(ctx: GejuContext, includeExtras: boolean): Counts {
+  const extras = ctx.extras
   const eg = (wx: WuXing) => includeExtras ? extras.extraGanWxCount(wx) : 0
   const ez = (wx: WuXing) => includeExtras ? extras.extraZhiMainWxCount(wx) : 0
   return {
-    ganHuo: bazi.ganWxCount('火') + eg('火'), zhiHuo: bazi.zhiMainWxCount('火') + ez('火'),
-    ganTu: bazi.ganWxCount('土') + eg('土'), zhiTu: bazi.zhiMainWxCount('土') + ez('土'),
-    ganShui: bazi.ganWxCount('水') + eg('水'), zhiShui: bazi.zhiMainWxCount('水') + ez('水'),
+    ganHuo: ctx.calc.ganWxCount('火') + eg('火'), zhiHuo: ctx.calc.zhiMainWxCount('火') + ez('火'),
+    ganTu: ctx.calc.ganWxCount('土') + eg('土'), zhiTu: ctx.calc.zhiMainWxCount('土') + ez('土'),
+    ganShui: ctx.calc.ganWxCount('水') + eg('水'), zhiShui: ctx.calc.zhiMainWxCount('水') + ez('水'),
   }
 }
 
@@ -40,10 +37,10 @@ function judgeFromCounts(c: Counts): { name: Verdict; note: string } | null {
   return null
 }
 
-function pick(target: Verdict): GejuHit | null {
-  const extras = readExtras()
-  const baseV = judgeFromCounts(readCounts(false))
-  const extV = judgeFromCounts(readCounts(true))
+function pick(ctx: GejuContext, target: Verdict): GejuHit | null {
+  const extras = ctx.extras
+  const baseV = judgeFromCounts(readCounts(ctx, false))
+  const extV = judgeFromCounts(readCounts(ctx, true))
   const baseHit = baseV?.name === target
   const extHit = extV?.name === target
   if (!baseHit && !extHit) return null
@@ -54,5 +51,5 @@ function pick(target: Verdict): GejuHit | null {
   )
 }
 
-export function isHuoTuJiaDai(): GejuHit | null { return pick('火土夹带') }
-export function isHuoYanTuZao(): GejuHit | null { return pick('火炎土燥') }
+export function isHuoTuJiaDai(ctx: GejuContext): GejuHit | null { return pick(ctx, '火土夹带') }
+export function isHuoYanTuZao(ctx: GejuContext): GejuHit | null { return pick(ctx, '火炎土燥') }

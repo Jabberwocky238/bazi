@@ -1,6 +1,4 @@
-// @ts-nocheck — 暂时跳过类型检查 (待迁移/待修复 engine 重构)
-import { readBazi, readExtras } from '../snapshot'
-import type { GejuHit } from '../types'
+import { GejuContext, type GejuHit } from '../types'
 import { emitGeju } from '../_emit'
 import type { WuXing } from '@jabberwocky238/bazi-engine'
 
@@ -15,16 +13,15 @@ interface Counts {
   ganHuo: number; ganTu: number
 }
 
-function readCounts(includeExtras: boolean): Counts {
-  const bazi = readBazi()
-  const extras = readExtras()
+function readCounts(ctx: GejuContext, includeExtras: boolean): Counts {
+  const extras = ctx.extras
   const eg = (wx: WuXing) => includeExtras ? extras.extraGanWxCount(wx) : 0
   const ez = (wx: WuXing) => includeExtras ? extras.extraZhiMainWxCount(wx) : 0
   return {
-    ganJin: bazi.ganWxCount('金') + eg('金'), zhiJin: bazi.zhiMainWxCount('金') + ez('金'),
-    ganShui: bazi.ganWxCount('水') + eg('水'), zhiShui: bazi.zhiMainWxCount('水') + ez('水'),
-    ganHuo: bazi.ganWxCount('火') + eg('火'),
-    ganTu: bazi.ganWxCount('土') + eg('土'),
+    ganJin: ctx.calc.ganWxCount('金') + eg('金'), zhiJin: ctx.calc.zhiMainWxCount('金') + ez('金'),
+    ganShui: ctx.calc.ganWxCount('水') + eg('水'), zhiShui: ctx.calc.zhiMainWxCount('水') + ez('水'),
+    ganHuo: ctx.calc.ganWxCount('火') + eg('火'),
+    ganTu: ctx.calc.ganWxCount('土') + eg('土'),
   }
 }
 
@@ -53,11 +50,10 @@ function judgeFromCounts(c: Counts, dayWx: string, season: string, monthZhi: str
   return null
 }
 
-function pick(target: Verdict): GejuHit | null {
-  const bazi = readBazi()
-  const extras = readExtras()
-  const baseV = judgeFromCounts(readCounts(false), bazi.dayWx, bazi.season, bazi.monthZhi)
-  const extV = judgeFromCounts(readCounts(true), bazi.dayWx, bazi.season, bazi.monthZhi)
+function pick(ctx: GejuContext, target: Verdict): GejuHit | null {
+  const extras = ctx.extras
+  const baseV = judgeFromCounts(readCounts(ctx, false), ctx.dayWx, ctx.season, ctx.monthZhi)
+  const extV = judgeFromCounts(readCounts(ctx, true), ctx.dayWx, ctx.season, ctx.monthZhi)
   const baseHit = baseV?.name === target
   const extHit = extV?.name === target
   if (!baseHit && !extHit) return null
@@ -68,5 +64,5 @@ function pick(target: Verdict): GejuHit | null {
   )
 }
 
-export function isJinHanShuiLeng(): GejuHit | null { return pick('金寒水冷') }
-export function isJinBaiShuiQing(): GejuHit | null { return pick('金白水清') }
+export function isJinHanShuiLeng(ctx: GejuContext): GejuHit | null { return pick(ctx, '金寒水冷') }
+export function isJinBaiShuiQing(ctx: GejuContext): GejuHit | null { return pick(ctx, '金白水清') }

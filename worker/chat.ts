@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import { ToolRegistry, type ToolKV } from './toolcall'
-import './toolbox' // 副作用: 把工具 push 进全局 tools 数组
+// 工具注册由 toolcall.ts 在 import 时副作用完成 (聚合自 ./tools)。
 
 /**
  * 聊天后端 —— OpenAI (兼容端点) 流式 SSE + 多轮 tool-calling。
@@ -180,7 +180,7 @@ export async function chatStream(request: Request, env: ChatEnv): Promise<Respon
 
   // 每个请求实例化独立 registry: 注入请求级 context (basics+ui) + Cloudflare KV binding + request。
   // init() 对 context 做稳定 hash 并写入 KV (key=ctx:<hash>), 工具可按 hash 取回。
-  // 工具定义由 `import './toolbox'` 副作用 push 进全局 tools 数组, 构造器直接引用。
+  // 工具定义聚合在 ./tools, 由 toolcall.ts 在 import 时 push 进全局 tools 数组, 构造器直接引用。
   const registry = new ToolRegistry({
     kv: env.KV as ToolKV | undefined,
     context: { basics, ui } as Record<string, unknown>,

@@ -1,15 +1,13 @@
-// @ts-nocheck — 暂时跳过类型检查 (待迁移/待修复 engine 重构)
-import { readBazi, readExtras, readShishen, readStrength } from '../snapshot'
+import { GejuContext } from '../types'
 import {
   SHI_SHEN_CAT,
-  WX_CONTROLLED_BY,
   WX_CONTROLS,
+  WX_CONTROLLED_BY,
   WX_GENERATED_BY,
   type GejuHit,
 } from '../types'
 import { emitGeju } from '../_emit'
-import type { ShishenCat } from '../types'
-import type { WuXing } from '@jabberwocky238/bazi-engine'
+import type { ShishenCat, WuXing } from '@jabberwocky238/bazi-engine'
 
 /**
  * 从X 共用判据 — 与 bazi-skills《格局/从格》对照:
@@ -32,27 +30,25 @@ interface CongResult {
   note: string
 }
 
-function checkCong(target: ShishenCat, targetWx: string): CongResult | null {
-  const bazi = readBazi()
-  const shishen = readShishen()
-  const extras = readExtras()
+function checkCong(ctx: GejuContext, target: ShishenCat, targetWx: string): CongResult | null {
+  const extras = ctx.extras
 
   // —— 条件 2: 地支不见比劫 / 印 (静态) ——
-  if (shishen.allZhiArr.some((s) => SHI_SHEN_CAT[s] === '比劫')) return null
-  if (shishen.allZhiArr.some((s) => SHI_SHEN_CAT[s] === '印')) return null
+  if (ctx.allZhiArr.some((s) => SHI_SHEN_CAT[s] === '比劫')) return null
+  if (ctx.allZhiArr.some((s) => SHI_SHEN_CAT[s] === '印')) return null
 
   // —— 条件 4: 月令属 target (静态) ——
-  if (bazi.monthCat !== target) return null
+  if (ctx.monthCat !== target) return null
   // 地支主气 target 五行 ≥ 1 位
-  const zhiSupport = bazi.zhiMainWxCount(targetWx as WuXing)
+  const zhiSupport = ctx.calc.zhiMainWxCount(targetWx as WuXing)
   if (zhiSupport < 1) return null
 
   // —— 条件 1: 天干不透比劫 / 印 (主局严判 + 岁运 Break) ——
-  const baseClean1 = !shishen.touCat('比劫') && !shishen.touCat('印')
+  const baseClean1 = !ctx.touCat('比劫') && !ctx.touCat('印')
   const extClean1 = baseClean1 && !extras.touCat('比劫') && !extras.touCat('印')
 
   // —— 条件 3: 目标透干 (主局 / 岁运补) ——
-  const baseStruct3 = shishen.touCat(target)
+  const baseStruct3 = ctx.touCat(target)
   const extStruct3 = baseStruct3 || extras.touCat(target)
 
   const baseFormed = baseClean1 && baseStruct3
@@ -74,15 +70,14 @@ function checkCong(target: ShishenCat, targetWx: string): CongResult | null {
  *  本段: 量化阈值 (主局 only)
  *  岁运透比劫/印 → 复根 Break (由 checkCong 处理)
  */
-function isCongCaiGe(): GejuHit | null {
-  const bazi = readBazi()
-  const shishen = readShishen()
-  const caiWx = WX_CONTROLS[bazi.dayWx]
-  const r = checkCong('财', caiWx)
+function isCongCaiGe(ctx: GejuContext): GejuHit | null {
+  const ss = ctx.calc.shishen()
+  const caiWx = WX_CONTROLS[ctx.dayWx]
+  const r = checkCong(ctx, '财', caiWx)
   if (!r) return null
-  const caiN = shishen.countCat('财')
+  const caiN = ss.countCat('财')
   if (caiN < 3) return null
-  if (caiN < shishen.countCat('食伤')) return null
+  if (caiN < ss.countCat('食伤')) return null
   return emitGeju(
     { name: '弃命从财', note: `${r.note}，财 ${caiN} 位` },
     { baseFormed: r.baseFormed, withExtrasFormed: r.withExtrasFormed, hasExtras: r.hasExtras },
@@ -94,18 +89,17 @@ function isCongCaiGe(): GejuHit | null {
  *  checkCong: 月令从杀 / 地支无印比 / 天干印比 base+extras / 杀透 base+extras
  *  本段: 量化 + 无食伤透 (岁运透食伤 → Break)
  */
-function isCongShaGe(): GejuHit | null {
-  const bazi = readBazi()
-  const shishen = readShishen()
-  const extras = readExtras()
-  const ksWx = WX_CONTROLLED_BY[bazi.dayWx]
-  const r = checkCong('官杀', ksWx)
+function isCongShaGe(ctx: GejuContext): GejuHit | null {
+  const ss = ctx.calc.shishen()
+  const extras = ctx.extras
+  const ksWx = WX_CONTROLLED_BY[ctx.dayWx]
+  const r = checkCong(ctx, '官杀', ksWx)
   if (!r) return null
-  const gsN = shishen.countCat('官杀')
+  const gsN = ss.countCat('官杀')
   if (gsN < 5) return null
-  if (gsN < shishen.countCat('财')) return null
-  if (gsN <= shishen.countCat('食伤')) return null
-  if (shishen.touCat('食伤')) return null
+  if (gsN < ss.countCat('财')) return null
+  if (gsN <= ss.countCat('食伤')) return null
+  if (ctx.touCat('食伤')) return null
 
   const baseFormed = r.baseFormed
   const withExtrasFormed = r.withExtrasFormed && !extras.touCat('食伤')
@@ -126,23 +120,22 @@ function isCongShaGe(): GejuHit | null {
  *
  *  【岁运】岁运透比劫 / 印 → Break (复根破从)。
  */
-function isCongShiGe(): GejuHit | null {
-  const bazi = readBazi()
-  const shishen = readShishen()
-  const extras = readExtras()
+function isCongShiGe(ctx: GejuContext): GejuHit | null {
+  const ss = ctx.calc.shishen()
+  const extras = ctx.extras
 
   // —— 条件 1 + 4 + 5: 日主完全无根 (无比印任一位置) ——
-  if (shishen.touCat('比劫')) return null
-  if (shishen.touCat('印')) return null
+  if (ctx.touCat('比劫')) return null
+  if (ctx.touCat('印')) return null
   // 全 4 柱所有藏干 (本/中/余气) 皆不得为 比劫 / 印
-  const allHide = bazi.mainArr.flatMap((p) => p.hideShishen as string[])
+  const allHide = ctx.allZhiArr
   if (allHide.some((s) => SHI_SHEN_CAT[s] === '比劫')) return null
   if (allHide.some((s) => SHI_SHEN_CAT[s] === '印')) return null
 
   // —— 条件 2: 三党中 ≥ 2 种强势 (透干 + 地支通根) ——
-  const strongCai = shishen.touCat('财') && (shishen.zang('正财') || shishen.zang('偏财'))
-  const strongGS = shishen.touCat('官杀') && (shishen.zang('正官') || shishen.zang('七杀'))
-  const strongSS = shishen.touCat('食伤') && (shishen.zang('食神') || shishen.zang('伤官'))
+  const strongCai = ctx.touCat('财') && (ss.zang('正财')[0] || ss.zang('偏财')[0])
+  const strongGS = ctx.touCat('官杀') && (ss.zang('正官')[0] || ss.zang('七杀')[0])
+  const strongSS = ctx.touCat('食伤') && (ss.zang('食神')[0] || ss.zang('伤官')[0])
   const strongN = (strongCai ? 1 : 0) + (strongGS ? 1 : 0) + (strongSS ? 1 : 0)
   if (strongN < 2) return null
 
@@ -178,24 +171,23 @@ function isCongShiGe(): GejuHit | null {
  *  - 岁运透官杀 / 印 / 比劫 → Break (复根 / 克儿)
  *  - 主局缺食伤透 + 岁运透食伤 → Trigger
  */
-function isCongErGe(): GejuHit | null {
-  const bazi = readBazi()
-  const shishen = readShishen()
-  const extras = readExtras()
+function isCongErGe(ctx: GejuContext): GejuHit | null {
+  const ss = ctx.calc.shishen()
+  const extras = ctx.extras
 
-  if (shishen.touCat('比劫')) return null
-  if (shishen.touCat('印')) return null
-  if (shishen.touCat('官杀')) return null
-  if (bazi.monthCat === '比劫' || bazi.monthCat === '印') return null
-  const ssWx = WX_GENERATED_BY[bazi.dayWx] as WuXing
-  const zhiN = bazi.zhiMainWxCount(ssWx)
+  if (ctx.touCat('比劫')) return null
+  if (ctx.touCat('印')) return null
+  if (ctx.touCat('官杀')) return null
+  if (ctx.monthCat === '比劫' || ctx.monthCat === '印') return null
+  const ssWx = WX_GENERATED_BY[ctx.dayWx] as WuXing
+  const zhiN = ctx.calc.zhiMainWxCount(ssWx)
   if (zhiN < 2) return null
-  const ssN = shishen.countCat('食伤')
+  const ssN = ss.countCat('食伤')
   if (ssN < 4) return null
-  if (ssN <= shishen.countCat('财')) return null
+  if (ssN <= ss.countCat('财')) return null
 
   // 主局缺食伤透 + 岁运补 → Trigger
-  const baseStruct = shishen.touCat('食伤')
+  const baseStruct = ctx.touCat('食伤')
   const extStruct = baseStruct || extras.touCat('食伤')
 
   // 岁运透 比劫 / 印 / 官杀 → Break
@@ -223,20 +215,19 @@ function isCongErGe(): GejuHit | null {
  *  5. 无印。
  *  6. 无比劫。
  */
-function isCongGuanGe(): GejuHit | null {
-  const bazi = readBazi()
-  const shishen = readShishen()
-  if (shishen.countCat('比劫') > 0) return null
-  if (shishen.countCat('印') > 0) return null
-  if (shishen.countCat('食伤') > 0) return null
-  if (!shishen.tou('正官')) return null
-  if (shishen.tou('七杀')) return null
+function isCongGuanGe(ctx: GejuContext): GejuHit | null {
+  const ss = ctx.calc.shishen()
+  if (ss.countCat('比劫') > 0) return null
+  if (ss.countCat('印') > 0) return null
+  if (ss.countCat('食伤') > 0) return null
+  if (!ss.tou('正官')[0]) return null
+  if (ss.tou('七杀')[0]) return null
   // md 条件 2: 月令本气正官 (或 monthCat === '官杀' 配合透正官)
-  if (bazi.monthCat !== '官杀') return null
+  if (ctx.monthCat !== '官杀') return null
   // md 条件 3: 正官数量 ≥ 财
-  if (shishen.countOf('正官') < shishen.countCat('财')) return null
-  const gwWx = WX_CONTROLLED_BY[bazi.dayWx] as WuXing
-  if (bazi.zhiMainWxCount(gwWx) < 2) return null
+  if (ctx.countOf('正官') < ss.countCat('财')) return null
+  const gwWx = WX_CONTROLLED_BY[ctx.dayWx] as WuXing
+  if (ctx.calc.zhiMainWxCount(gwWx) < 2) return null
   return { name: '从官格', note: `无比印食伤，月令正官通根 ${gwWx} ≥ 2 位` }
 }
 
@@ -246,17 +237,16 @@ function isCongGuanGe(): GejuHit | null {
  *        「没有食伤财星官杀任何一党」。
  * 与从旺格差异：从旺格 比劫 ≥ 印，从强格 印 > 比劫。
  */
-function isCongQiangGe(): GejuHit | null {
-  const shishen = readShishen()
-  const strength = readStrength()
-  if (!strength.deLing) return null
-  const yinN = shishen.countCat('印')
-  const biN = shishen.countCat('比劫')
+function isCongQiangGe(ctx: GejuContext): GejuHit | null {
+  const ss = ctx.calc.shishen()
+  if (!ctx.strength.deLing) return null
+  const yinN = ss.countCat('印')
+  const biN = ss.countCat('比劫')
   if (yinN <= biN) return null
   if (yinN + biN < 5) return null
-  if (shishen.countCat('食伤') > 0) return null
-  if (shishen.countCat('财') > 0) return null
-  if (shishen.countCat('官杀') > 0) return null
+  if (ss.countCat('食伤') > 0) return null
+  if (ss.countCat('财') > 0) return null
+  if (ss.countCat('官杀') > 0) return null
   return { name: '从强格', note: `印 ${yinN} > 比劫 ${biN} 主导，全局皆印比` }
 }
 
@@ -268,33 +258,32 @@ function isCongQiangGe(): GejuHit | null {
  *  4. 食伤 ≤ 1 位 (条件 4，多则重泄破)。
  *  5. 比劫 ≥ 印（与从强格区分）。
  */
-function isCongWangGe(): GejuHit | null {
-  const shishen = readShishen()
-  const strength = readStrength()
-  if (!strength.deLing) return null
-  const support = shishen.countCat('比劫') + shishen.countCat('印')
+function isCongWangGe(ctx: GejuContext): GejuHit | null {
+  const ss = ctx.calc.shishen()
+  if (!ctx.strength.deLing) return null
+  const support = ss.countCat('比劫') + ss.countCat('印')
   if (support < 5) return null
-  if (shishen.countCat('官杀') > 0) return null
+  if (ss.countCat('官杀') > 0) return null
   // md 条件 3: 财紧贴印破 (其余远离可容)
   const caiAdjYin =
-    shishen.adjacentTou('正财', '正印') || shishen.adjacentTou('正财', '偏印') ||
-    shishen.adjacentTou('偏财', '正印') || shishen.adjacentTou('偏财', '偏印')
+    ss.adjacentTou('正财', '正印') || ss.adjacentTou('正财', '偏印') ||
+    ss.adjacentTou('偏财', '正印') || ss.adjacentTou('偏财', '偏印')
   if (caiAdjYin) return null
   // md 条件 4: 食伤不重泄
-  if (shishen.countCat('食伤') > 1) return null
+  if (ss.countCat('食伤') > 1) return null
   // md 条件 5: 从旺（比劫 ≥ 印）—— 印多反为从强
-  if (shishen.countCat('比劫') < shishen.countCat('印')) return null
+  if (ss.countCat('比劫') < ss.countCat('印')) return null
   return {
     name: '从旺格',
     note: `比印合 ${support} 位主导，比劫 ≥ 印，无官杀无紧贴财破`,
   }
 }
 
-export function isCongGe(): GejuHit | null {
+export function isCongGe(ctx: GejuContext): GejuHit | null {
   const hit =
-    isCongCaiGe() ||
-    isCongShaGe() ||
-    isCongShiGe() ||
-    isCongErGe()
+    isCongCaiGe(ctx) ||
+    isCongShaGe(ctx) ||
+    isCongShiGe(ctx) ||
+    isCongErGe(ctx)
   return hit ? { ...hit, name: '从格', note: `${hit.name} · ${hit.note}` } : null
 }

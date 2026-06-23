@@ -1,6 +1,4 @@
-// @ts-nocheck — 暂时跳过类型检查 (待迁移/待修复 engine 重构)
-import { readBazi, readExtras } from '../snapshot'
-import { EMPTY_SUIYUN, deriveVisibility, type GejuHit } from '../types'
+import { GejuContext, EMPTY_SUIYUN, deriveVisibility, type GejuHit } from '../types'
 
 /**
  * 水火木 类 — 寒木向阳 (单格, 三气联动):
@@ -12,17 +10,16 @@ import { EMPTY_SUIYUN, deriveVisibility, type GejuHit } from '../types'
  *    主局未成 + 岁运补火/水达标 → suiyunTrigger;
  *    主局成 + 岁运金水冲散 (水 ≥ 火) → suiyunBreak。
  */
-export function judgeHanMu(): GejuHit | null {
-  const bazi = readBazi()
-  const extras = readExtras()
-  if (bazi.dayWx !== '木') return null
-  if (bazi.season !== '冬') return null
-  if (!bazi.rootExt('木')) return null
+export function judgeHanMu(ctx: GejuContext): GejuHit | null {
+  const extras = ctx.extras
+  if (ctx.dayWx !== '木') return null
+  if (ctx.season !== '冬') return null
+  if (!ctx.rootExt('木')) return null
 
-  const natHuoGan = bazi.ganWxCount('火')
-  const natShuiN = bazi.ganWxCount('水') + bazi.zhiMainWxCount('水')
-  const natHuoN = natHuoGan + bazi.zhiMainWxCount('火')
-  const natTouHuo = bazi.touWx('火')
+  const natHuoGan = ctx.calc.ganWxCount('火')
+  const natShuiN = ctx.calc.ganWxCount('水') + ctx.calc.zhiMainWxCount('水')
+  const natHuoN = natHuoGan + ctx.calc.zhiMainWxCount('火')
+  const natTouHuo = ctx.calc.touWx('火')[0]
   const natOk = natTouHuo && natHuoGan < 3 && natShuiN >= 1 && natShuiN <= natHuoN
 
   const exHuoGan = extras.extraGanWxCount('火')

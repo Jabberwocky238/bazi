@@ -1,6 +1,4 @@
-// @ts-nocheck — 暂时跳过类型检查 (待迁移/待修复 engine 重构)
-import { readBazi, readExtras } from '../snapshot'
-import type { GejuHit } from '../types'
+import { GejuContext, type GejuHit } from '../types'
 import { emitGeju } from '../_emit'
 import type { WuXing } from '@jabberwocky238/bazi-engine'
 
@@ -17,17 +15,16 @@ interface Counts {
   ganShui: number; zhiShui: number
 }
 
-function readCounts(includeExtras: boolean): Counts {
-  const bazi = readBazi()
-  const extras = readExtras()
+function readCounts(ctx: GejuContext, includeExtras: boolean): Counts {
+  const extras = ctx.extras
   const eg = (wx: WuXing) => includeExtras ? extras.extraGanWxCount(wx) : 0
   const ez = (wx: WuXing) => includeExtras ? extras.extraZhiMainWxCount(wx) : 0
   return {
-    ganJin: bazi.ganWxCount('金') + eg('金'), zhiJin: bazi.zhiMainWxCount('金') + ez('金'),
-    ganTu: bazi.ganWxCount('土') + eg('土'), zhiTu: bazi.zhiMainWxCount('土') + ez('土'),
-    ganMu: bazi.ganWxCount('木') + eg('木'), zhiMu: bazi.zhiMainWxCount('木') + ez('木'),
-    ganHuo: bazi.ganWxCount('火') + eg('火'),
-    ganShui: bazi.ganWxCount('水') + eg('水'), zhiShui: bazi.zhiMainWxCount('水') + ez('水'),
+    ganJin: ctx.calc.ganWxCount('金') + eg('金'), zhiJin: ctx.calc.zhiMainWxCount('金') + ez('金'),
+    ganTu: ctx.calc.ganWxCount('土') + eg('土'), zhiTu: ctx.calc.zhiMainWxCount('土') + ez('土'),
+    ganMu: ctx.calc.ganWxCount('木') + eg('木'), zhiMu: ctx.calc.zhiMainWxCount('木') + ez('木'),
+    ganHuo: ctx.calc.ganWxCount('火') + eg('火'),
+    ganShui: ctx.calc.ganWxCount('水') + eg('水'), zhiShui: ctx.calc.zhiMainWxCount('水') + ez('水'),
   }
 }
 
@@ -50,11 +47,10 @@ function judgeFromCounts(c: Counts, dayWx: string): { name: Verdict; note: strin
   return null
 }
 
-function pick(target: Verdict): GejuHit | null {
-  const bazi = readBazi()
-  const extras = readExtras()
-  const baseV = judgeFromCounts(readCounts(false), bazi.dayWx)
-  const extV = judgeFromCounts(readCounts(true), bazi.dayWx)
+function pick(ctx: GejuContext, target: Verdict): GejuHit | null {
+  const extras = ctx.extras
+  const baseV = judgeFromCounts(readCounts(ctx, false), ctx.dayWx)
+  const extV = judgeFromCounts(readCounts(ctx, true), ctx.dayWx)
   const baseHit = baseV?.name === target
   const extHit = extV?.name === target
   if (!baseHit && !extHit) return null
@@ -65,5 +61,5 @@ function pick(target: Verdict): GejuHit | null {
   )
 }
 
-export function isTuJinYuXiu(): GejuHit | null { return pick('土金毓秀') }
-export function isTuZhongJinMai(): GejuHit | null { return pick('土重金埋') }
+export function isTuJinYuXiu(ctx: GejuContext): GejuHit | null { return pick(ctx, '土金毓秀') }
+export function isTuZhongJinMai(ctx: GejuContext): GejuHit | null { return pick(ctx, '土重金埋') }

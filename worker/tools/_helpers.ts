@@ -20,7 +20,7 @@ import {
   deriveAll,
   type BaziResult,
 } from '@LIB'
-import type { ToolContext } from '../toolcall'
+import type { ToolContext } from '../tooldef'
 
 // ————————————————————————————————————————————————————————
 // 工具箱内部共享辅助 —— 各 tool 文件复用的干支解析 / 排盘派生逻辑。

@@ -17,6 +17,8 @@ interface ToolCallRecord {
   result?: string
 }
 
+const BASE_URL = 'https://bazi.app238.com'
+
 interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
@@ -124,7 +126,7 @@ export function ChatWidget() {
         liuyue: pickGz('流月'),
       }
 
-      const res = await fetch('/api/chat', {
+      const res = await fetch(`${BASE_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',

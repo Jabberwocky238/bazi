@@ -1,4 +1,4 @@
-import { shishenOf, type Shishen, type nayinOf } from '@jabberwocky238/bazi-engine'
+import { shishenOf, type Shishen, type WuXing, type nayinOf } from '@jabberwocky238/bazi-engine'
 import { GejuContext, type GejuHit } from '../types'
 
 function shishen2Geju(shishen: Shishen): string | null {
@@ -121,6 +121,33 @@ export function calcZhengGe(context: GejuContext): GejuHit | null {
         const geju = shishen2Geju(shishen)
         if (geju) {
             return { name: geju, note: '三会局' }
+        }
+    }
+    // 规则8，四见, 同五行>4
+    const mapping: Record<WuXing, number> = { '金': 0, '木': 0, '水': 0, '火': 0, '土': 0 }
+    for (const pillar of context.pillars) {
+        const wuxing = pillar.gan.wuxing
+        mapping[wuxing]++
+        const zhiWuxing = pillar.zhi.wuxing
+        let sameWithZhi = false
+        for (const cangGan of pillar.zhi.cangGan) {
+            if (cangGan.wuxing === wuxing && !sameWithZhi) {
+                sameWithZhi = true
+                mapping[wuxing]++
+                continue
+            }
+            mapping[cangGan.wuxing]++
+        }
+    }
+    const maxWuxing = Object.entries(mapping).reduce((prev, curr) => {
+        return curr[1] > prev[1] ? curr : prev
+    })[0] as WuXing
+    if (mapping[maxWuxing] >= 4) {
+        const [_, yin] = context.wuxingGan(maxWuxing) // 触发缓存
+        const shishen = shishenOf(rizhu.name, yin)
+        const geju = shishen2Geju(shishen)
+        if (geju) {
+            return { name: geju, note: '四见' }
         }
     }
     return null

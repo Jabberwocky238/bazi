@@ -74,10 +74,10 @@ export class GejuContext {
   }
 
   sanHeJu(): SanHeFinding[] {
-    return this.ganzhiAnalysis.地支三合
+    return this.ganzhiAnalysis?.地支三合 ?? []
   }
   sanHuiJu(): SanHuiFinding[] {
-    return this.ganzhiAnalysis.地支三会
+    return this.ganzhiAnalysis?.地支三会 ?? []
   }
   // 五行对应的阳干和阴干
   wuxingGan(wuxing: WuXing): [Gan, Gan] {
@@ -159,8 +159,8 @@ export interface CtxPillars {
   liunian?: DetailedPillar
 }
 
-/** Detector 不再接收 ctx 参数, 内部通过 composeCtx() 直接拉 store. */
-export type Detector = () => GejuHit | null
+/** v2 detector: 接收 GejuContext, 返回命中或 null。 */
+export type Detector = (ctx: GejuContext) => GejuHit | null
 
 // ————————————————————————————————————————————————————————
 // 常量（原 lib/geju/ctx.ts 提供）

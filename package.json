@@ -18,6 +18,7 @@
     "deploy": "bun run build && wrangler deploy",
     "dev:ios": "CAP_DEV=1 npx cap sync ios && npx cap open ios",
     "dev:android": "CAP_DEV=1 npx cap sync android && npx cap open android",
+    "dev:desktop": "tauri dev",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-popover": "^1.1.15",
     "@tailwindcss/vite": "^4.2.2",
+    "@tauri-apps/api": "^2.11.1",
     "lunar-typescript": "^1.8.6",
     "openai": "^6.44.0",
     "react": "^19.2.4",
@@ -46,6 +48,7 @@
     "@cloudflare/workers-types": "^4.20250923.0",
     "@eslint/js": "^9.39.4",
     "@rolldown/plugin-babel": "^0.2.2",
+    "@tauri-apps/cli": "^2.11.3",
     "@types/babel__core": "^7.20.5",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",

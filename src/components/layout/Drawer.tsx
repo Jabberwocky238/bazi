@@ -112,9 +112,15 @@ function SidebarPanel({ pathname }: { pathname: string }) {
   const { desktopOpen, openDisclaimer } = useLayout()
   return (
     <aside
-      className={`hidden md:flex shrink-0 flex-col sticky top-0 h-screen overflow-hidden border-r border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/40 transition-[width] duration-300 ease-out native:pt-[env(safe-area-inset-top)] ${desktopOpen ? 'w-72' : 'w-0'}`}
+      className={`hidden md:flex shrink-0 
+        flex-col sticky top-0 h-screen 
+        overflow-hidden border-r border-slate-200 
+        dark:border-slate-800 bg-white/60 
+        dark:bg-slate-950/40 transition-[width] duration-300 ease-out 
+        native:pt-[env(safe-area-inset-top)] 
+        ${desktopOpen ? 'w-[30%]' : 'w-0'}`}
     >
-      <div className="w-72 h-full flex flex-col">
+      <div className="h-full flex flex-col">
         <div className="h-14 shrink-0 flex items-center px-4 border-b border-slate-200 dark:border-slate-800">
           <span className="text-base font-semibold">导航</span>
         </div>

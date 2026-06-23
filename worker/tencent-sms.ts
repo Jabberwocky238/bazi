@@ -53,12 +53,14 @@ async function tencentRequest<T = unknown>(
   const date = new Date(timestamp * 1000).toISOString().slice(0, 10) // UTC YYYY-MM-DD
 
   // 1. 拼接规范请求串 CanonicalRequest。
-  //    注意腾讯云的怪癖: x-tc-action 头在规范头里其值需小写。
+  //    签名头只含 content-type;host —— 与官方 SDK (sign3) 完全对齐, 不签 x-tc-action:
+  //    若把 x-tc-action 纳入签名, 规范头里其值需小写 (sendms), 而实际发送的 X-TC-Action
+  //    头是原值 (SendSms); 服务端按 SignedHeaders 取请求头原值重算签名会对不上,
+  //    直接报 AuthFailure.SignatureFailure。SDK 的做法是不签它, 回避大小写问题。
   const canonicalHeaders =
     `content-type:application/json; charset=utf-8\n` +
-    `host:${SMS_HOST}\n` +
-    `x-tc-action:${action.toLowerCase()}\n`
-  const signedHeaders = 'content-type;host;x-tc-action'
+    `host:${SMS_HOST}\n`
+  const signedHeaders = 'content-type;host'
   const hashedPayload = await sha256Hex(payloadStr)
   const canonicalRequest = [
     'POST', '/', '', canonicalHeaders, signedHeaders, hashedPayload,

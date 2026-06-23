@@ -77,17 +77,26 @@ export function LoginModal({ close }: LoginModalProps) {
       {/* 手机号 */}
       <label className="block">
         <span className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">手机号</span>
-        <input
-          ref={phoneRef}
-          type="tel"
-          inputMode="numeric"
-          autoComplete="tel"
-          maxLength={11}
-          value={phone}
-          onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-          placeholder="请输入 11 位手机号"
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-        />
+        <div className="flex gap-2">
+          {/* 区号位: 预留国际号形态但锁死 +86 (disabled 纯显示, 不可改) */}
+          <input
+            value="+86"
+            disabled
+            aria-label="区号"
+            className="w-16 shrink-0 cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-2 py-2.5 text-center text-sm text-slate-400 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-500"
+          />
+          <input
+            ref={phoneRef}
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
+            maxLength={11}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+            placeholder="请输入 11 位手机号"
+            className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          />
+        </div>
       </label>
 
       {/* 验证码 + 发送 */}

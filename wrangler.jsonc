@@ -24,8 +24,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "bazi-users",
-      "database_id": "e994a5d8-790f-41ac-8b2c-1e667f88d65d"
+      "database_name": "bazi",
+      "database_id": "f3302e87-ac01-441f-ac1e-08cfcb3a073d"
     }
   ]
 }

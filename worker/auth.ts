@@ -50,15 +50,17 @@ export async function sendCode(request: Request, env: Env): Promise<Response> {
   const kv = env.KV
   if (!kv) return json(500, { error: 'KV 未绑定' })
 
-  // 限频: 60 秒内同一手机号只能发一次。
+  // DEV 环境变量存在时跳过 60s 限频, 便于本地反复联调 (.dev.vars 里设 DEV=1, 不进生产)。
+  const isDev = Boolean((env as { DEV?: string }).DEV)
   const lockKey = `sms:lock:${phone}`
-  if (await kv.get(lockKey)) {
+  // 限频: 60 秒内同一手机号只能发一次。
+  if (!isDev && (await kv.get(lockKey))) {
     return json(429, { error: '发送过于频繁, 请 60 秒后重试' })
   }
 
   const code = genCode()
   await kv.put(`sms:code:${phone}`, code, { expirationTtl: CODE_TTL })
-  await kv.put(lockKey, '1', { expirationTtl: RESEND_LOCK_TTL })
+  if (!isDev) await kv.put(lockKey, '1', { expirationTtl: RESEND_LOCK_TTL })
 
   // dev 兜底: 无凭证时不真正发短信。
   if (!env.TENCENT_SECRET_ID) {

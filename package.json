@@ -16,6 +16,8 @@
     "test:bazi": "bun test src/lib/geju/random_bazi.spec.ts",
     "test:geju": "bun test src/lib/geju/random_geju.spec.ts",
     "deploy": "bun run build && wrangler deploy",
+    "migrate:local": "wrangler d1 migrations apply bazi-users --local --migrations-dir worker/migrations",
+    "migrate:remote": "wrangler d1 migrations apply bazi-users --remote --migrations-dir worker/migrations",
     "dev:ios": "CAP_DEV=1 npx cap sync ios && npx cap open ios",
     "dev:android": "CAP_DEV=1 npx cap sync android && npx cap open android",
     "dev:desktop": "tauri dev",

@@ -6,6 +6,7 @@ import {
   CONTROLS,
   ganWuxing,
   zhiWuxing,
+  seasonOf,
   type Gan,
   type Zhi,
   type Season,
@@ -19,6 +20,8 @@ import {
 import type { DetailedPillar } from '../base'
 import { CHONG_PAIR, YANG_GANS, SHI_SHEN_CAT } from '../base'
 import type { StrengthDerived } from '../strength'
+
+export type { Season, ShishenCat } from '@jabberwocky238/bazi-engine'
 
 /**
  * 格局判定用 — 上下文。直接使用 @jabberwocky238/bazi-engine 的 Calculator。
@@ -117,6 +120,14 @@ export class GejuContext {
     return this.pillars.some((p, i) => i !== 1 && p.zhi.name === pair)
   }
   get mainArr(): DetailedPillar[] { return this.pillars }
+  get yearZhi(): Zhi { return this.pillars[0].zhi.name }
+  /** 月令季节 (seasonOf(monthZhi))。 */
+  get season(): Season { return seasonOf(this.monthZhi) }
+  /** 月干十神类别 (与 BaziDerived.monthCat 一致)。 */
+  get monthCat(): ShishenCat | '' {
+    const s = this.pillars[1].gan.shishen
+    return s === '日主' ? '' : (SHI_SHEN_CAT[s as Shishen] ?? '')
+  }
   /** 月支藏干十神 (月令本/中/余气)。 */
   get monthHideShishen(): Shishen[] {
     return this.yueLing.cangGan.map(cg => cg.shishen)
@@ -150,6 +161,16 @@ export class GejuContext {
   get mainZhiArr(): Shishen[] {
     return this.pillars.map(p => p.zhi.cangGan[0]?.shishen).filter((s): s is Shishen => !!s)
   }
+  /** 全部藏干十神 (各柱本/中/余气铺平, 对应旧 allZhiArr / hideShishen)。 */
+  get allZhiArr(): Shishen[] {
+    return this.pillars.flatMap(p => p.zhi.cangGan.map(c => c.shishen))
+  }
+  /** 指定十神出现次数 (透 + 藏)。 */
+  countOf(s: Shishen): number { return this._ss.count(s) }
+  /** 本气或中气含此五行 (委托 calc.rootExt)。 */
+  rootExt(wx: WuXing): boolean { return this.calc.rootExt(wx) }
+  /** 指定五行是否有根 (透 + 藏, 布尔包装 calc.rootWx)。 */
+  rootWx(wx: WuXing): boolean { return this.calc.rootWx(wx)[0] }
 
   // ———————————————————————————————————————————————
   // 身强弱 / 岁运
@@ -179,6 +200,8 @@ export class GejuContext {
 export interface ExtrasView {
   active: boolean
   extraArr: DetailedPillar[]
+  /** 岁运柱数组别名 (与 extraArr 同)。 */
+  extraPillars: DetailedPillar[]
   /** 岁运天干是否透该十神。 */
   tou(s: Shishen): boolean
   /** 岁运天干是否透该类别。 */
@@ -202,6 +225,7 @@ function createExtrasView(input: { dayun?: DetailedPillar; liunian?: DetailedPil
   return {
     active: arr.length > 0,
     extraArr: arr,
+    extraPillars: arr,
     tou: (s: Shishen) => ganShishens.includes(s),
     touCat: (c: ShishenCat) => ganShishens.some(s => SHI_SHEN_CAT[s] === c),
     has: (s: Shishen) => allShishens.includes(s),

@@ -106,7 +106,6 @@ const computePillars: Tool<{
           hour: hourKnown ? parseGz(h) : undefined,
           sex,
         },
-        sex,
       )
       return JSON.stringify(calc.pillars())
     } catch (e) {
@@ -168,7 +167,6 @@ const ganzhiRelation: Tool = tool({
           hour: hourKnown ? parseGz2(h) as Pillar : undefined,
           sex,
         },
-        sex,
       )
       // 四柱 Pillar (engine 原始 {gan,zhi} 结构)
       const pillars: Pillar[] = calc.bazi.year && calc.bazi.month && calc.bazi.day

@@ -12,7 +12,8 @@
       "Bash(npx cap *)",
       "Bash(node *)",
       "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx\\)$\")",
-      "Bash(bash scripts/check-exports.sh)"
+      "Bash(bash scripts/check-exports.sh)",
+      "Bash(npx wrangler *)"
     ],
     "deny": [
       "Bash(tsc *)",

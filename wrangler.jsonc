@@ -13,7 +13,8 @@
   },
   "vars": {
     "OPENAI_BASE_URL": "https://api.deepseek.com/v1",
-    "OPENAI_MODEL": "deepseek-chat"
+    "OPENAI_MODEL": "deepseek-chat",
+    "TENCENT_SMS_SIGN_NAME": "天津未见科技",
   },
   "kv_namespaces": [
     {

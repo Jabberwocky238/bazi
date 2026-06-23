@@ -1,11 +1,20 @@
 /**
  * 格局判定入口。
- * v2: 基于 GejuContext (由 BaziInput 直接构造 Calculator) 跑各 detector，
+ * 基于 GejuContext (由 BaziInput 直接构造 Calculator) 跑各 detector，
  * detectGejuWith() 为一站式纯函数。
+ *
+ * 增量迁移中：已铺 正格 (十神格/禄刃格/魁罡) 与 专旺格。
+ * v2/正格 暂保留但不再引用。其余 categories detector 仍待迁移。
  */
 import { GejuContext, EMPTY_SUIYUN, deriveVisibility } from './types'
 import type { Detector, GejuHit, GejuQuality, GejuCategory, DaYunMeta } from './types'
-import { calcZhengGe } from './v2'
+import {
+  isJianLuGe, isYangRenGe,
+  isZhengGuanGe, isQiShaGe, isShiShenYueLingGe, isShangGuanGe,
+  isZhengCaiGe, isPianCaiGe, isZhengYinGe, isPianYinGe,
+  isKuiGangGe,
+} from './categories'
+import { isZhuanWangGe } from './categories'
 import type { BaziDerived } from '../base'
 import type { StrengthDerived } from '../strength'
 import type { DetailedPillar } from '../base'
@@ -28,14 +37,25 @@ export { EMPTY_SUIYUN, deriveVisibility } from './types'
  */
 export const DETECTORS: Array<[string, Detector, GejuQuality, GejuCategory]> = [
   // 正格: 月令单一十神定格 (透干/有根/三合三会等规则)
-  ['正格', calcZhengGe, 'good', '正格'],
+  ['建禄格', isJianLuGe, 'good', '正格'],
+  ['阳刃格', isYangRenGe, 'good', '正格'],
+  ['正官格', isZhengGuanGe, 'good', '正格'],
+  ['七杀格', isQiShaGe, 'good', '正格'],
+  ['食神格', isShiShenYueLingGe, 'good', '正格'],
+  ['伤官格', isShangGuanGe, 'good', '正格'],
+  ['正财格', isZhengCaiGe, 'good', '正格'],
+  ['偏财格', isPianCaiGe, 'good', '正格'],
+  ['正印格', isZhengYinGe, 'good', '正格'],
+  ['偏印格', isPianYinGe, 'good', '正格'],
+  ['魁罡格', isKuiGangGe, 'good', '正格'],
+  // 专旺格: 日主同气专旺 (曲直/炎上/稼穑/从革/润下)
+  ['专旺格', isZhuanWangGe, 'good', '专旺格'],
 ]
 
 export type GejuOutput = GejuHit & { quality: GejuQuality, category: GejuCategory }
 
 /**
  * 由 BaziResult 重建 BaziInput 以构造 GejuContext。
- * 正格判定不依赖性别 (性别仅影响神煞, calcZhengGe 不读神煞), 故 sex 占位。
  */
 function buildBaziInput(baziDerived: BaziDerived): BaziInput {
   const p = baziDerived.pillars
@@ -54,15 +74,15 @@ function buildBaziInput(baziDerived: BaziDerived): BaziInput {
  */
 export function detectGejuWith(
   baziDerived: BaziDerived,
-  _strengthDerived: StrengthDerived,
-  _extras?: { dayun?: DetailedPillar; liunian?: DetailedPillar },
+  strengthDerived: StrengthDerived,
+  extras?: { dayun?: DetailedPillar; liunian?: DetailedPillar },
 ): GejuOutput[] {
   // 空排盘 (如初始化 EMPTY_RESULT) 无柱可判。
   if (baziDerived.mainArr.length === 0) return []
   // 正格判定需时柱参与 (透时干/时支有根等规则); 时辰未知时跳过, 避免越界。
   if (!baziDerived.hourKnown) return []
 
-  const ctx = new GejuContext(buildBaziInput(baziDerived))
+  const ctx = new GejuContext(buildBaziInput(baziDerived), strengthDerived, extras)
   const hits: GejuOutput[] = []
   for (const [, detect, quality, category] of DETECTORS) {
     const h = detect(ctx)

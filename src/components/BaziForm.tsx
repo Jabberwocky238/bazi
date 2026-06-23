@@ -185,7 +185,7 @@ export function BaziForm({
       }
     }
 
-    save(entry)
+    void save(entry)
   }
 
   const handleLoad = () => {
@@ -202,7 +202,7 @@ export function BaziForm({
           onDelete={(name: string, ev: React.MouseEvent) => {
             ev.stopPropagation()
             if (!window.confirm('删除"' + name + '"？')) return
-            deleteEntry(name)
+            void deleteEntry(name)
           }}
         />
       ),
@@ -212,7 +212,7 @@ export function BaziForm({
 
   const handleReset = () => {
     if (!window.confirm('恢复出厂设置将清空你保存的全部排盘，仅保留内置命例，确定？')) return
-    reset()
+    void reset()
   }
 
   const defaultButtons = () => (

@@ -94,7 +94,7 @@ export function FooterSources() {
   const build = formatBuildTime(__APP_BUILD_TIME__)
   const linkCls = 'text-amber-700 dark:text-amber-400 underline'
   return (
-    <div className="mb-2 px-3 space-y-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+    <div className="mb-2 px-3 space-y-0.5 text-[11px] text-slate-400 dark:text-slate-500 text-xs">
       <div>
         释义来源 ·{' '}
         <a href="https://github.com/Jabberwocky238/bazi-skills" className={linkCls} target="_blank" rel="noreferrer">

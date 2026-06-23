@@ -55,7 +55,7 @@ export default function HepanInput() {
   const { init, entries, delete: deleteEntry } = useSavedEntries()
 
   useEffect(() => {
-    init(DEFAULT_STORAGE_KEY, MAIN_PRESETS)
+    void init(DEFAULT_STORAGE_KEY, MAIN_PRESETS)
   }, [init])
 
   const handleChange = (newState: Partial<HepanInputPageState>) => {
@@ -98,7 +98,7 @@ export default function HepanInput() {
           }}
           onDelete={(name, ev) => {
             ev.stopPropagation()
-            deleteEntry(name)
+            void deleteEntry(name)
           }}
         />
       ),

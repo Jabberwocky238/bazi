@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { HOUR_UNKNOWN } from '@LIB'
+import { nativeStore, migrateFromLocalStorage } from '@/native/store'
 import type { BaziInputData } from './compute'
 
 export interface SavedEntryBase {
@@ -92,9 +93,9 @@ function normalizeEntry(raw: unknown): SavedEntry | null {
   }
 }
 
-function loadAll(storageKey: string): SavedEntry[] {
+async function loadAll(storageKey: string): Promise<SavedEntry[]> {
   try {
-    const raw = localStorage.getItem(storageKey)
+    const raw = await nativeStore.getItem(storageKey)
     if (!raw) return []
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
@@ -104,30 +105,30 @@ function loadAll(storageKey: string): SavedEntry[] {
   }
 }
 
-function saveAll(storageKey: string, entries: SavedEntry[]): void {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(entries))
-  } catch {}
+async function saveAll(storageKey: string, entries: SavedEntry[]): Promise<void> {
+  await nativeStore.setItem(storageKey, JSON.stringify(entries))
 }
 
 function seededKey(storageKey: string): string {
   return `${storageKey}.seeded`
 }
 
-export function seedIfAbsent(storageKey: string, presets: SavedEntry[] | undefined): void {
+export async function seedIfAbsent(storageKey: string, presets: SavedEntry[] | undefined): Promise<void> {
   if (!presets || presets.length === 0) return
   const sk = seededKey(storageKey)
   try {
-    const seeded = new Set<string>(JSON.parse(localStorage.getItem(sk) ?? '[]') as string[])
+    const seeded = new Set<string>(JSON.parse((await nativeStore.getItem(sk)) ?? '[]') as string[])
     const toAdd = presets.filter((p) => !seeded.has(p.name))
     if (!toAdd.length) return
-    const existing = loadAll(storageKey)
+    const existing = await loadAll(storageKey)
     const existingNames = new Set(existing.map((e) => e.name))
     const newOnes = toAdd.filter((p) => !existingNames.has(p.name))
-    if (newOnes.length) saveAll(storageKey, [...existing, ...newOnes])
+    if (newOnes.length) await saveAll(storageKey, [...existing, ...newOnes])
     for (const p of toAdd) seeded.add(p.name)
-    localStorage.setItem(sk, JSON.stringify([...seeded]))
-  } catch {}
+    await nativeStore.setItem(sk, JSON.stringify([...seeded]))
+  } catch {
+    /* 静默: 预设播种失败不阻断加载 */
+  }
 }
 
 export function applySavedEntry(current: BaziInputData, entry: SavedEntry): BaziInputData {
@@ -189,10 +190,10 @@ interface SavedEntriesState {
   storageKey: string
   entries: SavedEntry[]
   presets: SavedEntry[]
-  init: (storageKey: string, presets: SavedEntry[]) => void
-  save: (entry: SavedEntry) => void
-  delete: (name: string) => void
-  reset: () => void
+  init: (storageKey: string, presets: SavedEntry[]) => Promise<void>
+  save: (entry: SavedEntry) => Promise<void>
+  delete: (name: string) => Promise<void>
+  reset: () => Promise<void>
 }
 
 export const useSavedEntries = create<SavedEntriesState>((set, get) => ({
@@ -200,33 +201,35 @@ export const useSavedEntries = create<SavedEntriesState>((set, get) => ({
   entries: [],
   presets: [],
 
-  init: (storageKey: string, presets: SavedEntry[]) => {
-    seedIfAbsent(storageKey, presets)
-    set({ storageKey, presets, entries: loadAll(storageKey) })
+  init: async (storageKey: string, presets: SavedEntry[]) => {
+    // 原生壳下把老版本 localStorage 里的命例搬到原生 backend (web 下 no-op, 幂等)。
+    await migrateFromLocalStorage([storageKey, seededKey(storageKey)])
+    await seedIfAbsent(storageKey, presets)
+    const entries = await loadAll(storageKey)
+    set({ storageKey, presets, entries })
   },
 
-  save: (entry: SavedEntry) => {
+  save: async (entry: SavedEntry) => {
     const { storageKey, entries } = get()
     const list = entries.filter((e) => e.name !== entry.name)
     list.unshift(entry)
-    saveAll(storageKey, list)
-    set({ entries: list })
+    set({ entries: list }) // 同步更新, 即时 UI 反馈
+    await saveAll(storageKey, list)
   },
 
-  delete: (name: string) => {
+  delete: async (name: string) => {
     const { storageKey, entries } = get()
     const list = entries.filter((e) => e.name !== name)
-    saveAll(storageKey, list)
     set({ entries: list })
+    await saveAll(storageKey, list)
   },
 
-  reset: () => {
+  reset: async () => {
     const { storageKey, presets } = get()
-    try {
-      localStorage.removeItem(storageKey)
-      localStorage.removeItem(`${storageKey}.seeded`)
-    } catch {}
-    seedIfAbsent(storageKey, presets)
-    set({ entries: loadAll(storageKey) })
+    await nativeStore.removeItem(storageKey)
+    await nativeStore.removeItem(`${storageKey}.seeded`)
+    await seedIfAbsent(storageKey, presets)
+    const entries = await loadAll(storageKey)
+    set({ entries })
   },
 }))

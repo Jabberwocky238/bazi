@@ -1,6 +1,4 @@
-import { readBazi, readStrength } from '../snapshot'
-import { KUIGANG_DAY } from '../types'
-import type { GejuHit } from '../types'
+import { GejuContext, KUIGANG_DAY, type GejuHit } from '../types'
 import type { WuXing } from '@jabberwocky238/bazi-engine'
 
 /**
@@ -15,14 +13,12 @@ const KUIGANG_FORBIDDEN_WX: Record<string, string> = {
   庚辰: '火', 庚戌: '火', 壬辰: '火', 戊戌: '水',
 }
 
-export function isKuiGangGe(): GejuHit | null {
-  const bazi = readBazi()
-  const strength = readStrength()
-  if (!KUIGANG_DAY.has(bazi.dayGz)) return null
-  if (!strength.shenWang) return null
-  const forbidden = KUIGANG_FORBIDDEN_WX[bazi.dayGz]
-  if (forbidden && bazi.touWx(forbidden as WuXing)) return null
-  if (bazi.dayZhi === '辰' && bazi.mainArr.some((p, i) => i !== 2 && p.zhi.name === '戌')) return null
-  if (bazi.dayZhi === '戌' && bazi.mainArr.some((p, i) => i !== 2 && p.zhi.name === '辰')) return null
-  return { name: '魁罡格', note: `日柱 ${bazi.dayGz} 魁罡 · 身旺 · 无忌透无冲` }
+export function isKuiGangGe(ctx: GejuContext): GejuHit | null {
+  if (!KUIGANG_DAY.has(ctx.dayGz)) return null
+  if (!ctx.strength.shenWang) return null
+  const forbidden = KUIGANG_FORBIDDEN_WX[ctx.dayGz]
+  if (forbidden && ctx.calc.touWx(forbidden as WuXing)[0]) return null
+  if (ctx.dayZhi === '辰' && ctx.mainArr.some((p, i) => i !== 2 && p.zhi.name === '戌')) return null
+  if (ctx.dayZhi === '戌' && ctx.mainArr.some((p, i) => i !== 2 && p.zhi.name === '辰')) return null
+  return { name: '魁罡格', note: `日柱 ${ctx.dayGz} 魁罡 · 身旺 · 无忌透无冲` }
 }

@@ -20,5 +20,12 @@
       "binding": "KV",
       "id": "5570fc682b144cefa1f04fa8719fd45d"
     }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bazi-users",
+      "database_id": "e994a5d8-790f-41ac-8b2c-1e667f88d65d"
+    }
   ]
 }

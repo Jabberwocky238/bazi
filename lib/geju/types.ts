@@ -4,18 +4,25 @@ import {
   GENERATED_BY,
   CONTROLLED_BY,
   CONTROLS,
+  ganWuxing,
+  zhiWuxing,
   type Gan,
   type Zhi,
   type Season,
   type WuXing,
+  type Shishen,
+  type ShishenCat,
   analyzeGanZhi,
   relationOf,
   wuxingGan,
 } from '@jabberwocky238/bazi-engine'
 import type { DetailedPillar } from '../base'
+import { CHONG_PAIR, YANG_GANS, SHI_SHEN_CAT } from '../base'
+import type { StrengthDerived } from '../strength'
 
 /**
- * 格局判定用 — 快照上下文。直接使用 @jabberwocky238/bazi-engine 的 Calculator。
+ * 格局判定用 — 上下文。直接使用 @jabberwocky238/bazi-engine 的 Calculator。
+ * detector 直接用 ctx.calc 取 engine 原语；ctx 只补 engine 缺的十神原语 + 派生字段 + strength/extras。
  */
 import { Calculator } from '@jabberwocky238/bazi-engine'
 import type { BaziInput } from '@jabberwocky238/bazi-engine'
@@ -28,8 +35,17 @@ export class GejuContext {
 
   constructor(
     public bazi: BaziInput,
+    private _strength?: StrengthDerived,
+    extras?: { dayun?: DetailedPillar; liunian?: DetailedPillar },
   ) {
     this.calc = new Calculator(bazi)
+    if (extras) {
+      this.state.extrasInput = extras
+    }
+  }
+
+  set extraPillars(pillars: DetailedPillar[]) {
+    this.state.extraPillars = pillars
   }
 
   get pillars(): DetailedPillar[] {
@@ -81,10 +97,118 @@ export class GejuContext {
   }
   // 五行对应的阳干和阴干
   wuxingGan(wuxing: WuXing): [Gan, Gan] {
-    wuxingGan(wuxing, true)
     return [wuxingGan(wuxing, true), wuxingGan(wuxing, false)]
   }
-  
+
+  // ———————————————————————————————————————————————
+  // 派生命局字段 (旧 snapshot 上 BaziSnapshot 暴露, detector 直接用 ctx.同名)
+  // ———————————————————————————————————————————————
+
+  get dayGan(): Gan { return this.riZhu.name }
+  get dayZhi(): Zhi { return this.pillars[2].zhi.name }
+  get dayGz(): string { return `${this.dayGan}${this.dayZhi}` }
+  get dayWx(): WuXing { return this.pillars[2].gan.wuxing }
+  get dayYang(): boolean { return YANG_GANS.has(this.dayGan) }
+  get monthZhi(): Zhi { return this.yueLing.name }
+  /** 月令是否被四柱任一非月支六冲。 */
+  get monthZhiBeingChong(): boolean {
+    const pair = CHONG_PAIR[this.monthZhi]
+    if (!pair) return false
+    return this.pillars.some((p, i) => i !== 1 && p.zhi.name === pair)
+  }
+  get mainArr(): DetailedPillar[] { return this.pillars }
+  /** 月支藏干十神 (月令本/中/余气)。 */
+  get monthHideShishen(): Shishen[] {
+    return this.yueLing.cangGan.map(cg => cg.shishen)
+  }
+
+  // ———————————————————————————————————————————————
+  // engine 缺的十神原语 — 基于 calc.shishen() 派生
+  // ———————————————————————————————————————————————
+
+  private get _ss() {
+    if (!this.state.ss) this.state.ss = this.calc.shishen()
+    return this.state.ss
+  }
+  /** 指定类别是否透干 (年/月/时天干)。 */
+  touCat(c: ShishenCat): boolean {
+    return this._ss.tou().some((s: Shishen) => SHI_SHEN_CAT[s] === c)
+  }
+  /** 指定类别是否透或藏。 */
+  hasCat(c: ShishenCat): boolean {
+    return this._ss.has().some((s: Shishen) => SHI_SHEN_CAT[s] === c)
+  }
+  /** 透该十神的柱索引 (年/月/时, 排除日主)。 */
+  mainAt(s: Shishen): number[] {
+    const out: number[] = []
+    this.pillars.forEach((p, i) => {
+      if (i !== 2 && p.gan.shishen === s) out.push(i)
+    })
+    return out
+  }
+  /** 各柱本气十神 (地支藏干首字)。 */
+  get mainZhiArr(): Shishen[] {
+    return this.pillars.map(p => p.zhi.cangGan[0]?.shishen).filter((s): s is Shishen => !!s)
+  }
+
+  // ———————————————————————————————————————————————
+  // 身强弱 / 岁运
+  // ———————————————————————————————————————————————
+
+  get strength(): StrengthDerived {
+    return this._strength ?? {
+      analysis: null,
+      level: '',
+      deLing: false,
+      deDi: false,
+      deShi: false,
+      shenWang: false,
+      shenRuo: false,
+    }
+  }
+
+  get extras(): ExtrasView {
+    if (!this.state.extrasView) {
+      this.state.extrasView = createExtrasView(this.state.extrasInput ?? {})
+    }
+    return this.state.extrasView
+  }
+}
+
+/** 岁运视图 — 由 {dayun, liunian} 派生。 */
+export interface ExtrasView {
+  active: boolean
+  extraArr: DetailedPillar[]
+  /** 岁运天干是否透该十神。 */
+  tou(s: Shishen): boolean
+  /** 岁运天干是否透该类别。 */
+  touCat(c: ShishenCat): boolean
+  /** 岁运是否含该十神 (天干透 ∪ 地支藏)。 */
+  has(s: Shishen): boolean
+  /** 岁运是否含该类别 (天干透 ∪ 地支藏)。 */
+  hasCat(c: ShishenCat): boolean
+  extraGanWxCount(wx: WuXing): number
+  extraZhiMainWxCount(wx: WuXing): number
+}
+
+function createExtrasView(input: { dayun?: DetailedPillar; liunian?: DetailedPillar }): ExtrasView {
+  const arr: DetailedPillar[] = []
+  if (input.dayun) arr.push(input.dayun)
+  if (input.liunian) arr.push(input.liunian)
+  const ganShishens: Shishen[] = arr.map(p => p.gan.shishen as Shishen).filter(Boolean)
+  const allShishens: Shishen[] = arr.flatMap(p =>
+    [p.gan.shishen as Shishen, ...p.zhi.cangGan.map(c => c.shishen)],
+  ).filter(Boolean)
+  return {
+    active: arr.length > 0,
+    extraArr: arr,
+    tou: (s: Shishen) => ganShishens.includes(s),
+    touCat: (c: ShishenCat) => ganShishens.some(s => SHI_SHEN_CAT[s] === c),
+    has: (s: Shishen) => allShishens.includes(s),
+    hasCat: (c: ShishenCat) => allShishens.some(s => SHI_SHEN_CAT[s] === c),
+    extraGanWxCount: (wx) => arr.filter(p => ganWuxing(p.gan.name) === wx).length,
+    extraZhiMainWxCount: (wx) => arr.filter(p => zhiWuxing(p.zhi.name) === wx).length,
+  }
 }
 
 
@@ -171,6 +295,24 @@ export type Detector = (ctx: GejuContext) => GejuHit | null
 export { SHI_SHEN_CAT, CHONG_PAIR } from '../base'
 
 export const KUIGANG_DAY = new Set(['庚辰', '庚戌', '壬辰', '戊戌'])
+
+/** 日主禄位（十干禄支）。 */
+export const LU: Record<Gan, Zhi> = {
+  甲: '寅', 乙: '卯',
+  丙: '巳', 丁: '午',
+  戊: '巳', 己: '午',
+  庚: '申', 辛: '酉',
+  壬: '亥', 癸: '子',
+}
+
+/** 日主阳刃位。 */
+export const YANG_REN: Record<Gan, Zhi> = {
+  甲: '卯', 乙: '寅',
+  丙: '午', 丁: '巳',
+  戊: '午', 己: '巳',
+  庚: '酉', 辛: '申',
+  壬: '子', 癸: '亥',
+}
 
 export const WX_GENERATED_BY: Record<string, string> = GENERATED_BY
 export const WX_CONTROLLED_BY: Record<string, string> = CONTROLLED_BY

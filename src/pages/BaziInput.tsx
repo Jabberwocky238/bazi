@@ -11,7 +11,7 @@ export default function BaziInput() {
   const { init } = useSavedEntries()
 
   useEffect(() => {
-    init(DEFAULT_STORAGE_KEY, MAIN_PRESETS)
+    void init(DEFAULT_STORAGE_KEY, MAIN_PRESETS)
   }, [init])
 
   return (

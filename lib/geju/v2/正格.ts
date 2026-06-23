@@ -1,4 +1,4 @@
-import type { Shishen, nayinOf } from '@jabberwocky238/bazi-engine'
+import { shishenOf, type Shishen, type nayinOf } from '@jabberwocky238/bazi-engine'
 import { GejuContext, type GejuHit } from '../types'
 
 function shishen2Geju(shishen: Shishen): string | null {
@@ -42,6 +42,7 @@ function zhengOrPian(shishen: Shishen): '正' | '偏' {
 
 
 export function calcZhengGe(context: GejuContext): GejuHit | null {
+    const rizhu = context.riZhu
     // 规则1:月令藏干透月干
     for (const cangGan of context.yueLing.cangGan) {
         if (context.touGan(cangGan.name, 1)) {
@@ -100,6 +101,27 @@ export function calcZhengGe(context: GejuContext): GejuHit | null {
         const [g1, p1] = gejuCandidates[0]
         const [g2, p2] = gejuCandidates[1]
         return { name: p1 < p2 ? g1 : g2, note: '月令虚浮，取令格' }
+    }
+    // 规则7，三合局，三会局
+    const sanHeJu = context.sanHeJu()
+    if (sanHeJu.length > 0) {
+        const wuxing = sanHeJu[0].hua
+        const [_, yin] = context.wuxingGan(wuxing) // 触发缓存
+        const shishen = shishenOf(rizhu.name, yin)
+        const geju = shishen2Geju(shishen)
+        if (geju) {
+            return { name: geju, note: '三合局' }
+        }
+    }
+    const sanHuiJu = context.sanHuiJu()
+    if (sanHuiJu.length > 0) {
+        const wuxing = sanHuiJu[0].hua
+        const [_, yin] = context.wuxingGan(wuxing) // 触发缓存
+        const shishen = shishenOf(rizhu.name, yin)
+        const geju = shishen2Geju(shishen)
+        if (geju) {
+            return { name: geju, note: '三会局' }
+        }
     }
     return null
 }

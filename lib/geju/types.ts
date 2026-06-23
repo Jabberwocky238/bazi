@@ -7,8 +7,10 @@ import {
   type Gan,
   type Zhi,
   type Season,
-  type Shishen,
   type WuXing,
+  analyzeGanZhi,
+  relationOf,
+  wuxingGan,
 } from '@jabberwocky238/bazi-engine'
 import type { DetailedPillar } from '../base'
 
@@ -17,6 +19,8 @@ import type { DetailedPillar } from '../base'
  */
 import { Calculator } from '@jabberwocky238/bazi-engine'
 import type { BaziInput } from '@jabberwocky238/bazi-engine'
+import type { SanHeFinding, SanHeJuInfo } from '@jabberwocky238/bazi-engine/ganzhi/地支三合'
+import type { SanHuiFinding } from '@jabberwocky238/bazi-engine/ganzhi/地支三会'
 
 export class GejuContext {
   calc: Calculator
@@ -25,7 +29,7 @@ export class GejuContext {
   constructor(
     public bazi: BaziInput,
   ) {
-    this.calc = new Calculator(bazi, bazi.sex)
+    this.calc = new Calculator(bazi)
   }
 
   get pillars(): DetailedPillar[] {
@@ -33,12 +37,16 @@ export class GejuContext {
     return this.state.pillars
   }
 
+  get riZhu(): DetailedPillar['gan'] {
+    if (!this.state.riZhu) this.state.riZhu = this.pillars[2].gan
+    return this.state.riZhu
+  }
   get yueLing(): DetailedPillar['zhi'] {
     if (!this.state.yueLing) this.state.yueLing = this.pillars[1].zhi
     return this.state.yueLing
   }
 
-  touGan(gan: Gan, pos?: 0 | 1 | 2| 3): boolean {
+  touGan(gan: Gan, pos?: 0 | 1 | 2 | 3): boolean {
     if (pos) {
       return this.pillars[pos].gan.name === gan
     }
@@ -57,6 +65,26 @@ export class GejuContext {
     }
     return false
   }
+
+  get ganzhiAnalysis(): ReturnType<typeof analyzeGanZhi> {
+    if (!this.state.ganzhiAnalysis) {
+      this.state.ganzhiAnalysis = analyzeGanZhi(this.pillars.map(p => { return { gan: p.gan.name, zhi: p.zhi.name } }))
+    }
+    return this.state.ganzhiAnalysis
+  }
+
+  sanHeJu(): SanHeFinding[] {
+    return this.ganzhiAnalysis.地支三合
+  }
+  sanHuiJu(): SanHuiFinding[] {
+    return this.ganzhiAnalysis.地支三会
+  }
+  // 五行对应的阳干和阴干
+  wuxingGan(wuxing: WuXing): [Gan, Gan] {
+    wuxingGan(wuxing, true)
+    return [wuxingGan(wuxing, true), wuxingGan(wuxing, false)]
+  }
+  
 }
 
 
@@ -142,36 +170,11 @@ export type Detector = () => GejuHit | null
 
 export { SHI_SHEN_CAT, CHONG_PAIR } from '../base'
 
-/** 日主禄位（十干禄支）。 */
-export const LU: Record<Gan, Zhi> = {
-  甲: '寅', 乙: '卯',
-  丙: '巳', 丁: '午',
-  戊: '巳', 己: '午',
-  庚: '申', 辛: '酉',
-  壬: '亥', 癸: '子',
-}
-
-/** 日主阳刃位。 */
-export const YANG_REN: Record<Gan, Zhi> = {
-  甲: '卯', 乙: '寅',
-  丙: '午', 丁: '巳',
-  戊: '午', 己: '巳',
-  庚: '酉', 辛: '申',
-  壬: '子', 癸: '亥',
-}
-
 export const KUIGANG_DAY = new Set(['庚辰', '庚戌', '壬辰', '戊戌'])
 
 export const WX_GENERATED_BY: Record<string, string> = GENERATED_BY
 export const WX_CONTROLLED_BY: Record<string, string> = CONTROLLED_BY
 export const WX_CONTROLS: Record<string, string> = CONTROLS
-
-export const SEASON_BY_ZHI: Record<string, Season> = {
-  寅: '春', 卯: '春', 辰: '春',
-  巳: '夏', 午: '夏', 未: '夏',
-  申: '秋', 酉: '秋', 戌: '秋',
-  亥: '冬', 子: '冬', 丑: '冬',
-}
 
 export function yimaFrom(zhi: string): string | undefined {
   try {

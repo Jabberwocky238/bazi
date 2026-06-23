@@ -79,7 +79,7 @@ export function computeBazi(
     sex,
   }
 
-  const calc = new Calculator(input, sex)
+  const calc = new Calculator(input)
   const pillars = calc.pillars()
   if (pillars.length === 3) pillars.push(EMPTY_PILLAR)
 
@@ -116,7 +116,7 @@ export function parseBaziToResult(bazi: [string, string, string, string], sex: S
       hour: hourKnown ? parseGz(h) : undefined,
       sex,
     }
-    const calc = new Calculator(input, sex)
+    const calc = new Calculator(input)
     const pillars = calc.pillars()
     if (pillars.length === 3) pillars.push(EMPTY_PILLAR)
     return fillDerivedFields({

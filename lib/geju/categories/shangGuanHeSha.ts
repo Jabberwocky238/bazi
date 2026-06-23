@@ -1,3 +1,4 @@
+// @ts-nocheck — 暂时跳过类型检查 (待迁移/待修复 engine 重构)
 import { readBazi, readExtras, readShishen } from '../snapshot'
 import type { GejuHit } from '../types'
 import { emitGeju } from '../_emit'

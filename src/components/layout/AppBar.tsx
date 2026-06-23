@@ -1,5 +1,6 @@
 import { formatBuildTime } from '@@/buildTime'
 import { useChat } from '@@/stores'
+import { AuthButton } from '@@/AuthButton'
 import { useLayout } from './context'
 
 // ————————————————————————————————————————————————————————
@@ -57,6 +58,8 @@ export function AppBar() {
           八字补完计划
         </h1>
         <div className="ml-auto flex items-center gap-3">
+          {/* 登录 / 账号 */}
+          <AuthButton />
           {/* 聊天助手 —— 机器人图标, 与抽屉按钮呼应 */}
           <button
             type="button"

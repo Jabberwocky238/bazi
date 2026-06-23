@@ -110,4 +110,11 @@ export function setSessionCookie(token: string, opts: { maxAge?: number; isSecur
   return parts.join('; ')
 }
 
+/** 清除会话 Cookie —— 用 Max-Age=0 让浏览器立即删除 (HttpOnly, JS 无法直接清)。 */
+export function clearSessionCookie(opts: { isSecure: boolean } = { isSecure: true }): string {
+  const parts = [`${COOKIE_NAME}=`, 'Path=/', 'HttpOnly', 'SameSite=Lax', 'Max-Age=0']
+  if (opts.isSecure) parts.push('Secure')
+  return parts.join('; ')
+}
+
 export const SESSION_COOKIE_NAME = COOKIE_NAME

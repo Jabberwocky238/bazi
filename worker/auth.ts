@@ -10,7 +10,7 @@
  */
 
 import { sendSmsCode } from './tencent-sms'
-import { signJwt, setSessionCookie } from './jwt'
+import { signJwt, setSessionCookie, parseSession, clearSessionCookie } from './jwt'
 
 /** 中国大陆手机号: 1 + [3-9] + 9 位。 */
 const PHONE_RE = /^1[3-9]\d{9}$/
@@ -127,4 +127,19 @@ export async function register(request: Request, env: Env): Promise<Response> {
   const isSecure = new URL(request.url).protocol === 'https:'
   const cookie = setSessionCookie(token, { maxAge: SESSION_MAX_AGE, isSecure })
   return json(200, { ok: true, user: result }, { 'set-cookie': cookie })
+}
+
+/** GET /api/auth/me —— 返回当前会话用户。无会话 / 会话过期返回 401。 */
+export async function me(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'GET') return json(405, { error: 'Method Not Allowed' })
+  const payload = await parseSession(request, env)
+  if (!payload) return json(401, { error: '未登录' })
+  return json(200, { ok: true, user: { id: payload.sub, phone: payload.phone } })
+}
+
+/** POST /api/auth/logout —— 清除会话 Cookie (HttpOnly, 须由后端下发 Max-Age=0)。 */
+export async function logout(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'POST') return json(405, { error: 'Method Not Allowed' })
+  const isSecure = new URL(request.url).protocol === 'https:'
+  return json(200, { ok: true }, { 'set-cookie': clearSessionCookie({ isSecure }) })
 }

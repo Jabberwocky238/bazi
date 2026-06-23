@@ -41,7 +41,7 @@ async function resolve(): Promise<Backend> {
     if (platform === 'ios' || platform === 'android') {
       backend = 'capacitor'
     } else if (platform === 'macos' || platform === 'windows') {
-      tauriStore = await loadTauriStore(TAURI_STORE_FILE, { autoSave: true })
+      tauriStore = await loadTauriStore(TAURI_STORE_FILE)
       backend = 'tauri'
     } else {
       backend = 'localStorage'

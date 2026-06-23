@@ -1,6 +1,6 @@
 /// <reference types="../worker-configuration.d.ts" />
 import { chatStream } from './chat'
-import { sendCode, register } from './auth'
+import { sendCode, register, me, logout } from './auth'
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -19,6 +19,14 @@ export default {
     // 手机号注册 —— 验码注册/登录
     if (url.pathname === '/api/auth/register') {
       return register(request, env)
+    }
+
+    // 会话查询 / 登出
+    if (url.pathname === '/api/auth/me') {
+      return me(request, env)
+    }
+    if (url.pathname === '/api/auth/logout') {
+      return logout(request, env)
     }
 
     return env.ASSETS.fetch(request)

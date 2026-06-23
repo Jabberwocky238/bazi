@@ -8,13 +8,13 @@
  */
 import { GejuContext, EMPTY_SUIYUN, deriveVisibility } from './types'
 import type { Detector, GejuHit, GejuQuality, GejuCategory, DaYunMeta } from './types'
+import { isJianLuGe, isYangRenGe } from './categories/禄刃格'
 import {
-  isJianLuGe, isYangRenGe,
   isZhengGuanGe, isQiShaGe, isShiShenYueLingGe, isShangGuanGe,
   isZhengCaiGe, isPianCaiGe, isZhengYinGe, isPianYinGe,
-  isKuiGangGe,
-} from './categories'
-import { isZhuanWangGe } from './categories'
+} from './categories/十神格'
+import { isKuiGangGe } from './categories/kuiGangGe'
+import { isZhuanWangGe } from './categories/专旺'
 import type { BaziDerived } from '../base'
 import type { StrengthDerived } from '../strength'
 import type { DetailedPillar } from '../base'

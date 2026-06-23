@@ -22,9 +22,9 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
-    "@capacitor/android": "^6.0.0",
-    "@capacitor/core": "^6.0.0",
-    "@capacitor/ios": "^6.0.0",
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
     "@capacitor/preferences": "^8.0.1",
     "@headlessui/react": "^2.2.10",
     "@jabberwocky238/bazi-engine": "file:./bazi-engine",
@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
-    "@capacitor/cli": "^6.0.0",
+    "@capacitor/cli": "^8.0.0",
     "@cloudflare/vite-plugin": "^1.42.0",
     "@cloudflare/workers-types": "^4.20250923.0",
     "@eslint/js": "^9.39.4",

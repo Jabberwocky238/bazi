@@ -8,9 +8,10 @@
  */
 
 import type { Sex } from '@jabberwocky238/bazi-engine'
-import { buildDetailedPillars, parseBazi } from '../compute'
+import { parseBaziToResult } from '../compute'
+import { deriveStrength } from '../strength'
 type Bazi = [string, string, string, string]
-import { detectGeju, DETECTORS } from './index'
+import { detectGejuWith, DETECTORS } from './index'
 import type { GejuCategory } from './types'
 
 const YANG_GAN = ['甲', '丙', '戊', '庚', '壬'] as const
@@ -33,7 +34,7 @@ const N = 10000
 
 // name → category 映射
 const nameToCategory: Record<string, GejuCategory> = {}
-for (const [name, [, , cat]] of Object.entries(DETECTORS)) {
+for (const [name, , , cat] of DETECTORS) {
   nameToCategory[name] = cat
 }
 
@@ -46,15 +47,8 @@ for (let i = 0; i < N; i++) {
   const sex: Sex = Math.random() < 0.5 ? 0 : 1
   const bazi = randomBazi()
   try {
-    const pillars = buildDetailedPillars(parseBazi(bazi), sex)
-    useBazi.getState().setBazi({
-      pillars,
-      solarStr: '',
-      trueSolarStr: '',
-      lunarStr: '',
-      hourKnown: true,
-    })
-    const hits = detectGeju()
+    const r = parseBaziToResult(bazi, sex)
+    const hits = detectGejuWith(r, deriveStrength(r.pillars), {})
     for (const h of hits) {
       hitCount[h.name] = (hitCount[h.name] ?? 0) + 1
       const cat = nameToCategory[h.name] ?? '未知'
@@ -101,7 +95,7 @@ for (const [cat, n] of catSorted) {
 }
 
 // 列出未命中的格局
-const unused = Object.keys(DETECTORS).filter((n) => !(n in hitCount))
+const unused = DETECTORS.map(([n]) => n).filter((n) => !(n in hitCount))
 if (unused.length > 0) {
   console.log(`\n【未命中格局 (${unused.length})】`)
   console.log(`  ${unused.join(', ')}`)

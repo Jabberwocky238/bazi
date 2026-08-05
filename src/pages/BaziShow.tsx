@@ -11,6 +11,7 @@ import { StrengthPanel } from '@@/StrengthPanel'
 import { XiyongPanel } from '@@/XiyongPanel'
 import { GanZhiPanel } from '@@/GanZhiPanel'
 import { ErrorBoundary } from '@@/ErrorBoundary'
+import { DistributionPanel } from '@@/DistributionPanel'
 
 export default function BaziShow() {
   const solarStr = useBazi((s) => s.solarStr)
@@ -32,6 +33,7 @@ export default function BaziShow() {
         <section className="min-w-0">
           <ErrorBoundary name="BaziMeta"><BaziMeta solar={solarStr} trueSolar={trueSolarStr} lunar={lunarStr} /></ErrorBoundary>
           <ErrorBoundary name="BaziChart"><BaziChart pillars={pillars} /></ErrorBoundary>
+          <ErrorBoundary name="DistributionPanel"><DistributionPanel /></ErrorBoundary>
           <ErrorBoundary name="DaYunPanel"><DaYunPanel /></ErrorBoundary>
           <ErrorBoundary name="GejuPanel"><GejuPanel /></ErrorBoundary>
           <ErrorBoundary name="BaziRelationsPanel"><BaziRelationsPanel pillars={pillars} /></ErrorBoundary>

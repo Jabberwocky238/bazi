@@ -7,6 +7,7 @@ import {
   type Sex,
 } from '@jabberwocky238/bazi-engine'
 import { HOUR_UNKNOWN } from '@LIB'
+import type { SamplingUnit } from '@LIB'
 
 export interface DaYunStep {
   /** lunar-typescript 的原始 index; 0 表示起运前 */
@@ -23,6 +24,14 @@ export interface LiuYueEntry {
   /** 月建中文名: 正/二/…/腊。 */
   monthName: string
   /** 干支字符串。 */
+  gz: string
+  /** 该流月节气区间内的流日。 */
+  liuri: LiuRiEntry[]
+}
+
+export interface LiuRiEntry {
+  /** 公历日期 YYYY-MM-DD。 */
+  date: string
   gz: string
 }
 
@@ -76,6 +85,7 @@ export function computeDaYun(
         liuyue: ln.liuyue.map((ly) => ({
           monthName: ly.monthName,
           gz: gzStr(ly.gz),
+          liuri: ly.liuri.map((lr) => ({ date: lr.date, gz: gzStr(lr.gz) })),
         })),
       })),
     )
@@ -94,10 +104,74 @@ export function computeDaYun(
 
 interface DaYunStore {
   data: DaYunData | null
+  activeIdx: number | null
+  activeLnIdx: number | null
+  activeLyIdx: number | null
+  activeLrIdx: number | null
+  distributionCursor: { year: number; month: number; day: number } | null
   setDayun: (d: DaYunData | null) => void
+  setSelection: (
+    activeIdx: number | null,
+    activeLnIdx: number | null,
+    cursor: { year: number; month: number; day: number } | null,
+    activeLyIdx?: number | null,
+    activeLrIdx?: number | null,
+  ) => void
+  moveDistributionCursor: (direction: -1 | 1, unit: SamplingUnit, pace: number) => void
 }
 
-export const useDayun = create<DaYunStore>()((set) => ({
+function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate()
+}
+
+function shiftCursor(cursor: { year: number; month: number; day: number }, amount: number, unit: SamplingUnit) {
+  if (unit === 'day') {
+    const date = new Date(Date.UTC(cursor.year, cursor.month - 1, cursor.day + amount))
+    return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate() }
+  }
+  const monthIndex = unit === 'month'
+    ? cursor.year * 12 + cursor.month - 1 + amount
+    : (cursor.year + amount) * 12 + cursor.month - 1
+  const year = Math.floor(monthIndex / 12)
+  const month = ((monthIndex % 12) + 12) % 12 + 1
+  return { year, month, day: Math.min(cursor.day, daysInMonth(year, month)) }
+}
+
+function cursorDate(cursor: { year: number; month: number; day: number }): string {
+  return `${cursor.year}-${String(cursor.month).padStart(2, '0')}-${String(cursor.day).padStart(2, '0')}`
+}
+
+function locateDate(data: DaYunData, cursor: { year: number; month: number; day: number }) {
+  const date = cursorDate(cursor)
+  for (let activeIdx = 0; activeIdx < data.liunian.length; activeIdx += 1) {
+    for (let activeLnIdx = 0; activeLnIdx < data.liunian[activeIdx].length; activeLnIdx += 1) {
+      const liuyue = data.liunian[activeIdx][activeLnIdx].liuyue
+      for (let activeLyIdx = 0; activeLyIdx < liuyue.length; activeLyIdx += 1) {
+        const activeLrIdx = liuyue[activeLyIdx].liuri.findIndex((entry) => entry.date === date)
+        if (activeLrIdx >= 0) return { activeIdx, activeLnIdx, activeLyIdx, activeLrIdx }
+      }
+    }
+  }
+  return null
+}
+
+export const useDayun = create<DaYunStore>()((set, get) => ({
   data: null,
-  setDayun: (d) => set({ data: d }),
+  activeIdx: null,
+  activeLnIdx: null,
+  activeLyIdx: null,
+  activeLrIdx: null,
+  distributionCursor: null,
+  setDayun: (d) => set({ data: d, activeIdx: null, activeLnIdx: null, activeLyIdx: null, activeLrIdx: null, distributionCursor: null }),
+  setSelection: (activeIdx, activeLnIdx, distributionCursor, activeLyIdx = null, activeLrIdx = null) => {
+    set({ activeIdx, activeLnIdx, activeLyIdx, activeLrIdx, distributionCursor })
+  },
+  moveDistributionCursor: (direction, unit, pace) => {
+    const { data, activeIdx, activeLnIdx, distributionCursor } = get()
+    if (!data || activeIdx === null || !distributionCursor) return
+    const cursor = shiftCursor(distributionCursor, direction * pace, unit)
+    const located = locateDate(data, cursor)
+    if (!located) return
+    set({ ...located, distributionCursor: cursor })
+  },
 }))

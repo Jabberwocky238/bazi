@@ -100,8 +100,7 @@ export function GanZhiPanel() {
         </div>
       </button>
 
-      {open && (
-        <div className="space-y-5 text-sm">
+      <div data-copy-collapsible hidden={!open} className="space-y-5 text-sm">
           <Section label="① 合 · 天干五合 / 地支六合 / 三合 / 三会">
             <FindingList list={[...a.天干五合, ...a.地支六合, ...a.地支三合, ...a.地支三会]} />
           </Section>
@@ -125,8 +124,7 @@ export function GanZhiPanel() {
               <ExtraFindingList list={extraHits} />
             </Section>
           )}
-        </div>
-      )}
+      </div>
     </section>
   )
 }

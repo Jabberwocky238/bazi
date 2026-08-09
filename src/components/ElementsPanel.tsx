@@ -320,6 +320,7 @@ export function ElementsPanel() {
             ))}
             <span
               role="button"
+              data-copy-exclude
               tabIndex={0}
               onClick={(ev) => { ev.stopPropagation(); setExtras([]) }}
               onKeyDown={(ev) => {
@@ -337,8 +338,7 @@ export function ElementsPanel() {
         )}
       </button>
 
-      {open && (
-        <>
+      <div data-copy-collapsible hidden={!open}>
           {/* 五行 · 关系 + 占比 (合并后的视图) */}
           {rel && dayGan && (
             <div>
@@ -469,8 +469,7 @@ export function ElementsPanel() {
                   {data.adjustments.length} 项 · 点击{showAdj ? '收起' : '展开'}
                 </span>
               </button>
-              {showAdj && (
-                <div className="mt-2 flex flex-col gap-1.5">
+              <div data-copy-collapsible hidden={!showAdj} className="mt-2 flex flex-col gap-1.5">
                   {data.adjustments.map((a, i) => (
                     <div
                       key={i}
@@ -480,12 +479,10 @@ export function ElementsPanel() {
                       {a.desc}
                     </div>
                   ))}
-                </div>
-              )}
+              </div>
             </div>
           )}
-        </>
-      )}
+      </div>
     </section>
   )
 }

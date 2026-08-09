@@ -50,8 +50,7 @@ export function StrengthPanel() {
         </div>
       </button>
 
-      {open && (
-        <div className="space-y-3 text-sm">
+      <div data-copy-collapsible hidden={!open} className="space-y-3 text-sm">
           {/* 日主 */}
           <Row label="日主">
             <span
@@ -160,8 +159,7 @@ export function StrengthPanel() {
             <br />
             未计入人元司令修正 · 合冲刑害需人工再审
           </div>
-        </div>
-      )}
+      </div>
     </section>
   )
 }

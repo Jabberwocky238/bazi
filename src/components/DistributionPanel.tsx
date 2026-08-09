@@ -154,7 +154,7 @@ export function DistributionPanel() {
           <h2 className="text-xs font-medium tracking-[0.25em] text-slate-500 dark:text-slate-400">时辰分布看板</h2>
         </button>
         {canCalculate && (
-          <div className="flex w-full flex-wrap items-center justify-between gap-3 text-xs text-slate-500 sm:w-auto sm:justify-start">
+          <div data-copy-exclude className="flex w-full flex-wrap items-center justify-between gap-3 text-xs text-slate-500 sm:w-auto sm:justify-start">
             <label className="flex items-center gap-1.5">步长
               <input aria-label="分布步长（小时）" type="number" min="1" max="24" value={paceHours} onChange={(event) => setPaceHours(Math.min(24, Math.max(1, Number(event.target.value) || 1)))} className="h-8 w-14 rounded border border-slate-300 bg-white px-2 text-right tabular-nums text-slate-800 outline-none focus:border-amber-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200" />
               <span>h</span>
@@ -167,9 +167,9 @@ export function DistributionPanel() {
         )}
       </div>
 
-      {open && !canCalculate && <p className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-500 dark:border-slate-800">需要明确的公历或真太阳时才能计算小时偏移分布。</p>}
-      {open && result && center && (
-        <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+      {!canCalculate && <p data-copy-collapsible hidden={!open} className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-500 dark:border-slate-800">需要明确的公历或真太阳时才能计算小时偏移分布。</p>}
+      {result && center && (
+        <div data-copy-collapsible hidden={!open} className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
           <div className="mb-5 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
             <span>范围 <b className="font-medium text-slate-800 dark:text-slate-200">±{result.rangeHours}h</b></span>
             <span>样本 <b className="font-medium text-slate-800 dark:text-slate-200">{result.summary.sampleCount}</b></span>

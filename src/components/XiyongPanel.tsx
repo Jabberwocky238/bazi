@@ -50,8 +50,7 @@ export function XiyongPanel() {
         </div>
       </button>
 
-      {open && (
-        <div className="space-y-5 text-sm">
+      <div data-copy-collapsible hidden={!open} className="space-y-5 text-sm">
           {/* 从格覆写（最前） */}
           {a.congOverride && (
             <div className="rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-800 dark:text-purple-300 px-3 py-2 text-xs leading-relaxed">
@@ -232,8 +231,7 @@ export function XiyongPanel() {
             <br />
             md 明文"扶抑为主 · 调候为辅 · 从格出现一切推翻"，合冲刑害需人工再审
           </div>
-        </div>
-      )}
+      </div>
     </section>
   )
 }

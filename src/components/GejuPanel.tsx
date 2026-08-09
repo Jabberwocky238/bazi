@@ -266,7 +266,7 @@ export function GejuPanel() {
         )
       })()}
 
-      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+      <div data-copy-exclude className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
         <button
           type="button"
           onClick={() => setShowAll((s) => !s)}

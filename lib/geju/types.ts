@@ -16,6 +16,7 @@ import {
   analyzeGanZhi,
   relationOf,
   wuxingGan,
+  type GanZhiAnalysis,
 } from '@jabberwocky238/bazi-engine'
 import type { DetailedPillar } from '../base'
 import { CHONG_PAIR, YANG_GANS, SHI_SHEN_CAT } from '../base'
@@ -29,8 +30,9 @@ export type { Season, ShishenCat } from '@jabberwocky238/bazi-engine'
  */
 import { Calculator } from '@jabberwocky238/bazi-engine'
 import type { BaziInput } from '@jabberwocky238/bazi-engine'
-import type { SanHeFinding, SanHeJuInfo } from '@jabberwocky238/bazi-engine/ganzhi/地支三合'
-import type { SanHuiFinding } from '@jabberwocky238/bazi-engine/ganzhi/地支三会'
+type SanHeFinding = GanZhiAnalysis['地支三合'][number]
+type SanHeJuInfo = Extract<SanHeFinding, { sub: '三合局' }>
+type SanHuiFinding = GanZhiAnalysis['地支三会'][number]
 
 export class GejuContext {
   calc: Calculator
@@ -349,4 +351,3 @@ export function yimaFrom(zhi: string): string | undefined {
     return undefined
   }
 }
-

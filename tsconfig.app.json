@@ -22,8 +22,6 @@
     "noFallthroughCasesInSwitch": true,
 
     "paths": {
-      "@jabberwocky238/bazi-engine": ["./bazi-engine/src/index.ts"],
-      "@jabberwocky238/bazi-engine/*": ["./bazi-engine/src/*"],
       "@/*": ["./src/*"],
       "@LIB": ["./lib/index.ts"],
       "@@/*": ["./src/components/*"]

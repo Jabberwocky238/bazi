@@ -1,6 +1,0 @@
-[submodule "public/bazi-skills"]
-	path = public/bazi-skills
-	url = https://github.com/Jabberwocky238/bazi-skills.git
-[submodule "bazi-engine"]
-	path = bazi-engine
-	url = https://github.com/Jabberwocky238/bazi-engine.git

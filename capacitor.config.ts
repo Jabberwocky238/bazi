@@ -8,8 +8,9 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: isDev ? 'http' : 'https',
-    // 开发模式使用本地 Vite 服务器，生产模式使用远程 URL
-    url: isDev ? 'http://localhost:5173' : 'https://bazi.app238.com',
+    // 生产模式优先使用随应用安装的 dist，避免首屏依赖网络。
+    // 新资源由 Worker 托管并通过 Service Worker 在后台更新。
+    ...(isDev ? { url: 'http://localhost:5173' } : {}),
     cleartext: isDev, // 开发模式允许明文 HTTP
     // 允许的主机名（用于 Android 网络安全配置）
     hostname: isDev ? 'localhost' : 'bazi.app238.com'

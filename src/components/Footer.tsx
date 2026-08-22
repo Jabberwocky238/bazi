@@ -96,18 +96,10 @@ export function FooterSources() {
   return (
     <div className="mb-2 px-3 space-y-0.5 text-[11px] text-slate-400 dark:text-slate-500 text-xs">
       <div>
-        释义来源 ·{' '}
-        <a href="https://github.com/Jabberwocky238/bazi-skills" className={linkCls} target="_blank" rel="noreferrer">
-          bazi-skills
-        </a>{' '}
-        <span className="tabular-nums">{__SKILLS_COMMIT__} · {__SKILLS_DATE__.slice(0, 10)}</span>
-      </div>
-      <div>
         排盘计算 ·{' '}
         <a href="https://github.com/Jabberwocky238/bazi-engine" className={linkCls} target="_blank" rel="noreferrer">
           bazi-engine
         </a>{' '}
-        <span className="tabular-nums">v{__ENGINE_VERSION__}</span>
       </div>
       <div>
         本项目 ·{' '}

@@ -6,6 +6,14 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
 
+    // 客户端 OTA 版本探测。版本由部署时 APP_VERSION 变量控制。
+    if (url.pathname === '/api/app-version') {
+      return Response.json(
+        { version: env.APP_VERSION ?? '0.0.0', updateUrl: new URL('/', request.url).origin },
+        { headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+
     // 聊天 —— OpenAI 流式 SSE
     if (url.pathname === '/api/chat') {
       return chatStream(request, env)

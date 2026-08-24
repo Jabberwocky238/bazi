@@ -12,13 +12,13 @@ function check(ctx: GejuContext, includeExtras: boolean): boolean {
   const extras = ctx.extras
   const eg = (wx: WuXing) => includeExtras ? extras.extraGanWxCount(wx) : 0
   const ez = (wx: WuXing) => includeExtras ? extras.extraZhiMainWxCount(wx) : 0
-  const jinGanN = ctx.calc.ganWxCount('金') + eg('金')
-  const jinZhiN = ctx.calc.zhiMainWxCount('金') + ez('金')
+  const jinGanN = ctx.ganWxCount('金') + eg('金')
+  const jinZhiN = ctx.zhiMainWxCount('金') + ez('金')
   if (jinGanN === 0 && jinZhiN === 0) return false
   if (jinGanN + jinZhiN > 3) return false
   if (jinGanN === 0) return false  // 金透才成象
-  const shuiN = ctx.calc.ganWxCount('水') + ctx.calc.zhiMainWxCount('水') + eg('水') + ez('水')
-  const tuN = ctx.calc.ganWxCount('土') + ctx.calc.zhiMainWxCount('土') + eg('土') + ez('土')
+  const shuiN = ctx.ganWxCount('水') + ctx.zhiMainWxCount('水') + eg('水') + ez('水')
+  const tuN = ctx.ganWxCount('土') + ctx.zhiMainWxCount('土') + eg('土') + ez('土')
   if (shuiN >= 3) return false
   if (tuN >= 3) return false
   return true

@@ -2,7 +2,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { computeFromState } from '@@/stores/compute'
 import type { Pillar } from '@LIB'
-import { emptyPillars } from '@LIB'
 import { BaziChart } from '@@/chart/BaziChart'
 import { ErrorBoundary } from '@@/ErrorBoundary'
 import { defaultA, defaultB, type HepanState } from '@@/HepanInput'
@@ -64,16 +63,17 @@ export default function HepanInput() {
     saveHepanInputPageState(next)
   }
 
+  // 输入未成盘时 pillars 为空数组 (不再造占位柱)
   const aResult = computeFromState(state.a)?.bazi || {
     solarStr: '', trueSolarStr: '', lunarStr: '',
-    pillars: emptyPillars(), hourKnown: false
+    pillars: [], shishen: [], hourKnown: false
   }
   const bResult = computeFromState(state.b)?.bazi || {
     solarStr: '', trueSolarStr: '', lunarStr: '',
-    pillars: emptyPillars(), hourKnown: false
+    pillars: [], shishen: [], hourKnown: false
   }
 
-  const hasValidBazi = (pillars: Pillar[]) => pillars && pillars.length === 4 && pillars.every(p => p.gan && p.zhi)
+  const hasValidBazi = (pillars: Pillar[]) => pillars && pillars.length === 4 && pillars.every(p => p.pillar.gan && p.pillar.zhi)
 
   const activeState = activeTab === 'a' ? state.a : state.b
   const setActiveState = (newState: HepanState) => {
@@ -167,7 +167,7 @@ export default function HepanInput() {
           {/* 预览 */}
           <div className="min-w-0 flex flex-col gap-2 md:gap-3">
             <ErrorBoundary name={`HepanChart-${activeTab}`}>
-              <BaziChart pillars={activeResult.pillars} />
+              <BaziChart pillars={activeResult.pillars} shishen={activeResult.shishen} />
             </ErrorBoundary>
           </div>
         </div>

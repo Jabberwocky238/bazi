@@ -23,13 +23,13 @@ function readCounts(ctx: GejuContext, includeExtras: boolean): Counts {
   const ez = (wx: WuXing) => includeExtras ? extras.extraZhiMainWxCount(wx) : 0
   const baseRootExtMu = ctx.rootExt('木')
   return {
-    ganHuo: ctx.calc.ganWxCount('火') + eg('火'),
-    zhiHuo: ctx.calc.zhiMainWxCount('火') + ez('火'),
-    ganMu: ctx.calc.ganWxCount('木') + eg('木'),
-    zhiMu: ctx.calc.zhiMainWxCount('木') + ez('木'),
-    ganShui: ctx.calc.ganWxCount('水') + eg('水'),
-    zhiShui: ctx.calc.zhiMainWxCount('水') + ez('水'),
-    ganJin: ctx.calc.ganWxCount('金') + eg('金'),
+    ganHuo: ctx.ganWxCount('火') + eg('火'),
+    zhiHuo: ctx.zhiMainWxCount('火') + ez('火'),
+    ganMu: ctx.ganWxCount('木') + eg('木'),
+    zhiMu: ctx.zhiMainWxCount('木') + ez('木'),
+    ganShui: ctx.ganWxCount('水') + eg('水'),
+    zhiShui: ctx.zhiMainWxCount('水') + ez('水'),
+    ganJin: ctx.ganWxCount('金') + eg('金'),
     rootExtMu: baseRootExtMu || (includeExtras && ez('木') > 0),
   }
 }

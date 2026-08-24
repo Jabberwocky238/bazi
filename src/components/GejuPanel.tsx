@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
-  CANG_GAN,
-  ganWuxing,
-  zhiWuxing,
-  changshengState,
+  PillarC,
   type Gan,
-  type WuXing,
 } from '@jabberwocky238/bazi-engine'
 import {
   type Pillar,
@@ -100,35 +96,17 @@ const CATEGORY_TEXT: Record<GejuCategory, string> = {
 const CATEGORY_ORDER: GejuCategory[] = ['五行格', '正格', '十神格', '特殊格', '专旺格', '从格']
 
 /** 把 ExtraPillar 补齐成一个可喂给 detectGeju 的 Pillar。
- *  只补齐格局判定会用到的字段，其它（nayin/shensha）给空值。 */
+ *  十神不再挂在柱上 (由 Calculator.shishen() 提供), 故 e.shishen /
+ *  e.hideShishen 在此不参与构造; 神煞岁运柱不计, 给空数组。 */
 function extraToPillar(e: ExtraPillar, dayGan: Gan): Pillar {
-  const hideGans = (CANG_GAN[e.zhi] ?? []) as Gan[]
-  const fallbackWx = ganWuxing(dayGan)
   return {
-    label: e.label as PillarType,
-    gan: {
-      name: e.gan,
-      wuxing: ganWuxing(e.gan),
-      shishen: e.shishen,
-    },
-    zhi: {
-      name: e.zhi,
-      wuxing: zhiWuxing(e.zhi),
-      cangGan: [],
-    },
-    hideGans,
-    hideShishen: e.hideShishen,
-    nayin: '',
-    ganWuxing: ganWuxing(e.gan),
-    zhiWuxing: zhiWuxing(e.zhi),
-    shishenWuxing: (shishenWuxing(dayGan, e.shishen) || fallbackWx) as WuXing,
-    hideShishenWuxings: e.hideShishen.map(
-      (s) => (shishenWuxing(dayGan, s) || fallbackWx) as WuXing,
-    ),
+    // 1.2.0: 干支收在 PillarC 里, 纳音由 pillar.nayinName() 自带;
+    // changsheng 是 日干 vs 本柱地支 (非本柱干支对), 故另造一柱来取。
+    pillar: PillarC.from(e.gan, e.zhi, e.label as PillarType),
     shensha: [],
-    zizuo: changshengState(e.gan, e.zhi),
-    changsheng: '',
-  } as unknown as Pillar
+    changsheng: PillarC.from(dayGan, e.zhi).changsheng(),
+    isRizhu: false,
+  }
 }
 
 export function GejuPanel() {
@@ -136,7 +114,7 @@ export function GejuPanel() {
   const hits = useBazi((s) => s.gejuHits)
   const setGejuExtras = useBazi((s) => s.setGejuExtras)
   const extras = useBaziStore((s) => s.extraPillars)
-  const dayGan = pillars[2]?.gan.name as Gan | undefined
+  const dayGan: Gan | undefined = pillars[2]?.pillar.gan.str
 
   const activeDaYun = extras.find((e) => e.label === '大运') ?? null
   const activeLiuNian = extras.find((e) => e.label === '流年') ?? null

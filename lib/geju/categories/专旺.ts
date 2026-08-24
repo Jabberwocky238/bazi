@@ -58,7 +58,7 @@ function checkZhuanWang(
   targetWx: string,
   maxCaiTou = 0,
 ): ZhuanWangResult | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const strength = ctx.strength
   const extras = ctx.extras
 
@@ -68,8 +68,8 @@ function checkZhuanWang(
 
   const selfWx = ctx.dayWx
   const yinWx = WX_GENERATED_BY[selfWx] as WuXing
-  const mainZhis = ctx.mainArr.map((p) => p.zhi.name as Zhi)
-  const extraZhis = extras.extraArr.map((p) => p.zhi.name as Zhi)
+  const mainZhis = ctx.mainArr.map((p) => p.pillar.zhi.str as Zhi)
+  const extraZhis = extras.extraArr.map((p) => p.pillar.zhi.str as Zhi)
   const allZhis = [...mainZhis, ...extraZhis]
 
   // —— 条件 2: 三合 / 三会 / (土) 四库齐 (可被岁运补齐) ——
@@ -104,7 +104,7 @@ function checkZhuanWang(
 
   // —— 条件 3: 天干 比劫 + 印 ≥ 2 (含日主，可被岁运补齐) ——
   // md 明文 "另有至少两位为同五行的比劫或生我之印星", 含印宽放。
-  const baseGanN = ctx.calc.ganWxCount(targetWx as WuXing) + ctx.calc.ganWxCount(yinWx)
+  const baseGanN = ctx.ganWxCount(targetWx as WuXing) + ctx.ganWxCount(yinWx)
   const allGanN = baseGanN
     + extras.extraGanWxCount(targetWx as WuXing) + extras.extraGanWxCount(yinWx)
   const base3 = baseGanN >= 2
@@ -117,7 +117,7 @@ function checkZhuanWang(
   const base4 = base4TouN === 0 && base4MainN < 2
   const ext4TouN = base4TouN + (extras.tou('正官') ? 1 : 0) + (extras.tou('七杀') ? 1 : 0)
   const ext4MainAdd = extras.extraArr.filter(
-    (p) => p.zhi.cangGan[0]?.shishen === '正官' || p.zhi.cangGan[0]?.shishen === '七杀',
+    (p) => { const s = ctx.zhiMainShishenOf(p); return s === '正官' || s === '七杀' },
   ).length
   const ext4 = ext4TouN === 0 && (base4MainN + ext4MainAdd) < 2
 
@@ -128,14 +128,14 @@ function checkZhuanWang(
   const base6 = (base6TouN + base6MainN) <= 1
   const ext6TouAdd = (extras.tou('食神') ? 1 : 0) + (extras.tou('伤官') ? 1 : 0)
   const ext6MainAdd = extras.extraArr.filter(
-    (p) => p.zhi.cangGan[0]?.shishen === '食神' || p.zhi.cangGan[0]?.shishen === '伤官',
+    (p) => { const s = ctx.zhiMainShishenOf(p); return s === '食神' || s === '伤官' },
   ).length
   const ext6 = (base6TouN + ext6TouAdd + base6MainN + ext6MainAdd) <= 1
 
   // —— 条件 5: 财透 ≤ maxCaiTou (附属克气控量) ——
   const baseCaiTou = (ss.tou('正财')[0] ? 1 : 0) + (ss.tou('偏财')[0] ? 1 : 0)
   const extraCaiTouAdd = extras.extraArr.filter(
-    (p) => CAI_SHISHENS.includes(p.gan.shishen as Shishen),
+    (p) => { const s = ctx.ganShishenOf(p); return !!s && CAI_SHISHENS.includes(s) },
   ).length
   const base5 = baseCaiTou <= maxCaiTou
   const ext5 = baseCaiTou + extraCaiTouAdd <= maxCaiTou
@@ -148,7 +148,7 @@ function checkZhuanWang(
       (s) => s === '正财' || s === '偏财',
     ).length
     const extraCaiMainZhi = extras.extraArr.filter(
-      (p) => p.zhi.cangGan[0]?.shishen === '正财' || p.zhi.cangGan[0]?.shishen === '偏财',
+      (p) => { const s = ctx.zhiMainShishenOf(p); return s === '正财' || s === '偏财' },
     ).length
     base5b = (baseCaiTou + mainCaiMainZhi) < 2
     ext5b = (baseCaiTou + extraCaiTouAdd + mainCaiMainZhi + extraCaiMainZhi) < 2
@@ -251,17 +251,17 @@ function isJiaSeGe(ctx: GejuContext): GejuHit | null {
   // 若 distinct 库 < 3 (重复库, 层次薄) 则需 干土 ≥ 3 以"一气遍布"补足。
   const SI_KU = new Set(['辰', '戌', '丑', '未'])
   const baseDistinctKu = new Set(
-    ctx.mainArr.map((p) => p.zhi.name).filter((z) => SI_KU.has(z)),
+    ctx.mainArr.map((p) => p.pillar.zhi.str).filter((z) => SI_KU.has(z)),
   ).size
   const requireTuGan = baseDistinctKu < 3 ? 3 : 2
-  const baseTuGan = ctx.calc.ganWxCount('土')
+  const baseTuGan = ctx.ganWxCount('土')
   const allTuGan = baseTuGan + extras.extraGanWxCount('土')
   if (baseTuGan < requireTuGan && allTuGan < requireTuGan) return null
   const r = checkZhuanWang(ctx, '土', 1)
   if (!r) return null
 
   // 升格 "稼穑毓秀" — 金点缀 (主局 OR 岁运)
-  const baseJinN = ctx.calc.ganWxCount('金') + ctx.calc.zhiMainWxCount('金')
+  const baseJinN = ctx.ganWxCount('金') + ctx.zhiMainWxCount('金')
   const extraJinAdd = extras.extraGanWxCount('金') + extras.extraZhiMainWxCount('金')
   const hasJin = baseJinN > 0 || extraJinAdd > 0
   const variantNote = baseJinN > 0
@@ -301,7 +301,7 @@ function isCongGeGe(ctx: GejuContext): GejuHit | null {
   const r = checkZhuanWang(ctx, '金')
   if (!r) return null
 
-  const baseShuiN = ctx.calc.ganWxCount('水') + ctx.calc.zhiMainWxCount('水')
+  const baseShuiN = ctx.ganWxCount('水') + ctx.zhiMainWxCount('水')
   const extraShuiAdd = extras.extraGanWxCount('水') + extras.extraZhiMainWxCount('水')
   const hasShui = baseShuiN > 0 || extraShuiAdd > 0
   const variantNote = baseShuiN > 0
@@ -338,8 +338,8 @@ function isRunXiaGe(ctx: GejuContext): GejuHit | null {
   const r = checkZhuanWang(ctx, '水')
   if (!r) return null
 
-  const baseMuN = ctx.calc.ganWxCount('木') + ctx.calc.zhiMainWxCount('木')
-  const baseJinN = ctx.calc.ganWxCount('金') + ctx.calc.zhiMainWxCount('金')
+  const baseMuN = ctx.ganWxCount('木') + ctx.zhiMainWxCount('木')
+  const baseJinN = ctx.ganWxCount('金') + ctx.zhiMainWxCount('金')
   const extraMuAdd = extras.extraGanWxCount('木') + extras.extraZhiMainWxCount('木')
   const extraJinAdd = extras.extraGanWxCount('金') + extras.extraZhiMainWxCount('金')
   const hasMu = baseMuN > 0 || extraMuAdd > 0

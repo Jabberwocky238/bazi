@@ -1,4 +1,5 @@
-// @ts-nocheck — 暂时跳过类型检查 (待迁移/待修复 engine 重构)
+// @ts-nocheck — 孤立文件: 依赖 commit 8ff72ee 删除的 ../snapshot 全局读取 API,
+//   未接入 geju/index.ts 的 DETECTORS 表 (无任何引用)。待改写为 GejuContext 后再启用。
 import { readBazi, readExtras } from '../snapshot'
 import type { GejuHit } from '../types'
 import { emitGeju } from '../_emit'

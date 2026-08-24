@@ -93,7 +93,8 @@ export type GejuOutput = GejuHit & { quality: GejuQuality, category: GejuCategor
  */
 function buildBaziInput(baziDerived: BaziDerived): BaziInput {
   const p = baziDerived.pillars
-  const toPillar = (i: number) => ({ gan: p[i].gan.name as Gan, zhi: p[i].zhi.name as Zhi })
+  // engine 1.1.0: gan.name 是 GanC, zhi 是 ZhiC → 取 .str 还原为 BaziInput 的裸干支
+  const toPillar = (i: number) => ({ gan: p[i].pillar.gan.str, zhi: p[i].pillar.zhi.str })
   return {
     year: toPillar(0),
     month: toPillar(1),

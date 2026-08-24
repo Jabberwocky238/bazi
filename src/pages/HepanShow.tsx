@@ -1,23 +1,24 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { computeFromState } from '@@/stores/compute'
-import { EMPTY_PILLAR } from '@LIB'
 import { BaziChart } from '@@/chart/BaziChart'
 import { BaziMeta } from '@@/BaziMeta'
 import { ErrorBoundary } from '@@/ErrorBoundary'
 import { HepanCrossPanel } from '@@/HepanCrossPanel'
 import { HepanXiyongMatch } from '@@/HepanXiyongMatch'
 import type { HepanState } from '@@/HepanInput'
-import type { ExtendedDetailedPillar } from '@LIB'
+import type { DetailedPillar, PillarShishenView } from '@LIB'
 
 interface LocationState {
   a: HepanState
   b: HepanState
 }
 
+// 无输入时空盘: pillars 为空数组 (engine 的 GanC/ZhiC 无空值表示, 不再造占位柱)
 const EMPTY_RESULT = {
   solarStr: '', trueSolarStr: '', lunarStr: '',
-  pillars: [EMPTY_PILLAR, EMPTY_PILLAR, EMPTY_PILLAR, EMPTY_PILLAR],
+  pillars: [] as DetailedPillar[],
+  shishen: [] as PillarShishenView[],
   hourKnown: false,
 }
 
@@ -102,7 +103,13 @@ export default function HepanShow() {
 
 interface SideProps {
   label: string
-  result: { solarStr: string; trueSolarStr: string; lunarStr: string; pillars: ExtendedDetailedPillar[] }
+  result: {
+    solarStr: string
+    trueSolarStr: string
+    lunarStr: string
+    pillars: DetailedPillar[]
+    shishen: PillarShishenView[]
+  }
 }
 
 function Side({ label, result }: SideProps) {
@@ -112,7 +119,7 @@ function Side({ label, result }: SideProps) {
         <BaziMeta solar={result.solarStr} trueSolar={result.trueSolarStr} lunar={result.lunarStr} />
       </ErrorBoundary>
       <ErrorBoundary name={`BaziChart-${label}`}>
-        <BaziChart pillars={result.pillars} />
+        <BaziChart pillars={result.pillars} shishen={result.shishen} />
       </ErrorBoundary>
     </section>
   )

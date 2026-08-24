@@ -16,10 +16,10 @@ export function judgeHanMu(ctx: GejuContext): GejuHit | null {
   if (ctx.season !== '冬') return null
   if (!ctx.rootExt('木')) return null
 
-  const natHuoGan = ctx.calc.ganWxCount('火')
-  const natShuiN = ctx.calc.ganWxCount('水') + ctx.calc.zhiMainWxCount('水')
-  const natHuoN = natHuoGan + ctx.calc.zhiMainWxCount('火')
-  const natTouHuo = ctx.calc.touWx('火')[0]
+  const natHuoGan = ctx.ganWxCount('火')
+  const natShuiN = ctx.ganWxCount('水') + ctx.zhiMainWxCount('水')
+  const natHuoN = natHuoGan + ctx.zhiMainWxCount('火')
+  const natTouHuo = ctx.touWx('火')[0]
   const natOk = natTouHuo && natHuoGan < 3 && natShuiN >= 1 && natShuiN <= natHuoN
 
   const exHuoGan = extras.extraGanWxCount('火')

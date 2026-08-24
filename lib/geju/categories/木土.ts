@@ -11,10 +11,10 @@ function check(ctx: GejuContext, includeExtras: boolean): boolean {
   const extras = ctx.extras
   const eg = (wx: WuXing) => includeExtras ? extras.extraGanWxCount(wx) : 0
   const ez = (wx: WuXing) => includeExtras ? extras.extraZhiMainWxCount(wx) : 0
-  const ganMu = ctx.calc.ganWxCount('木') + eg('木')
-  const zhiTu = ctx.calc.zhiMainWxCount('土') + ez('土')
-  const ganTu = ctx.calc.ganWxCount('土') + eg('土')
-  const ganJin = ctx.calc.ganWxCount('金') + eg('金')
+  const ganMu = ctx.ganWxCount('木') + eg('木')
+  const zhiTu = ctx.zhiMainWxCount('土') + ez('土')
+  const ganTu = ctx.ganWxCount('土') + eg('土')
+  const ganJin = ctx.ganWxCount('金') + eg('金')
   const rootExtMu = ctx.rootExt('木') || (includeExtras && ez('木') > 0)
   if (zhiTu < 2) return false
   if (ganTu < 1) return false

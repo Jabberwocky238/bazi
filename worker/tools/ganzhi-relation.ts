@@ -1,6 +1,6 @@
 import { tool, type Tool, type ToolContext } from '../tooldef'
 import { analyzeGanZhi } from '@jabberwocky238/bazi-engine'
-import { Calculator, parseGz2, type Sex, type Pillar, type ExtraPillar } from './_helpers'
+import { Calculator, BaziInputC, PillarC, parseGz2, type Sex, type Pillar } from './_helpers'
 
 /**
  * ganzhi_relation —— 用 engine 的 Calculator + analyzeGanZhi 计算整个命盘
@@ -35,28 +35,27 @@ export const ganzhiRelation: Tool = tool({
       // 用 Calculator 构造四柱 Pillar (校验干支合法性 + 补时柱未知)
       const [y, m, d, h = ''] = bazi
       const hourKnown = h.length === 2
-      const calc = new Calculator(
-        {
-          year: parseGz2(y) as Pillar,
-          month: parseGz2(m) as Pillar,
-          day: parseGz2(d) as Pillar,
-          hour: hourKnown ? parseGz2(h) as Pillar : undefined,
-          sex,
-        },
-      )
-      // 四柱 Pillar (engine 原始 {gan,zhi} 结构)
-      const pillars: Pillar[] = calc.bazi.year && calc.bazi.month && calc.bazi.day
-        ? [calc.bazi.year, calc.bazi.month, calc.bazi.day, calc.bazi.hour!].filter(Boolean) as Pillar[]
-        : []
+      const calc = new Calculator(BaziInputC.from({
+        year: parseGz2(y) as Pillar,
+        month: parseGz2(m) as Pillar,
+        day: parseGz2(d) as Pillar,
+        hour: hourKnown ? parseGz2(h) as Pillar : undefined,
+        sex,
+      }))
+      // 四柱裸 Pillar —— analyzeGanZhi 第一参吃字面量形式 (1.2.0: bazi 是 BaziInputC)
+      const pillars: Pillar[] = [
+        calc.bazi.year, calc.bazi.month, calc.bazi.day, calc.bazi.hour,
+      ]
+        .filter((p): p is PillarC => !!p)
+        .map((p) => ({ gan: p.gan.str, zhi: p.zhi.str }))
 
-      // 选中大运作为 extras (label 用 '时柱' 占位也行, 但更准确用引擎 PillarType;
-      // analyzeGanZhi 内部只用 gan/zhi, label 仅做标记, 此处用 '流年' 之类无实际影响)
-      const extras: ExtraPillar[] = (ui?.dayun ?? [])
+      // 选中大运作为 extras (1.2.0: extras 是 PillarC[]; pillarType 仅做标记)
+      const extras: PillarC[] = (ui?.dayun ?? [])
         .map((d) => d.gz)
         .filter((g): g is string => !!g && g.length === 2)
         .map((g) => {
           const p = parseGz2(g)!
-          return { label: '流年' as never, gan: p.gan, zhi: p.zhi }
+          return PillarC.from(p.gan, p.zhi, '大运')
         })
 
       if (pillars.length !== 4) {

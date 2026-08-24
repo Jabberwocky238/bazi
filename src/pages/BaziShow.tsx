@@ -20,6 +20,7 @@ export default function BaziShow() {
   const trueSolarStr = useBazi((s) => s.trueSolarStr)
   const lunarStr = useBazi((s) => s.lunarStr)
   const pillars = useBazi((s) => s.pillars)
+  const shishen = useBazi((s) => s.shishen)
   const analysisRef = useRef<HTMLElement>(null)
 
   return (
@@ -36,6 +37,7 @@ export default function BaziShow() {
           trueSolar={trueSolarStr}
           lunar={lunarStr}
           pillars={pillars}
+          shishen={shishen}
           contentRef={analysisRef}
         />
       </div>
@@ -43,7 +45,7 @@ export default function BaziShow() {
         <section ref={analysisRef} className="min-w-0">
           <div data-copy-exclude>
             <ErrorBoundary name="BaziMeta"><BaziMeta solar={solarStr} trueSolar={trueSolarStr} lunar={lunarStr} /></ErrorBoundary>
-            <ErrorBoundary name="BaziChart"><BaziChart pillars={pillars} /></ErrorBoundary>
+            <ErrorBoundary name="BaziChart"><BaziChart pillars={pillars} shishen={shishen} /></ErrorBoundary>
           </div>
           <ErrorBoundary name="DistributionPanel"><DistributionPanel /></ErrorBoundary>
           <ErrorBoundary name="DaYunPanel"><DaYunPanel /></ErrorBoundary>
@@ -53,7 +55,7 @@ export default function BaziShow() {
           <ErrorBoundary name="StrengthPanel"><StrengthPanel /></ErrorBoundary>
           <ErrorBoundary name="GanZhiPanel"><GanZhiPanel /></ErrorBoundary>
           <ErrorBoundary name="XiyongPanel"><XiyongPanel /></ErrorBoundary>
-          <ErrorBoundary name="SkillIndex"><SkillIndex pillars={pillars} /></ErrorBoundary>
+          <ErrorBoundary name="SkillIndex"><SkillIndex pillars={pillars} shishen={shishen} /></ErrorBoundary>
         </section>
       </div>
     </ErrorBoundary>

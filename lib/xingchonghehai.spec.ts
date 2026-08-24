@@ -18,7 +18,7 @@ const YANG_ZHI = ['子', '寅', '辰', '午', '申', '戌'] as const
 const YIN_ZHI = ['丑', '卯', '巳', '未', '酉', '亥'] as const
 const EXTRA_LABELS: ExtraSourceLabel[] = ['大运', '流年', '流月']
 
-function randomPillar(): DetailedPillar {
+function randomPillar(): Pillar {
   const yang = Math.random() < 0.5
   const gans = yang ? YANG_GAN : YIN_GAN
   const zhis = yang ? YANG_ZHI : YIN_ZHI
@@ -75,10 +75,10 @@ describe('analyzeGanZhiWithExtras 大数定律模拟', () => {
           continue
         }
 
-        for (const [kind, value] of Object.entries(analysis.base)) {
-          if (!Array.isArray(value)) continue
-          bump(baseKindCount, kind, value.length)
-          totalBase += value.length
+        // 1.2.0: 关系已按 合/冲/刑/害/破克暗合 分好组
+        for (const [group, list] of Object.entries(analysis.groups)) {
+          bump(baseKindCount, group, list.length)
+          totalBase += list.length
         }
 
         for (const item of analysis.extra) {

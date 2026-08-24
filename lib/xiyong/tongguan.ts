@@ -1,9 +1,5 @@
 /** 通关分析（两强相战，依 通关.md）+ 五行力量统计。 */
-import {
-  ganWuxing,
-  zhiWuxing,
-  GENERATED_BY as GEN_BY,
-} from '@jabberwocky238/bazi-engine'
+import { WuXingC } from '@jabberwocky238/bazi-engine'
 import type { DetailedPillar } from '../base'
 import type { TongguanInfo, WuXing } from './types'
 
@@ -15,12 +11,10 @@ import type { TongguanInfo, WuXing } from './types'
 export function countWxStrength(pillars: DetailedPillar[]): Record<WuXing, number> {
   const cnt: Record<WuXing, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 }
   pillars.forEach((p, i) => {
-    const w = ganWuxing(p.gan.name) as WuXing
-    if (w) cnt[w] += i === 1 ? 1.5 : 1
+    cnt[p.pillar.gan.wuxing.str] += i === 1 ? 1.5 : 1
   })
   pillars.forEach((p, i) => {
-    const w = zhiWuxing(p.zhi.name) as WuXing
-    if (w) cnt[w] += i === 1 ? 3 : 2
+    cnt[p.pillar.zhi.wuxing.str] += i === 1 ? 3 : 2
   })
   return cnt
 }
@@ -29,8 +23,8 @@ function findWxInPillars(pillars: DetailedPillar[], wx: WuXing): string[] {
   const hits: string[] = []
   pillars.forEach((p, i) => {
     const pos = ['年', '月', '日', '时'][i]
-    if (ganWuxing(p.gan.name) === wx) hits.push(`${pos}干 ${p.gan.name}`)
-    if (zhiWuxing(p.zhi.name) === wx) hits.push(`${pos}支 ${p.zhi.name}`)
+    if (p.pillar.gan.wuxing.str === wx) hits.push(`${pos}干 ${p.pillar.gan.str}`)
+    if (p.pillar.zhi.wuxing.str === wx) hits.push(`${pos}支 ${p.pillar.zhi.str}`)
   })
   return hits
 }
@@ -62,7 +56,8 @@ export function analyzeTongguan(
     }
   }
   // 通关.md: 桥梁 = 被克者之印 (生被克者)
-  const bridgeWx = GEN_BY[best.b]
+  // 通关.md: 桥梁 = 被克者之印 (生被克者) —— 走 engine relationFrom
+  const bridgeWx = WuXingC.from(best.b).relationFrom('生我').str
   const bridgeHits = findWxInPillars(pillars, bridgeWx)
   const bridgePresent = bridgeHits.length > 0
   return {

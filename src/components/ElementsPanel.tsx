@@ -1,21 +1,38 @@
-// @ts-nocheck — 暂时跳过类型检查 (待迁移/待修复 engine 重构)
 import { useMemo, useState } from 'react'
 import {
-  analyzeGanZhi,
-  ganWuxing,
-  zhiWuxing,
-  wuxingRelations,
-  isYangGan,
+  Calculator,
+  BaziInputC,
+  PillarC,
+  GanC,
+  ZhiC,
+  WUXING_BY_RELATION_TABLE,
   CANG_GAN,
-  type ConflictFinding,
   type Gan,
-  type GanZhiAnalysis,
-  type HeFinding,
   type Zhi,
   type WuXing,
 } from '@jabberwocky238/bazi-engine'
-import { type ExtendedDetailedPillar } from '@LIB'
-type Pillar = ExtendedDetailedPillar
+import type { DetailedPillar, PillarShishenView } from '@LIB'
+type Pillar = DetailedPillar
+
+/** 日主五行 → 各 relation 对应五行 (取代已移除的 wuxingRelations)。 */
+function wuxingRelations(dayGan: Gan) {
+  const wx = GanC.from(dayGan).wuxing.str
+  return {
+    同类: WUXING_BY_RELATION_TABLE['同类'][wx],
+    我生: WUXING_BY_RELATION_TABLE['我生'][wx],
+    我克: WUXING_BY_RELATION_TABLE['我克'][wx],
+    克我: WUXING_BY_RELATION_TABLE['克我'][wx],
+    生我: WUXING_BY_RELATION_TABLE['生我'][wx],
+  }
+}
+
+/** 阳干判定 (取代已移除的 isYangGan)。 */
+const YANG_GAN_SET = new Set<string>(['甲', '丙', '戊', '庚', '壬'])
+function isYangGan(g: Gan): boolean { return YANG_GAN_SET.has(g) }
+
+/** 天干/地支 → 五行字符串 (取代已移除的 ganWuxing / zhiWuxing)。 */
+function ganWuxing(g: Gan): WuXing { return GanC.from(g).wuxing.str }
+function zhiWuxing(z: Zhi): WuXing { return ZhiC.from(z).wuxing.str }
 import { useBazi, useBaziStore, type ExtraPillar } from '@@/stores'
 import { WUXING_BG_STRONG, WUXING_BG_SOFT, WUXING_BORDER, WUXING_TEXT } from '@@/css'
 import { SkillLink } from '@@/SkillLink'
@@ -64,15 +81,17 @@ function wxToCat(rel: ReturnType<typeof wuxingRelations>, w: WuXing): Cat | null
   return null
 }
 
-function parseHuaWx(s: string): WuXing | null {
-  const m = s.match(/[合会化][^木火土金水]*([木火土金水])/)
-  return m ? (m[1] as WuXing) : null
+/** 合会命中的化气五行 —— 1.2.0 由 rule.huaWuxing 直接给出, 不再从名字正则抠。 */
+function huaWxOf(hit: { kind: string; rule: unknown }): WuXing | null {
+  const r = hit.rule as { huaWuxing?: { str: WuXing } }
+  return r?.huaWuxing?.str ?? null
 }
 
 function constituents(
   positions: string,
   isGanKind: boolean,
   pillars: Pillar[],
+  shishen: PillarShishenView[],
 ): { wx: WuXing; ss: string }[] {
   const out: { wx: WuXing; ss: string }[] = []
   for (const ch of positions) {
@@ -81,11 +100,9 @@ function constituents(
     const p = pillars[i]
     if (!p) continue
     if (isGanKind) {
-      const wx = ganWuxing(p.gan.name as Gan) as WuXing | undefined
-      if (wx) out.push({ wx, ss: p.shishen })
+      out.push({ wx: p.pillar.gan.wuxing.str, ss: shishen[i]?.gan?.str ?? '' })
     } else {
-      const wx = zhiWuxing(p.zhi.name as Zhi) as WuXing | undefined
-      if (wx) out.push({ wx, ss: p.hideShishen[0] ?? '' })
+      out.push({ wx: p.pillar.zhi.wuxing.str, ss: shishen[i]?.zhi[0]?.str ?? '' })
     }
   }
   return out
@@ -105,17 +122,22 @@ interface Computed {
   adjustments: Adjustment[]
 }
 
-const HE_KINDS = ['天干五合', '地支六合', '地支三合', '地支三会'] as const satisfies readonly (keyof GanZhiAnalysis)[]
-const CONFLICTS: { kind: keyof GanZhiAnalysis; penalty: number; cat: Adjustment['category'] }[] = [
-  { kind: '天干相冲', penalty: CHONG_PENALTY, cat: '冲' },
-  { kind: '天干相克', penalty: KE_PENALTY, cat: '克' },
-  { kind: '地支相冲', penalty: CHONG_PENALTY, cat: '冲' },
-  { kind: '地支相刑', penalty: XING_PENALTY, cat: '刑害' },
-  { kind: '地支相害', penalty: HAI_PENALTY, cat: '刑害' },
-  { kind: '地支相破', penalty: PO_PENALTY, cat: '破' },
-]
+// 1.2.0: kind 统一为 天干三类 (相合/相冲/相克) + 地支八类 (六合/三合/三会/暗合/相冲/相刑/相害/相破)
+const HE_KINDS: readonly string[] = ['相合', '六合', '三合', '三会']
+const CONFLICT_PENALTY: Record<string, { penalty: number; cat: Adjustment['category'] }> = {
+  相冲: { penalty: CHONG_PENALTY, cat: '冲' },
+  相克: { penalty: KE_PENALTY, cat: '克' },
+  相刑: { penalty: XING_PENALTY, cat: '刑害' },
+  相害: { penalty: HAI_PENALTY, cat: '刑害' },
+  相破: { penalty: PO_PENALTY, cat: '破' },
+}
 
-function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Computed | null {
+function compute(
+  pillars: Pillar[],
+  shishen: PillarShishenView[],
+  extras: ExtraPillar[],
+  dayGan: string,
+): Computed | null {
   if (!dayGan || pillars.length !== 4) return null
   const rel = wuxingRelations(dayGan as Gan)
   const wxW: Record<WuXing, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 }
@@ -147,7 +169,12 @@ function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Comp
       ensureSs(ss, '藏干'); ssW[ss] += w
     })
   }
-  pillars.forEach((p) => ingest(p.gan.name, p.hideGans, p.shishen, p.hideShishen))
+  pillars.forEach((p, i) => ingest(
+    p.pillar.gan.str,
+    p.pillar.zhi.canggan().map((g: GanC) => g.str),
+    shishen[i]?.gan?.str ?? '',
+    (shishen[i]?.zhi ?? []).map((ss) => ss.str),
+  ))
   extras.forEach((e) => {
     const cangs = (CANG_GAN[e.zhi] ?? []) as string[]
     ingest(e.gan, cangs, e.shishen, e.hideShishen)
@@ -175,49 +202,63 @@ function compute(pillars: Pillar[], extras: ExtraPillar[], dayGan: string): Comp
     ssW[rep] += amount
   }
 
-  const a = analyzeGanZhi(
-    pillars.map((p) => ({ gan: p.gan.name as Gan, zhi: p.zhi.name as Zhi })),
-    extras.map((e) => ({ label: e.label, gan: e.gan, zhi: e.zhi })),
-  )
+  if (pillars.length !== 4) return { wxWeight: wxW, ssWeight: ssW, ssOrder, ssGroup, adjustments }
+  const calc = new Calculator(BaziInputC.from({
+    year: { gan: pillars[0].pillar.gan.str, zhi: pillars[0].pillar.zhi.str },
+    month: { gan: pillars[1].pillar.gan.str, zhi: pillars[1].pillar.zhi.str },
+    day: { gan: pillars[2].pillar.gan.str, zhi: pillars[2].pillar.zhi.str },
+    hour: { gan: pillars[3].pillar.gan.str, zhi: pillars[3].pillar.zhi.str },
+    sex: 1,
+  }))
+  const extraPillars = extras.map((e) => PillarC.from(e.gan, e.zhi, e.label))
+  const a = calc.ganzhi().analyze(extraPillars)
   if (!a) return { wxWeight: wxW, ssWeight: ssW, ssOrder, ssGroup, adjustments }
 
-  // —— 原局合化 (impacted 不影响化气计入, 只在视图上标注) ——
-  for (const k of HE_KINDS) {
-    for (const f of a[k] as HeFinding[]) {
-      if (!f.transformed) continue
-      const huaWx = parseHuaWx(f.state) ?? parseHuaWx(f.name)
-      if (!huaWx) continue
-      const cs = constituents(f.positions, k.startsWith('天干'), pillars)
-      if (cs.length < 2) continue
-      penalize(cs, HE_TRANSFER)
-      transferIn(huaWx, HE_TRANSFER * cs.length)
-      adjustments.push({
-        source: '原局', category: '合化',
-        desc: `${f.name}（${f.positions}）→ ${huaWx} +${(HE_TRANSFER * cs.length).toFixed(1)}`,
-      })
-    }
+  /** 命中柱位串 —— 0-3 为原局年月日时, 4+ 为岁运。 */
+  const posOf = (slots: readonly number[]) =>
+    slots.map((i) => (i < 4 ? '年月日时'[i] : (extras[i - 4]?.label ?? '运'))).join('')
+
+  const isGan = (h: { kind: string }) => ['相合', '相冲', '相克'].includes(h.kind)
+
+  // —— 合化 (impacted 不影响化气计入, 只在视图上标注) ——
+  for (const x of [...a.天干, ...a.地支]) {
+    if (!HE_KINDS.includes(x.hit.kind)) continue
+    const huaWx = huaWxOf(x.hit)
+    if (!huaWx) continue
+    const positions = posOf(x.hit.slots)
+    const cs = constituents(positions, isGan(x.hit), pillars, shishen)
+    if (cs.length < 2) continue
+    penalize(cs, HE_TRANSFER)
+    transferIn(huaWx, HE_TRANSFER * cs.length)
+    adjustments.push({
+      source: '原局', category: '合化',
+      desc: `${x.hit.name}（${positions}）→ ${huaWx} +${(HE_TRANSFER * cs.length).toFixed(1)}`,
+    })
   }
 
-  // —— 原局冲克刑害破 (有 dissolved 视为岁运化解, 跳过扣分) ——
-  for (const { kind, penalty, cat } of CONFLICTS) {
-    for (const f of a[kind] as ConflictFinding[]) {
-      const dissolvedBy = f.dissolved ?? []
-      if (dissolvedBy.length > 0) {
-        const via = dissolvedBy.map((d) => `${d.by.label}${d.by.gan}${d.by.zhi}`).join('、')
-        adjustments.push({
-          source: '岁运', category: '化解',
-          desc: `${f.name}（${f.positions}）— ${via} 引化, 效力消解`,
-        })
-        continue
-      }
-      const cs = constituents(f.positions, kind.startsWith('天干'), pillars)
-      if (!cs.length) continue
-      penalize(cs, penalty)
+  // —— 冲克刑害破 (被岁运引化则跳过扣分) ——
+  for (const x of [...a.天干, ...a.地支]) {
+    const rule = CONFLICT_PENALTY[x.hit.kind]
+    if (!rule) continue
+    const positions = posOf(x.hit.slots)
+    const dissolvedBy = x.mods.filter((m) => m.effect === '引化')
+    if (dissolvedBy.length > 0) {
+      const via = dissolvedBy
+        .map((d) => `${d.by.pillarType ?? '岁运'}${d.by.gan.str}${d.by.zhi.str}`)
+        .join('、')
       adjustments.push({
-        source: '原局', category: cat,
-        desc: `${f.name}（${f.positions}）→ -${penalty.toFixed(1)} 各方`,
+        source: '岁运', category: '化解',
+        desc: `${x.hit.name}（${positions}）— ${via} 引化, 效力消解`,
       })
+      continue
     }
+    const cs = constituents(positions, isGan(x.hit), pillars, shishen)
+    if (!cs.length) continue
+    penalize(cs, rule.penalty)
+    adjustments.push({
+      source: '原局', category: rule.cat,
+      desc: `${x.hit.name}（${positions}）→ -${rule.penalty.toFixed(1)} 各方`,
+    })
   }
 
   return { wxWeight: wxW, ssWeight: ssW, ssOrder, ssGroup, adjustments }
@@ -256,15 +297,17 @@ function huaWxOfShishen(
 
 export function ElementsPanel() {
   const pillars = useBazi((s) => s.pillars)
-  const dayGan = useBazi((s) => s.dayGan)
+  const shishen = useBazi((s) => s.shishen)
+  // 渲染层统一用字符串日主 (store 里是 GanC | null)
+  const dayGan = useBazi((s) => s.dayGan)?.str ?? ''
   const extras = useBaziStore((s) => s.extraPillars)
   const setExtras = useBaziStore((s) => s.setExtraPillars)
   const [open, setOpen] = useState(false)
   const [showAdj, setShowAdj] = useState(false)
 
   const data = useMemo(
-    () => compute(pillars, extras, dayGan),
-    [pillars, extras, dayGan],
+    () => compute(pillars, shishen, extras, dayGan),
+    [pillars, shishen, extras, dayGan],
   )
   if (!data) return null
 

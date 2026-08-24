@@ -22,6 +22,15 @@ const POINT_NEG = 'text-rose-600 dark:text-rose-400 tabular-nums'
 function ptClass(n: number) { return n > 0 ? POINT_POS : n < 0 ? POINT_NEG : 'text-slate-400 tabular-nums' }
 function signed(n: number) { return n > 0 ? `+${n}` : `${n}` }
 
+/** 旺相休囚死 色调: 旺/相 为强, 休 中性, 囚/死 为弱。 */
+const WANGSHUAI_TONE: Record<string, string> = {
+  旺: 'font-bold text-emerald-700 dark:text-emerald-400',
+  相: 'font-medium text-emerald-600 dark:text-emerald-500',
+  休: 'text-slate-500 dark:text-slate-400',
+  囚: 'font-medium text-amber-700 dark:text-amber-400',
+  死: 'font-bold text-rose-700 dark:text-rose-400',
+}
+
 export function StrengthPanel() {
   const a = useBazi((s) => s.analysis)
   const [open, setOpen] = useState(true)
@@ -54,11 +63,11 @@ export function StrengthPanel() {
           {/* 日主 */}
           <Row label="日主">
             <span
-              className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-bold border ${WUXING_TEXT[a.dayWx]} ${WUXING_BG_SOFT[a.dayWx]} ${WUXING_BORDER[a.dayWx]}`}
+              className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-bold border ${WUXING_TEXT[a.dayWx.str]} ${WUXING_BG_SOFT[a.dayWx.str]} ${WUXING_BORDER[a.dayWx.str]}`}
             >
-              {a.dayGan}
+              {a.dayGan.str}
             </span>
-            <span className={`font-medium ${WUXING_TEXT[a.dayWx]}`}>{a.dayWx}</span>
+            <span className={`font-medium ${WUXING_TEXT[a.dayWx.str]}`}>{a.dayWx.str}</span>
           </Row>
 
           {/* 得令 */}
@@ -68,6 +77,14 @@ export function StrengthPanel() {
             </span>
             <span className="text-slate-600 dark:text-slate-400 flex-1">{a.deLingNote}</span>
             <span className={ptClass(a.deLingPoints)}>{signed(a.deLingPoints)}</span>
+          </Row>
+
+          {/* 旺相休囚死 —— 月令层粗判, 与评分法独立 */}
+          <Row label="旺衰">
+            <span className={WANGSHUAI_TONE[a.wangShuai] ?? ''}>{a.wangShuai}</span>
+            <span className="text-slate-600 dark:text-slate-400 flex-1">
+              日主 {a.dayWx.str} 在 {a.monthZhi.str}月({a.monthWx.str}) 的旺相休囚死
+            </span>
           </Row>
 
           {/* 得地 (四柱根) */}
@@ -85,7 +102,7 @@ export function StrengthPanel() {
                       : 'border-emerald-400/40 bg-emerald-500/5'
                   }`}
                 >
-                  <div className="text-[10px] text-slate-500">{r.pos}支 {r.zhi}</div>
+                  <div className="text-[10px] text-slate-500">{r.pos}支 {r.zhi.str}</div>
                   <div className={`text-xs font-medium ${r.kind === 'none' ? '' : 'text-emerald-700 dark:text-emerald-400'}`}>
                     {r.label}
                   </div>
@@ -114,9 +131,9 @@ export function StrengthPanel() {
                   }`}
                 >
                   <span className="text-[10px] opacity-70">{c.pos}干</span>
-                  <span className="font-bold">{c.gan}</span>
-                  <SkillLink category="shishen" name={c.shishen} className="">
-                    {c.shishen}
+                  <span className="font-bold">{c.gan.str}</span>
+                  <SkillLink category="shishen" name={c.shishen.str} className="">
+                    {c.shishen.str}
                   </SkillLink>
                   <span className={ptClass(c.points)}>{signed(c.points)}</span>
                 </span>

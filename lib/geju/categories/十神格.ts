@@ -15,7 +15,7 @@ function deferToYangRen(ctx: GejuContext): boolean {
  */
 function monthGeFormed(ctx: GejuContext, target: Shishen): boolean {
   if (deferToYangRen(ctx)) return false
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const monthHide = ctx.monthHideShishen
   if ((monthHide[0] as Shishen | undefined) === target) return true
   if (monthHide.includes(target) && ss.tou(target)[0]) return true
@@ -34,7 +34,7 @@ function monthGeFormed(ctx: GejuContext, target: Shishen): boolean {
  *  6. (升格) 财生官 / 印护官 → 转 财官印全
  */
 function isZhengGuanGe(ctx: GejuContext): GejuHit | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const strength = ctx.strength
   const extras = ctx.extras
 
@@ -72,7 +72,7 @@ function zhengGuanHeQu(ctx: GejuContext): boolean {
   const heTarget = HE_GAN[ctx.dayGan as Gan]
   const guanGan = ZHENG_GUAN[ctx.dayGan as Gan]
   if (heTarget !== guanGan) return false
-  return ctx.pillars[1].gan.name === guanGan || ctx.pillars[3].gan.name === guanGan
+  return ctx.pillars[1].pillar.gan.str === guanGan || ctx.pillars[3].pillar.gan.str === guanGan
 }
 
 /**
@@ -83,7 +83,7 @@ function zhengGuanHeQu(ctx: GejuContext): boolean {
  *  ④ 身非极弱 / 近从弱 (极弱归从杀)。
  */
 function isQiShaGe(ctx: GejuContext): GejuHit | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const strength = ctx.strength
   const extras = ctx.extras
   if (!monthGeFormed(ctx, '七杀')) return null
@@ -104,7 +104,7 @@ function isQiShaGe(ctx: GejuContext): GejuHit | null {
   const foodControl = ss.tou('食神')[0] && ss.zang('食神')[0] && ss.adjacentTou('食神', '七杀')
   const yinHua = ctx.touCat('印') && (ss.zang('正印')[0] || ss.zang('偏印')[0])
   const renDiSha = ctx.dayYang && ctx.mainArr.some(
-    (p, i) => i !== 2 && p.zhi.name === (YANG_REN[ctx.dayGan as Gan] ?? ''),
+    (p, i) => i !== 2 && p.pillar.zhi.str === (YANG_REN[ctx.dayGan as Gan] ?? ''),
   )
   const details: string[] = []
   if (heQu) details.push('合官留杀')
@@ -134,7 +134,7 @@ function isQiShaGe(ctx: GejuContext): GejuHit | null {
  *  6. (升格) 财星接应 → 转 食神生财
  */
 function isShiShenYueLingGe(ctx: GejuContext): GejuHit | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const strength = ctx.strength
   const extras = ctx.extras
 
@@ -167,7 +167,7 @@ function isShiShenYueLingGe(ctx: GejuContext): GejuHit | null {
  *  5. 伤官清而不杂                                [岁运透食神 → 混杂 Break]
  */
 function isShangGuanGe(ctx: GejuContext): GejuHit | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const strength = ctx.strength
   const extras = ctx.extras
 
@@ -200,7 +200,7 @@ function isShangGuanGe(ctx: GejuContext): GejuHit | null {
  *  6. (升格) 财生官 / 食伤生财
  */
 function isZhengCaiGe(ctx: GejuContext): GejuHit | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const strength = ctx.strength
   const extras = ctx.extras
 
@@ -235,7 +235,7 @@ function isZhengCaiGe(ctx: GejuContext): GejuHit | null {
  *  6. (升格) 食伤生财 / 财生官杀
  */
 function isPianCaiGe(ctx: GejuContext): GejuHit | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const strength = ctx.strength
   const extras = ctx.extras
 
@@ -272,7 +272,7 @@ function isPianCaiGe(ctx: GejuContext): GejuHit | null {
  *  5. (升格) 官印相生 → 转 官印相生
  */
 function isZhengYinGe(ctx: GejuContext): GejuHit | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const strength = ctx.strength
   const extras = ctx.extras
 
@@ -306,14 +306,14 @@ function isZhengYinGe(ctx: GejuContext): GejuHit | null {
  *  5. 偏印不宜过重 (透 + 主气 ≤ 2)               [岁运透偏印 → 超阈 Break]
  */
 function isPianYinGe(ctx: GejuContext): GejuHit | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const strength = ctx.strength
   const extras = ctx.extras
 
   if (!monthGeFormed(ctx, '偏印')) return null
   if (strength.level === '身极旺') return null
 
-  const ganCount = ctx.mainArr.filter((p) => p.gan.shishen === '偏印').length
+  const ganCount = ctx.mainArr.filter((p) => ctx.ganShishenOf(p) === '偏印').length
   const mainCount = ctx.mainAt('偏印').length
   if (ganCount + mainCount > 2) return null
 
@@ -321,7 +321,7 @@ function isPianYinGe(ctx: GejuContext): GejuHit | null {
   const baseFormed = !xiao
 
   // 岁运: 偏印加量 → 超阈 Break; 透偏印贴食神且无财救 → Break
-  const extraXiaoTou = extras.extraArr.filter((p) => p.gan.shishen === '偏印').length
+  const extraXiaoTou = extras.extraArr.filter((p) => ctx.ganShishenOf(p) === '偏印').length
   const extOverflow = (ganCount + mainCount + extraXiaoTou) > 2
   const extXiao = xiao || (
     extras.tou('偏印') && !ctx.touCat('财') && !extras.touCat('财')

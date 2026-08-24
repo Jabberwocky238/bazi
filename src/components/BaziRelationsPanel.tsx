@@ -1,17 +1,16 @@
-// @ts-nocheck — 暂时跳过类型检查 (待迁移/待修复 engine 重构)
 import { useMemo } from 'react'
 import type { Pillar } from '@LIB'
 import { useBaziStore } from '@@/stores'
 import {
-  ganWuxing,
-  zhiWuxing,
-  GENERATES,
-  CONTROLS,
+  GanC,
+  ZhiC,
+  WuXingC,
   pairwiseGan,
   pairwiseZhi,
   type Gan,
   type Zhi,
-  type PairResult,
+  type PairGan,
+  type PairZhi,
 } from '@jabberwocky238/bazi-engine'
 import { WUXING_SVG_COLOR } from '@@/css'
 import { Description } from './Description'
@@ -29,27 +28,28 @@ interface Relation {
   direction: 'forward' | 'backward' | 'both'
 }
 
+/** a 相对 b 的五行关系 —— 走 engine 的 WuXingC.relationOf, 不自维生克表。 */
 function relationOf(a: BaziChar, b: BaziChar): Relation | null {
   if (!a.value || !b.value || !a.wuxing || !b.wuxing) return null
-  if (a.wuxing === b.wuxing) return { kind: '助', direction: 'both' }
-  if (GENERATES[a.wuxing as WuXing] === b.wuxing) return { kind: '生', direction: 'forward' }
-  if (CONTROLS[a.wuxing as WuXing] === b.wuxing) return { kind: '克', direction: 'forward' }
-  if (GENERATES[b.wuxing as WuXing] === a.wuxing) return { kind: '生', direction: 'backward' }
-  if (CONTROLS[b.wuxing as WuXing] === a.wuxing) return { kind: '克', direction: 'backward' }
-  return null
+  switch (WuXingC.from(a.wuxing as WuXing).relationOf(WuXingC.from(b.wuxing as WuXing))) {
+    case '同类': return { kind: '助', direction: 'both' }
+    case '我生': return { kind: '生', direction: 'forward' }
+    case '我克': return { kind: '克', direction: 'forward' }
+    case '生我': return { kind: '生', direction: 'backward' }
+    case '克我': return { kind: '克', direction: 'backward' }
+  }
 }
 
+/** 柱内干支作用 (同气/得覆/得载/盖头/截脚) —— 同样由 relationOf 判。 */
 function verticalRelationOf(gan: BaziChar, zhi: BaziChar): { type: string; kind: '生' | '克' | '助' } | null {
   if (!gan.wuxing || !zhi.wuxing) return null
-  const gw = gan.wuxing as WuXing
-  const zw = zhi.wuxing as WuXing
-
-  if (gw === zw) return { type: '同气', kind: '助' }
-  if (GENERATES[gw] === zw) return { type: '得覆', kind: '生' }
-  if (GENERATES[zw] === gw) return { type: '得载', kind: '生' }
-  if (CONTROLS[gw] === zw) return { type: '盖头', kind: '克' }
-  if (CONTROLS[zw] === gw) return { type: '截脚', kind: '克' }
-  return null
+  switch (WuXingC.from(gan.wuxing as WuXing).relationOf(WuXingC.from(zhi.wuxing as WuXing))) {
+    case '同类': return { type: '同气', kind: '助' }
+    case '我生': return { type: '得覆', kind: '生' }
+    case '生我': return { type: '得载', kind: '生' }
+    case '我克': return { type: '盖头', kind: '克' }
+    case '克我': return { type: '截脚', kind: '克' }
+  }
 }
 
 // 复用全局定义的五行颜色
@@ -127,36 +127,36 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
   if (dayun) extraList.push(dayun)
 
   const stems: BaziChar[] = pillars.map((p) => ({
-    key: `${p.label}-gan`,
-    label: `${p.label[0]}干`,
-    value: p.gan.name,
-    wuxing: p.gan.wuxing,
+    key: `${p.pillar.pillarType ?? ''}-gan`,
+    label: `${(p.pillar.pillarType ?? '')[0] ?? ''}干`,
+    value: p.pillar.gan.str,
+    wuxing: p.pillar.gan.wuxing.str,
   }))
   const branches: BaziChar[] = pillars.map((p) => ({
-    key: `${p.label}-zhi`,
-    label: `${p.label[0]}支`,
-    value: p.zhi.name,
-    wuxing: p.zhi.wuxing,
+    key: `${p.pillar.pillarType ?? ''}-zhi`,
+    label: `${(p.pillar.pillarType ?? '')[0] ?? ''}支`,
+    value: p.pillar.zhi.str,
+    wuxing: p.pillar.zhi.wuxing.str,
   }))
 
   const extraStems: BaziChar[] = extraList.map((p) => ({
     key: `extra-${p.label}-gan`,
     label: p.label,
     value: p.gan,
-    wuxing: ganWuxing(p.gan) ?? '',
+    wuxing: GanC.from(p.gan).wuxing.str,
   }))
   const extraBranches: BaziChar[] = extraList.map((p) => ({
     key: `extra-${p.label}-zhi`,
     label: '',
     value: p.zhi,
-    wuxing: zhiWuxing(p.zhi) ?? '',
+    wuxing: ZhiC.from(p.zhi).wuxing.str,
   }))
 
   const extraCount = extraList.length
 
   // 所有天干两两关系（包括相邻和不相邻）
   const ganPairs = useMemo(() => {
-    const results: { from: number; to: number; pair: PairResult | null }[] = []
+    const results: { from: number; to: number; pair: PairGan | null }[] = []
     for (let i = 0; i < stems.length; i++) {
       for (let j = i + 1; j < stems.length; j++) {
         results.push({
@@ -180,7 +180,7 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
 
   // 所有地支两两关系
   const zhiPairs = useMemo(() => {
-    const results: { from: number; to: number; pair: PairResult | null }[] = []
+    const results: { from: number; to: number; pair: PairZhi | null }[] = []
     for (let i = 0; i < branches.length; i++) {
       for (let j = i + 1; j < branches.length; j++) {
         results.push({
@@ -302,7 +302,7 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
               <circle cx={x1} cy={y} r="3" fill="#6b7280" />
               <circle cx={x2} cy={y} r="3" fill="#6b7280" />
               <text x={(x1 + x2) / 2} y={y - 5} textAnchor="middle" className="fill-slate-600 text-[10px]">
-                {pair.note}
+                {pair.name}
               </text>
             </g>
           )
@@ -321,7 +321,7 @@ export function BaziRelationsPanel({ pillars }: { pillars: Pillar[] }) {
               <circle cx={x1} cy={y} r="3" fill="#6b7280" />
               <circle cx={x2} cy={y} r="3" fill="#6b7280" />
               <text x={(x1 + x2) / 2} y={y + 14} textAnchor="middle" className="fill-slate-600 text-[10px]">
-                {pair.note}
+                {pair.name}
               </text>
             </g>
           )

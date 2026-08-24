@@ -1,116 +1,126 @@
-import {Calculator} from '@jabberwocky238/bazi-engine'
 import type {
   PillarType,
   Gan,
   Zhi,
   WuXing,
-  Shishen,
-  ShishenCat,
   Season,
   Sex,
   BaziInput,
+  DetailedPillar,
+  ChangSheng,
+} from '@jabberwocky238/bazi-engine'
+import {
+  GanC,
+  ZhiC,
+  WuXingC,
+  PillarC,
+  BaziInputC,
+  ShishenC,
+  ShishenCC,
+  shishenOf,
+  shishenWuxing as engineShishenWuxing,
+  Calculator,
+  pairwiseZhi,
+  GAN,
+  ZHI,
+  type Shishen,
+  type ShishenCat,
 } from '@jabberwocky238/bazi-engine'
 
 export type { Gan, Zhi, WuXing, Shishen, ShishenCat, Season, PillarType, BaziInput, Sex }
-import type { DetailedPillar } from '@jabberwocky238/bazi-engine'
+export type { DetailedPillar, ChangSheng }
+export { GanC, ZhiC, WuXingC, PillarC, BaziInputC, ShishenC, ShishenCC }
 
-// 注意：engine 的 Pillar 是 { gan: Gan, zhi: Zhi } 简单结构
-// 而 DetailedPillar 是包含 { name, wuxing, shishen } 的详细结构
+/** 一柱即 engine 的 DetailedPillar (干支收在 .pillar: PillarC 下)。 */
 export type Pillar = DetailedPillar
-export type { DetailedPillar }
 
-// 为兼容前端旧代码，扩展 DetailedPillar 添加衍生字段
-// 在 fillDerivedFields 或相关函数中需要填充这些字段
-export interface ExtendedDetailedPillar extends DetailedPillar {
-  // 十神快捷访问（与 gan.shishen 一致，方便旧代码）
-  shishen: Shishen | '日主' | ''
-  shishenWuxing: WuXing | ''
-  // 五行快捷访问（与 gan.wuxing / zhi.wuxing 一致）
-  ganWuxing: WuXing | ''
-  zhiWuxing: WuXing | ''
-  // 隐藏标记（用于格局判定时临时隐藏某柱）
-  hideGans: Gan[]
-  hideShishen: Shishen[]
-  hideShishenWuxings: WuXing[]
-  // 自坐（天干在地支的状态）
-  zizuo: string
-}
+// ————————————————————————————————————————————————————————
+// 柱访问器 —— engine 1.2.0 把干支收进 p.pillar (PillarC),
+// 这几个 helper 让调用方不必到处写 p.pillar.gan / p.pillar.zhi。
+// ————————————————————————————————————————————————————————
 
-// 兼容旧代码的 BaziDerived 名称，实际就是 BaziResult
+/** 柱天干。 */
+export function pGan(p: DetailedPillar): GanC { return p.pillar.gan }
+/** 柱地支。 */
+export function pZhi(p: DetailedPillar): ZhiC { return p.pillar.zhi }
+/** 柱位标签 (年柱/月柱/日柱/时柱; 岁运柱为其自身标签)。 */
+export function pLabel(p: DetailedPillar): string { return p.pillar.pillarType ?? '' }
+/** 柱纳音名。 */
+export function pNayin(p: DetailedPillar): string { return p.pillar.nayinName() }
+
+/** 兼容旧代码的 BaziDerived 名称，实际就是 BaziResult */
 export type BaziDerived = BaziResult
+
+/**
+ * 一柱的十神视图 —— engine 的 DetailedPillar 不再挂十神, 由 Calculator.shishen()
+ * 统一提供; 这里按柱位把结果摊平, 供 UI 与算法层按 index 取用。
+ */
+export interface PillarShishenView {
+  /** 天干十神; 日柱为 null (日主自身不论十神)。 */
+  gan: ShishenC | null
+  /** 地支藏干各自的十神 (与 zhi.canggan() 同序)。 */
+  zhi: ShishenC[]
+}
 
 export type BaziResult = {
   // 基础信息
   solarStr: string
   trueSolarStr: string
   lunarStr: string
-  pillars: ExtendedDetailedPillar[]
+  pillars: DetailedPillar[]
   hourKnown: boolean
+  /** 四柱十神 (与 pillars 同序同长)。 */
+  shishen: PillarShishenView[]
 
   // BaziDerived 合并字段
-  dayGan: Gan | ''
-  dayZhi: Zhi | ''
+  dayGan: GanC | null
+  dayZhi: ZhiC | null
   dayGz: string
-  dayWx: WuXing | ''
+  dayWx: WuXingC | null
   dayYang: boolean
-  yearZhi: Zhi | ''
-  monthZhi: Zhi | ''
+  yearZhi: ZhiC | null
+  monthZhi: ZhiC | null
   season: Season | ''
-  monthCat: ShishenCat | ''
+  monthCat: ShishenCC | null
   monthZhiBeingChong: boolean
-  mainArr: ExtendedDetailedPillar[]
+  mainArr: DetailedPillar[]
   ganSet: Set<Gan>
 }
-
 
 /** 时辰未知占位 (BaziInputState.hour 取这个值即代表"时柱未知")。 */
 export const HOUR_UNKNOWN = -1
 
-/** 十神 → 类别映射（依 engine ShishenMap 派生）。 */
-import { ShishenMap, ganWuxing, wuxingRelations, seasonOf } from '@jabberwocky238/bazi-engine'
+/**
+ * 地支六冲对 —— 由 engine 的 pairwiseZhi 反查生成, 不再手维表。
+ * 六冲即 相冲, 十二支两两扫一遍即得。
+ */
+export const CHONG_PAIR: Record<string, string> = Object.fromEntries(
+  ZHI.flatMap((a) =>
+    ZHI.map((b) => (pairwiseZhi(a, b)?.kind === '相冲' ? [a, b] : null))
+      .filter((x): x is [Zhi, Zhi] => !!x),
+  ),
+)
 
-export const SHI_SHEN_CAT: Record<Shishen | string, ShishenCat> = Object.fromEntries(
-  Object.entries(ShishenMap).map(([name, def]) => [name, def.category]),
-) as Record<Shishen | string, ShishenCat>
+/** 阳干判定 —— 十干序偶数即阳 (甲/丙/戊/庚/壬), 用 engine 的 GanC.index。 */
+export const YANG_GANS: ReadonlySet<string> = new Set(
+  GAN.filter((g) => GanC.from(g).index % 2 === 0),
+)
 
-/** 地支六冲对。 */
-export const CHONG_PAIR: Record<string, string> = {
-  子: '午', 午: '子', 卯: '酉', 酉: '卯',
-  寅: '申', 申: '寅', 巳: '亥', 亥: '巳',
-  辰: '戌', 戌: '辰', 丑: '未', 未: '丑',
-}
-
-/** 阳干集合 (甲/丙/戊/庚/壬)。 */
-export const YANG_GANS: ReadonlySet<string> = new Set(['甲', '丙', '戊', '庚', '壬'])
+/** 十神 → 类别映射 (由 engine ShishenC.catMap 派生)。 */
+export const SHI_SHEN_CAT: Record<Shishen | string, ShishenCat> = { ...ShishenC.catMap }
 
 /**
- * 十神五行 (依日主) — 通过 engine 的 ShishenMap + wuxingRelations 派生。
- * 日主本位/空串/未识别十神统一回空串。
+ * 十神五行 (依日主)。日主本位/空串/未识别十神统一回 null。
  */
-export function shishenWuxing(dayGan: string, shishen: string): WuXing | '' {
-  if (shishen === '日主') return ganWuxing(dayGan as Gan) ?? ''
-  const def = ShishenMap[shishen as Shishen]
-  if (!def) return ''
-  return wuxingRelations(dayGan as Gan)[def.relation] ?? ''
+export function shishenWuxing(dayGan: GanC, shishen: ShishenC | '日主'): WuXingC | null {
+  if (shishen === '日主') return dayGan.wuxing
+  return engineShishenWuxing(dayGan, shishen)
 }
 
-/** 时辰未知时的占位时柱 (UI 应依 hourKnown 跳过渲染)。 */
-export const EMPTY_PILLAR: ExtendedDetailedPillar = {
-  label: '时柱' as PillarType,
-  gan: { name: '', wuxing: '', shishen: '' },
-  zhi: { name: '', wuxing: '', cangGan: [] },
-  nayin: '',
-  shensha: [],
-  changsheng: '',
-  shishen: '',
-  shishenWuxing: '',
-  ganWuxing: '',
-  zhiWuxing: '',
-  hideGans: [],
-  hideShishen: [],
-  hideShishenWuxings: [],
-  zizuo: '',
-} as unknown as ExtendedDetailedPillar
+/** 一柱是否为有效柱 (时辰未知时时柱缺省)。 */
+export function hasPillar(p: DetailedPillar | undefined): p is DetailedPillar {
+  return !!p
+}
 
 /** 空排盘结果占位 */
 export const EMPTY_RESULT: BaziResult = {
@@ -119,29 +129,34 @@ export const EMPTY_RESULT: BaziResult = {
   lunarStr: '',
   pillars: [],
   hourKnown: false,
-  dayGan: '',
-  dayZhi: '',
+  shishen: [],
+  dayGan: null,
+  dayZhi: null,
   dayGz: '',
-  dayWx: '',
+  dayWx: null,
   dayYang: false,
-  yearZhi: '',
-  monthZhi: '',
+  yearZhi: null,
+  monthZhi: null,
   season: '',
-  monthCat: '',
+  monthCat: null,
   monthZhiBeingChong: false,
   mainArr: [],
   ganSet: new Set(),
 }
 
-/** 四柱占位 (年/月/日/时)，label 各异，用于无有效排盘时渲染空表，避免 key 重复。 */
-export function emptyPillars(): ExtendedDetailedPillar[] {
-  return (['年柱', '月柱', '日柱', '时柱'] as PillarType[]).map((label) => ({
-    ...EMPTY_PILLAR,
-    label,
+/**
+ * 计算四柱十神视图。日柱天干十神记 null。
+ */
+export function computeShishenView(pillars: DetailedPillar[]): PillarShishenView[] {
+  const dayGan = pillars[2] && pGan(pillars[2])
+  if (!dayGan) return pillars.map(() => ({ gan: null, zhi: [] }))
+  return pillars.map((p) => ({
+    gan: p.isRizhu ? null : shishenOf(dayGan, pGan(p)),
+    zhi: pZhi(p).canggan().map((g) => shishenOf(dayGan, g)),
   }))
 }
 
-/** 填充派生命段到 BaziResult，并为每个 pillar 添加扩展字段 */
+/** 填充派生字段到 BaziResult。pillars 保持 engine 原样 (XxxC 值对象)。 */
 export function fillDerivedFields(result: {
   solarStr: string
   trueSolarStr: string
@@ -149,56 +164,40 @@ export function fillDerivedFields(result: {
   pillars: DetailedPillar[]
   hourKnown: boolean
 }): BaziResult {
-  // 为每个 pillar 添加扩展字段，兼容旧代码访问方式
-  const pillars = result.pillars.map((p) => ({
-    ...p,
-    // 十神快捷访问
-    shishen: p.gan.shishen,
-    shishenWuxing: p.gan.wuxing,
-    // 五行快捷访问
-    ganWuxing: p.gan.wuxing,
-    zhiWuxing: p.zhi.wuxing,
-    // 隐藏标记默认值
-    hideGans: p.zhi.cangGan.map(c => c.name as Gan),
-    hideShishen: p.zhi.cangGan.map(c => c.shishen),
-    hideShishenWuxings: p.zhi.cangGan.map(c => c.wuxing),
-    // 自坐 = 日干在该柱地支的十二长生状态 (engine 已算好 changsheng)
-    zizuo: p.changsheng,
-  })) as ExtendedDetailedPillar[]
+  const { pillars } = result
+  const [yearPillar, monthPillar, dayPillar] = pillars
 
-  const yearPillar = pillars[0]
-  const monthPillar = pillars[1]
-  const dayPillar = pillars[2]
-  const hourPillar = pillars[3]
+  const dayGan = dayPillar ? pGan(dayPillar) : null
+  const dayZhi = dayPillar ? pZhi(dayPillar) : null
+  const dayGz = dayGan && dayZhi ? `${dayGan.str}${dayZhi.str}` : ''
+  const dayWx = dayGan?.wuxing ?? null
+  const dayYang = dayGan ? YANG_GANS.has(dayGan.str) : false
+  const yearZhi = yearPillar ? pZhi(yearPillar) : null
+  const monthZhi = monthPillar ? pZhi(monthPillar) : null
+  const season: Season | '' = monthZhi ? monthZhi.season().season : ''
 
-  const dayGan = dayPillar?.gan?.name ?? ''
-  const dayZhi = dayPillar?.zhi?.name ?? ''
-  const dayGz = dayGan && dayZhi ? `${dayGan}${dayZhi}` : ''
-  const dayWx = dayPillar?.gan?.wuxing ?? ''
-  const dayYang = YANG_GANS.has(dayGan)
-  const yearZhi = yearPillar?.zhi?.name ?? ''
-  const monthZhi = monthPillar?.zhi?.name ?? ''
-  const season: Season | '' = monthZhi ? (seasonOf(monthZhi as Zhi) ?? '') : ''
-  const monthCat = monthPillar?.gan?.shishen ? (SHI_SHEN_CAT[monthPillar.gan.shishen] ?? '') : ''
-  const monthZhiBeingChong = CHONG_PAIR[monthZhi] === (dayPillar?.zhi?.name ?? '')
-  const mainArr = pillars.slice()
-  const ganSet = new Set(pillars.map((p) => p.gan.name).filter(Boolean) as Gan[])
+  const shishen = computeShishenView(pillars)
+  const monthCat = shishen[1]?.gan?.cat ?? null
+  const monthZhiBeingChong = !!monthZhi && CHONG_PAIR[monthZhi.str] === (dayZhi?.str ?? '')
+  const ganSet = new Set(pillars.map((p) => pGan(p).str))
 
   return {
     ...result,
     pillars,
-    dayGan: dayGan as Gan | '',
-    dayZhi: dayZhi as Zhi | '',
+    shishen,
+    dayGan,
+    dayZhi,
     dayGz,
-    dayWx: dayWx as WuXing | '',
+    dayWx,
     dayYang,
-    yearZhi: yearZhi as Zhi | '',
-    monthZhi: monthZhi as Zhi | '',
+    yearZhi,
+    monthZhi,
     season,
-    monthCat: monthCat as ShishenCat | '',
+    monthCat,
     monthZhiBeingChong,
-    mainArr,
+    mainArr: pillars.slice(),
     ganSet,
   }
 }
 
+export { Calculator }

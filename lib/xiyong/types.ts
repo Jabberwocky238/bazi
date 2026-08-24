@@ -1,31 +1,21 @@
 /** 喜用神模块类型 + 共用映射。其他子模块共享之。 */
-import {
-  GENERATES as GEN,
-  CONTROLS as CON,
-  GENERATED_BY as GEN_BY,
-  CONTROLLED_BY as CON_BY,
-} from '@jabberwocky238/bazi-engine'
-import type { WuXing } from '@jabberwocky238/bazi-engine'
+import { ShishenC, ShishenCC, WuXingC } from '@jabberwocky238/bazi-engine'
+import type { WuXing, ShishenCat } from '@jabberwocky238/bazi-engine'
 export type { WuXing }
-export type Cat = '比劫' | '印' | '食伤' | '财' | '官杀'
+/** 十神类别 —— 直接复用 engine 的 ShishenCat。 */
+export type Cat = ShishenCat
 export type Side = 'self' | 'other' | 'neutral'
 
-export const CAT_OF_SHISHEN: Record<string, Cat> = {
-  比肩: '比劫', 劫财: '比劫',
-  正印: '印', 偏印: '印',
-  食神: '食伤', 伤官: '食伤',
-  正财: '财', 偏财: '财',
-  正官: '官杀', 七杀: '官杀',
-}
+/** 十神 → 类别; 由 engine 的 ShishenC.catMap 派生, 不再自维表。 */
+export const CAT_OF_SHISHEN: Record<string, Cat> = { ...ShishenC.catMap }
 
+/**
+ * 日主五行 + 十神类别 → 该类别的五行。
+ * 由 engine 的 类别→relation (ShishenCC.relation) 与
+ * WuXingC.relationFrom(relation) 组合得出, 不再自维四张生克表。
+ */
 export function catToWx(dayWx: WuXing, cat: Cat): WuXing {
-  switch (cat) {
-    case '比劫': return dayWx
-    case '印':   return GEN_BY[dayWx]
-    case '食伤': return GEN[dayWx]
-    case '财':   return CON[dayWx]
-    case '官杀': return CON_BY[dayWx]
-  }
+  return WuXingC.from(dayWx).relationFrom(ShishenCC.from(cat).relation).str
 }
 
 // —— 干支作用 (盖头/截脚/覆载) ——

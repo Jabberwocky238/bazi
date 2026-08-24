@@ -3,7 +3,7 @@
  * 直接使用 @jabberwocky238/bazi-engine 的 Calculator。
  */
 import { Solar } from 'lunar-typescript'
-import  {Calculator, type DetailedPillar } from '@jabberwocky238/bazi-engine'
+import  {Calculator, BaziInputC, SolarTime, type DetailedPillar } from '@jabberwocky238/bazi-engine'
 import {
   type BaziInput,
   type Gan,
@@ -13,7 +13,6 @@ import {
 } from '@jabberwocky238/bazi-engine'
 import {
   HOUR_UNKNOWN,
-  EMPTY_PILLAR,
   EMPTY_RESULT,
   fillDerivedFields,
   type BaziResult,
@@ -23,32 +22,19 @@ import { detectGejuWith, type GejuOutput } from './geju'
 import { analyzeXiyong, type XiyongAnalysis } from './xiyong'
 
 // ————————————————————————————————————————————————————————
-// 真太阳时均时差修正 (按 120°E, 不含经度修正)
+// 真太阳时 —— 均时差 / 经度修正 / 时区一律走 engine 的 SolarTime,
+// 不再自维近似式 (SolarTime 内部用 ShouXingUtil 天文级数)。
 // ————————————————————————————————————————————————————————
 
-function dayOfYear(year: number, month: number, day: number): number {
-  const start = Date.UTC(year, 0, 1)
-  const d = Date.UTC(year, month - 1, day)
-  return Math.floor((d - start) / 86400000) + 1
-}
-
-/** 均时差(分钟). 公历→真太阳时使用. 仅靠太阳轨道, 不含经度修正. */
+/** 均时差(分钟). 委托 engine SolarTime.equationOfTime. */
 export function equationOfTime(year: number, month: number, day: number): number {
-  const n = dayOfYear(year, month, day)
-  const B = (2 * Math.PI * (n - 81)) / 365
-  return 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B)
+  return SolarTime.equationOfTime(Date.UTC(year, month - 1, day, 12, 0, 0))
 }
 
+/** 按 120°E (北京标准时中央经线) 只做均时差修正后的真太阳时字符串. */
 function formatTrueSolar(year: number, month: number, day: number, hour: number, minute: number): string {
-  const eot = equationOfTime(year, month, day)
-  const d = new Date(year, month - 1, day, hour, minute, 0)
-  d.setMinutes(d.getMinutes() + Math.round(eot))
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mm = String(d.getMinutes()).padStart(2, '0')
-  return `${y}-${m}-${dd} ${hh}:${mm}`
+  const st = SolarTime.fromLocal(year, month, day, hour, minute, 0, { longitude: 120, tzOffset: 8 })
+  return st.toString().slice(0, 16)
 }
 
 // ————————————————————————————————————————————————————————
@@ -79,9 +65,10 @@ export function computeBazi(
     sex,
   }
 
-  const calc = new Calculator(input)
+  const calc = new Calculator(BaziInputC.from(input))
+  // 时辰未知时 engine 只产 3 柱; 不补占位柱 (ZhiC/GanC 无空值表示),
+  // 下游一律按 pillars.length / hourKnown 判断时柱是否存在。
   const pillars = calc.pillars()
-  if (pillars.length === 3) pillars.push(EMPTY_PILLAR)
 
   return fillDerivedFields({
     solarStr: hourKnown
@@ -116,9 +103,8 @@ export function parseBaziToResult(bazi: [string, string, string, string], sex: S
       hour: hourKnown ? parseGz(h) : undefined,
       sex,
     }
-    const calc = new Calculator(input)
+    const calc = new Calculator(BaziInputC.from(input))
     const pillars = calc.pillars()
-    if (pillars.length === 3) pillars.push(EMPTY_PILLAR)
     return fillDerivedFields({
       solarStr: '',
       trueSolarStr: '',
@@ -177,17 +163,18 @@ export function computeFromState(s: BaziInputData): ComputedFromState | null {
   const hourKnown = hour !== HOUR_UNKNOWN && hour >= 0 && hour < 24
 
   if (s.mode === 'gregorian' && s.longitude !== undefined && hourKnown) {
-    const eot = equationOfTime(year, month, day)
-    const longShift = (s.longitude - 120) * 4
-    const total = Math.round(eot + longShift)
-    const d = new Date(year, month - 1, day, hour, minute, 0)
-    d.setMinutes(d.getMinutes() + total)
+    // 经度修正 + 均时差 一并交给 SolarTime; 钟表时间按东八区解释。
+    const st = SolarTime.fromLocal(year, month, day, hour, minute, 0, {
+      longitude: s.longitude,
+      tzOffset: 8,
+    })
     solarStr = fmtDate(year, month, day, hour, minute)
-    year = d.getFullYear()
-    month = d.getMonth() + 1
-    day = d.getDate()
-    hour = d.getHours()
-    minute = d.getMinutes()
+    const t = st.trueSolarParts
+    year = t.year
+    month = t.month
+    day = t.day
+    hour = t.hour
+    minute = t.minute
     trueSolarStr = fmtDate(year, month, day, hour, minute)
   } else if (s.mode === 'trueSolar' && hourKnown) {
     trueSolarStr = fmtDate(year, month, day, hour, minute)
@@ -214,7 +201,7 @@ export function computeFromState(s: BaziInputData): ComputedFromState | null {
 export function deriveAll(r: BaziResult, gejuExtras: { dayun?: DetailedPillar; liunian?: DetailedPillar } = {}) {
   const strengthDerived = deriveStrength(r.pillars)
   const gejuHits = detectGejuWith(r, strengthDerived, gejuExtras)
-  const xiyongAnalysis = analyzeXiyong(r.pillars, strengthDerived.analysis, gejuHits)
+  const xiyongAnalysis = analyzeXiyong(r.pillars, r.shishen, strengthDerived.analysis, gejuHits)
   return { ...r, ...strengthDerived, gejuHits, xiyongAnalysis }
 }
 

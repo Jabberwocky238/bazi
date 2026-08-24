@@ -1,4 +1,4 @@
-import type { Sex, WuXing } from '@jabberwocky238/bazi-engine'
+import { WUXING, type Sex, type WuXing } from '@jabberwocky238/bazi-engine'
 import type { BaziInputData, BaziInputMode } from '../compute'
 import { computeFromState, deriveAll } from '../compute'
 import type { StrengthLevel } from '../strength'
@@ -6,7 +6,7 @@ import { countWxStrength } from '../xiyong/tongguan'
 
 export * from './calendar'
 
-const WUXING = ['木', '火', '土', '金', '水'] as const satisfies readonly WuXing[]
+// 五行序列直接用 engine 的 WUXING, 不再本地重列
 const NONE = '无' as const
 
 export interface BaziDistributionInput {
@@ -166,7 +166,7 @@ export function calculateBaziDistribution(
     const wuxingProportion = Object.fromEntries(
       WUXING.map((wx) => [wx, total === 0 ? 0 : wuxingStrength[wx] / total]),
     ) as Record<WuXing, number>
-    const bazi = computed.bazi.pillars.map((pillar) => `${pillar.gan.name}${pillar.zhi.name}`)
+    const bazi = computed.bazi.pillars.map((pillar) => `${pillar.pillar.gan.str}${pillar.pillar.zhi.str}`)
 
     samples.push({
       offsetHours,

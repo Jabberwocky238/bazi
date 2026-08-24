@@ -11,7 +11,7 @@
  *  HepanCrossPanel 仍走 lib/hepan/cross 做跨盘.
  */
 import { analyzeGanZhi, type GanZhiAnalysis } from '@jabberwocky238/bazi-engine'
-import type { DetailedPillar } from '../base'
+import { computeShishenView, type DetailedPillar } from '../base'
 import { analyzeStrength, type StrengthAnalysis } from '../strength'
 import { analyzeXiyong, type XiyongAnalysis } from '../xiyong'
 
@@ -27,9 +27,9 @@ export function analyzeSide(pillars: DetailedPillar[]): SideAnalysis | null {
   if (pillars.length !== 4) return null
   const strength = analyzeStrength(pillars)
   if (!strength) return null
-  const xiyong = analyzeXiyong(pillars, strength)
+  const xiyong = analyzeXiyong(pillars, computeShishenView(pillars), strength)
   if (!xiyong) return null
-  const enginePillars = pillars.map((p) => ({ gan: p.gan.name, zhi: p.zhi.name }))
+  const enginePillars = pillars.map((p) => ({ gan: p.pillar.gan.str, zhi: p.pillar.zhi.str }))
   const ganZhi = analyzeGanZhi(enginePillars, [])
   if (!ganZhi) return null
   return { pillars, strength, xiyong, ganZhi }

@@ -9,14 +9,14 @@
 
 import type { DetailedPillar } from './base'
 import {
-  CANG_GAN,
-  changshengState,
-  ganWuxing,
+  PillarC,
+  ganWangShuai,
   shishenOf,
-  zhiWuxing,
-  type Gan,
-  type WuXing,
-  type Zhi,
+  GanC,
+  WuXingC,
+  ZhiC,
+  type ShishenC,
+  type WangShuai,
 } from '@jabberwocky238/bazi-engine'
 
 const HIDDEN_STEM_STRENGTH = [10, 4, 2] as const
@@ -47,9 +47,9 @@ type LongShengState = keyof typeof LONG_SHENG_POINTS
 export type RootKind = 'positive' | 'negative' | 'neutral' | 'none'
 
 export interface HiddenStemContrib {
-  gan: string
-  shishen: string
-  wuxing: string
+  gan: GanC
+  shishen: ShishenC
+  wuxing: WuXingC
   base: number
   direction: 1 | -1
   points: number
@@ -57,7 +57,7 @@ export interface HiddenStemContrib {
 
 export interface RootInfo {
   pos: '年' | '月' | '日' | '时'
-  zhi: string
+  zhi: ZhiC
   kind: RootKind
   isZheng: boolean
   label: string
@@ -69,8 +69,8 @@ export interface RootInfo {
 
 export interface GanContrib {
   pos: '年' | '月' | '时'
-  gan: string
-  shishen: string
+  gan: GanC
+  shishen: ShishenC
   isSelf: boolean
   base: number
   weight: number
@@ -83,10 +83,10 @@ export type StrengthLevel =
   | '身略弱' | '身弱' | '身极弱' | '近从弱'
 
 export interface StrengthAnalysis {
-  dayGan: string
-  dayWx: string
-  monthZhi: string
-  monthWx: string
+  dayGan: GanC
+  dayWx: WuXingC
+  monthZhi: ZhiC
+  monthWx: WuXingC
   /** 得令：月令十二长生修正为正值。 */
   deLing: boolean
   deLingNote: string
@@ -100,6 +100,11 @@ export interface StrengthAnalysis {
   /** 月令十二长生修正。 */
   correction: number
   correctionNote: string
+  /**
+   * 日主在月令下的旺相休囚死 (engine ganWangShuai) —— 粗判, 与评分法独立。
+   * 旺 > 相 > 休 > 囚 > 死。
+   */
+  wangShuai: WangShuai
   /** 总分 */
   score: number
   level: StrengthLevel
@@ -109,21 +114,10 @@ export interface StrengthAnalysis {
 // 3. 辅助
 // ————————————————————————————————————————————————————————
 
-/** 两个五行的关系 (相对 a)：same=同类，sheng=生a，ke=克a，xie=a生，hao=a克 */
-function relation(a: string, b: string): 'same' | 'sheng' | 'ke' | 'xie' | 'hao' {
-  if (a === b) return 'same'
-  const gen: Record<string, string> = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' }
-  const con: Record<string, string> = { 木: '土', 土: '水', 水: '火', 火: '金', 金: '木' }
-  if (gen[b] === a) return 'sheng'
-  if (con[b] === a) return 'ke'
-  if (gen[a] === b) return 'xie'
-  if (con[a] === b) return 'hao'
-  return 'same'
-}
-
-function directionOf(dayWx: string, otherWx: string): 1 | -1 {
-  const r = relation(dayWx, otherWx)
-  return r === 'same' || r === 'sheng' ? 1 : -1
+/** 生扶 (+1) / 克泄耗 (-1)：同类与生我为生扶，其余为克泄耗。 */
+function directionOf(dayWx: WuXingC, otherWx: WuXingC): 1 | -1 {
+  const r = dayWx.relationOf(otherWx)
+  return r === '同类' || r === '生我' ? 1 : -1
 }
 
 function directionLabel(direction: 1 | -1): string {
@@ -131,19 +125,16 @@ function directionLabel(direction: 1 | -1): string {
 }
 
 function analyzeBranch(
-  dayGan: Gan,
-  dayWx: WuXing,
-  zhi: string,
+  dayGan: GanC,
+  dayWx: WuXingC,
+  zhi: ZhiC,
   pos: RootInfo['pos'],
   isZheng: boolean,
 ): RootInfo {
   const weight = BRANCH_WEIGHTS[pos]
-  if (!zhi || !(zhi in CANG_GAN)) {
-    return { pos, zhi, kind: 'none', isZheng, label: '未知', rawPoints: 0, weight, points: 0, hidden: [] }
-  }
 
-  const hidden = CANG_GAN[zhi as Zhi].map((gan, i) => {
-    const wuxing = ganWuxing(gan)
+  const hidden = zhi.canggan().map((gan, i) => {
+    const wuxing = gan.wuxing
     const direction = directionOf(dayWx, wuxing)
     const base = HIDDEN_STEM_STRENGTH[i] ?? 0
     return {
@@ -163,21 +154,19 @@ function analyzeBranch(
 }
 
 function analyzeStem(
-  dayGan: Gan,
-  dayWx: WuXing,
-  gan: string,
+  dayGan: GanC,
+  dayWx: WuXingC,
+  gan: GanC,
   pos: GanContrib['pos'],
-): GanContrib | null {
-  if (!gan || !(ganWuxing as (g: string) => WuXing | undefined)(gan)) return null
-  const g = gan as Gan
-  const wx = ganWuxing(g)
+): GanContrib {
+  const wx = gan.wuxing
   const direction = directionOf(dayWx, wx)
   const weight = STEM_WEIGHTS[pos]
   const points = 10 * direction * weight
   return {
     pos,
     gan,
-    shishen: shishenOf(dayGan, g),
+    shishen: shishenOf(dayGan, gan),
     isSelf: direction > 0,
     base: 10,
     weight,
@@ -193,40 +182,40 @@ function analyzeStem(
 export function analyzeStrength(pillars: DetailedPillar[]): StrengthAnalysis | null {
   if (pillars.length !== 4) return null
   const [yearP, monthP, dayP, hourP] = pillars
-  const dayGan = dayP.gan.name as Gan
-  const dayWx = ganWuxing(dayGan)
-  if (!dayWx) return null
-  const monthZhi = monthP.zhi.name as Zhi
-  if (!monthZhi) return null
-  const monthWx = zhiWuxing(monthZhi)
+  const dayGan = dayP.pillar.gan
+  const dayWx = dayGan.wuxing
+  const monthZhi = monthP.pillar.zhi
+  const monthWx = monthZhi.wuxing
 
   const branches: RootInfo[] = [
-    analyzeBranch(dayGan, dayWx, yearP.zhi.name, '年', false),
-    analyzeBranch(dayGan, dayWx, monthP.zhi.name, '月', false),
-    analyzeBranch(dayGan, dayWx, dayP.zhi.name, '日', true),
-    analyzeBranch(dayGan, dayWx, hourP.zhi.name, '时', false),
+    analyzeBranch(dayGan, dayWx, yearP.pillar.zhi, '年', false),
+    analyzeBranch(dayGan, dayWx, monthP.pillar.zhi, '月', false),
+    analyzeBranch(dayGan, dayWx, dayP.pillar.zhi, '日', true),
+    analyzeBranch(dayGan, dayWx, hourP.pillar.zhi, '时', false),
   ]
   const rootPoints = Number(branches.reduce((s, r) => s + r.points, 0).toFixed(10))
 
   const ganContribs = [
-    analyzeStem(dayGan, dayWx, yearP.gan.name, '年'),
-    analyzeStem(dayGan, dayWx, monthP.gan.name, '月'),
-    analyzeStem(dayGan, dayWx, hourP.gan.name, '时'),
-  ].filter((x): x is GanContrib => !!x)
+    analyzeStem(dayGan, dayWx, yearP.pillar.gan, '年'),
+    analyzeStem(dayGan, dayWx, monthP.pillar.gan, '月'),
+    analyzeStem(dayGan, dayWx, hourP.pillar.gan, '时'),
+  ]
   const ganPoints = Number(ganContribs.reduce((s, c) => s + c.points, 0).toFixed(10))
 
-  const longState = changshengState(dayGan, monthZhi)
+  // 1.2.0: changshengState 收进 PillarC.changsheng()
+  const longState = PillarC.from(dayGan, monthZhi).changsheng()
   const correction = LONG_SHENG_POINTS[longState]
   const deLing = correction > 0
   const deLingPoints = correction
-  const deLingNote = `月令 ${monthZhi}(${monthWx}) 为日主 ${dayGan}${dayWx} 十二长生「${longState}」`
+  const deLingNote = `月令 ${monthZhi.str}(${monthWx.str}) 为日主 ${dayGan.str}${dayWx.str} 十二长生「${longState}」`
   const correctionNote = `${longState} ${correction >= 0 ? '+' : ''}${correction}`
 
   const score = Number((rootPoints + ganPoints + correction).toFixed(10))
   const level = levelOf(score)
+  const wangShuai = ganWangShuai(dayGan, monthZhi)
 
   return {
-    dayGan, dayWx, monthZhi, monthWx,
+    dayGan, dayWx, monthZhi, monthWx, wangShuai,
     deLing, deLingNote, deLingPoints,
     roots: branches, rootPoints,
     ganContribs, ganPoints,

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react'
 import {
-  computeShishenGan,
-  computeShishenZhi,
-  ganWuxing,
-  zhiWuxing,
+  shishenOf,
+  shishenZhi,
+  GanC,
+  ZhiC,
   type Gan,
   type Pillar as EnginePillar,
   type Zhi,
@@ -47,18 +47,21 @@ function analyzeGz(dayPillar: EnginePillar | null, gz: string): GzCell {
     ganSsWx: '', zhiSsWx: '', hideSs: [],
   }
   if (!gan || !zhi || !dayPillar) return empty
-  const ganSs = computeShishenGan(dayPillar.gan, gan as Gan)
-  const zhiSs = computeShishenZhi(dayPillar.gan, zhi as Zhi)
+  const dayGan = GanC.from(dayPillar.gan)
+  const ganC = GanC.from(gan as Gan)
+  const zhiC = ZhiC.from(zhi as Zhi)
+  const ganSs = shishenOf(dayGan, ganC)
+  const zhiSs = shishenZhi(dayGan, zhiC)
   return {
     gan,
     zhi,
-    ganWx: ganWuxing(gan as Gan) ?? '',
-    zhiWx: zhiWuxing(zhi as Zhi) ?? '',
-    ganSs: ganSs === '日主' ? '比肩' : ganSs,
-    zhiSs: zhiSs[0] ?? '',
-    ganSsWx: shishenWuxing(dayPillar.gan, ganSs),
-    zhiSsWx: shishenWuxing(dayPillar.gan, zhiSs[0] ?? ''),
-    hideSs: zhiSs,
+    ganWx: ganC.wuxing.str,
+    zhiWx: zhiC.wuxing.str,
+    ganSs: ganSs.str,
+    zhiSs: zhiSs[0]?.str ?? '',
+    ganSsWx: shishenWuxing(dayGan, ganSs)?.str ?? '',
+    zhiSsWx: zhiSs[0] ? (shishenWuxing(dayGan, zhiSs[0])?.str ?? '') : '',
+    hideSs: zhiSs.map((ss) => ss.str),
   }
 }
 
@@ -72,8 +75,8 @@ export function DaYunPanel() {
   const birthMonth = useBaziInput((s) => s.month)
   const birthDay = useBaziInput((s) => s.day)
   const dayPillarRaw = useBazi((s) => s.pillars[2])
-  const dayPillar: EnginePillar | null = useMemo(() => dayPillarRaw && dayPillarRaw.gan && dayPillarRaw.zhi
-    ? { gan: dayPillarRaw.gan.name as Gan, zhi: dayPillarRaw.zhi.name as Zhi }
+  const dayPillar: EnginePillar | null = useMemo(() => dayPillarRaw
+    ? { gan: dayPillarRaw.pillar.gan.str, zhi: dayPillarRaw.pillar.zhi.str }
     : null, [dayPillarRaw])
   const raw = useDayun((s) => s.data)
   const activeIdx = useDayun((s) => s.activeIdx)

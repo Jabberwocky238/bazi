@@ -12,7 +12,7 @@
  *
  *  scoreMatch 综合上述指标输出 0-100 的合度分.
  */
-import { ganWuxing, zhiWuxing, type WuXing } from '@jabberwocky238/bazi-engine'
+import type { WuXing } from '@jabberwocky238/bazi-engine'
 import type { DetailedPillar } from '../base'
 import type { XiyongAnalysis } from '../xiyong'
 import { analyzeHepanCross } from './cross'
@@ -23,10 +23,8 @@ import { analyzeHepanCross } from './cross'
 export function wxDistribution(pillars: DetailedPillar[]): Record<WuXing, number> {
   const cnt: Record<WuXing, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 }
   for (const p of pillars) {
-    const gw = ganWuxing(p.gan.name) as WuXing | undefined
-    if (gw) cnt[gw] += 1
-    const zw = zhiWuxing(p.zhi.name) as WuXing | undefined
-    if (zw) cnt[zw] += 1
+    cnt[p.pillar.gan.wuxing.str] += 1
+    cnt[p.pillar.zhi.wuxing.str] += 1
   }
   return cnt
 }

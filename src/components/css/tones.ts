@@ -1,4 +1,3 @@
-// @ts-nocheck — 暂时跳过类型检查 (待迁移/待修复 engine 重构)
 /**
  * 全工程统一色调 tokens — 主盘 / 合盘 共用.
  *
@@ -10,9 +9,12 @@
  *
  *  后续若想换色, 只改这里, 不再到处搜.
  */
-import type { FindingKind } from '@jabberwocky238/bazi-engine'
-
-export const KIND_TONE: Record<FindingKind, string> = {
+/**
+ * 干支 finding 色调 —— key 为本工程自有的 finding 词表 (lib/hepan/cross.ts 的
+ * FindingKind 11 类 + 整柱/墓库/争妒合 7 类), 非 engine 导出类型;
+ * 故就地以 KIND_TONE 的键集为准, 由 CrossFindingKind 索引时自然收窄。
+ */
+export const KIND_TONE = {
   天干五合: 'border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
   地支六合: 'border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
   地支三合: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
@@ -30,7 +32,7 @@ export const KIND_TONE: Record<FindingKind, string> = {
   截脚: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-400',
   覆载: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
   墓库: 'border-indigo-500/40 bg-indigo-500/5 text-indigo-700 dark:text-indigo-400',
-}
+} satisfies Record<string, string>
 
 export const XIYONG_TONE: Record<'用神' | '喜神' | '忌神' | '调候', string> = {
   用神: 'border-amber-500/50 bg-amber-500/10',

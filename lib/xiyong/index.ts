@@ -10,8 +10,7 @@
  * md 明文："扶抑与调候冲突时以扶抑为主 · 从格出现一切推翻"。
  * 本实现不含合冲刑害动态修正、细分病药法。
  */
-import { ganWuxing } from '@jabberwocky238/bazi-engine'
-import type { DetailedPillar } from '../base'
+import type { DetailedPillar, PillarShishenView } from '../base'
 import type { StrengthAnalysis } from '../strength'
 import type { GejuOutput } from '../geju'
 import {
@@ -39,26 +38,28 @@ function pickCongOverride(gejuHits: GejuOutput[]): string | null {
 /**
  * 喜用神分析纯函数。
  * @param pillars 4 柱
+ * @param shishen 四柱十神视图 (与 pillars 同序)
  * @param strength 身强弱分析结果
  * @param gejuHits 格局命中列表（可选，用于从格/专旺格覆写）
  */
 export function analyzeXiyong(
   pillars: DetailedPillar[],
+  shishen: PillarShishenView[],
   strength: StrengthAnalysis | null,
   gejuHits?: GejuOutput[],
 ): XiyongAnalysis | null {
   if (pillars.length !== 4) return null
-  const dayGan = pillars[2].gan.name
-  const dayWx = ganWuxing(dayGan) as WuXing
-  if (!dayWx) return null
   if (!strength) return null
+  const dayGanC = pillars[2].pillar.gan
+  const dayGan = dayGanC.str
+  const dayWx = dayGanC.wuxing.str as WuXing
 
   const level = strength.level
   const side = sideOf(level)
-  const monthZhi = pillars[1].zhi.name
+  const monthZhi = pillars[1].pillar.zhi.str
 
   // ② 扶抑
-  const fy = pickFuYi(pillars, side)
+  const fy = pickFuYi(shishen, side)
   const primaryWx = fy.primaryCat ? catToWx(dayWx, fy.primaryCat) : null
   const secondaryWx = fy.secondaryCat ? catToWx(dayWx, fy.secondaryCat) : null
   const avoidWx: WuXing[] = fy.avoidCats.map((c: Cat) => catToWx(dayWx, c))

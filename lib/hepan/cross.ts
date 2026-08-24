@@ -233,8 +233,8 @@ function detectTripleFindings(
 ): AnyFinding[] {
   const out: AnyFinding[] = []
   const allZhis = [
-    ...self.map((p, i) => ({ zhi: p.zhi.name as Zhi, label: `${selfName}-${POS_LIST[i]}柱` })),
-    ...other.map((p, i) => ({ zhi: p.zhi.name as Zhi, label: `${otherName}-${POS_LIST[i]}柱` })),
+    ...self.map((p, i) => ({ zhi: p.pillar.zhi.str, label: `${selfName}-${POS_LIST[i]}柱` })),
+    ...other.map((p, i) => ({ zhi: p.pillar.zhi.str, label: `${otherName}-${POS_LIST[i]}柱` })),
   ]
   const checkTriple = (
     table: [Zhi, Zhi, Zhi, string][],
@@ -307,8 +307,8 @@ export function analyzeHepanCross(
       const findings = detectPairFindings({
         aPos: POS_LIST[i], bPos: POS_LIST[j],
         aName: selfName, bName: otherName,
-        aGan: self[i].gan.name as Gan, bGan: other[j].gan.name as Gan,
-        aZhi: self[i].zhi.name as Zhi, bZhi: other[j].zhi.name as Zhi,
+        aGan: self[i].pillar.gan.str, bGan: other[j].pillar.gan.str,
+        aZhi: self[i].pillar.zhi.str, bZhi: other[j].pillar.zhi.str,
       })
       for (const f of findings) {
         const group = classify(f)

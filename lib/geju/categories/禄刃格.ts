@@ -14,12 +14,12 @@ import type { Gan } from '@jabberwocky238/bazi-engine'
  *   - 主局缺 出口 (官 / 财 / 食伤) 时, 岁运补出口可激活成格 (suiyunTrigger)。
  */
 export function isJianLuGe(ctx: GejuContext): GejuHit | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const extras = ctx.extras
   if (ctx.monthZhi !== LU[ctx.dayGan as Gan]) return null
 
   const baseChong = ctx.monthZhiBeingChong
-  const extrasChong = extras.extraArr.some((p) => CHONG_PAIR[ctx.monthZhi] === p.zhi.name)
+  const extrasChong = extras.extraArr.some((p) => CHONG_PAIR[ctx.monthZhi] === p.pillar.zhi.str)
 
   const officerRooted = ctx.touCat('官杀') && (ss.zang('正官')[0] || ss.zang('七杀')[0])
   const caiRooted = ctx.touCat('财') && (ss.zang('正财')[0] || ss.zang('偏财')[0])
@@ -49,7 +49,7 @@ export function isJianLuGe(ctx: GejuContext): GejuHit | null {
  *  ③ 伤官紧贴正官且无印 → 破 (主局 / 岁运皆判)。
  */
 export function isYangRenGe(ctx: GejuContext): GejuHit | null {
-  const ss = ctx.calc.shishen()
+  const ss = ctx.ss
   const extras = ctx.extras
   if (ctx.monthZhi !== YANG_REN[ctx.dayGan as Gan]) return null
 

@@ -107,7 +107,7 @@ export function ChatWidget() {
       const store = useBaziStore.getState()
       // 八字四柱: 优先取排盘结果 pillars (各柱 gan+zhi), 退回 bazi 直输字符串
       const pillarsArr = bazi.pillars.map((p) =>
-        `${p.gan?.name ?? ''}${p.zhi?.name ?? ''}`.trim(),
+        `${p.pillar.gan.str}${p.pillar.zhi.str}`.trim(),
       )
       const baziArr = pillarsArr.some(Boolean) ? pillarsArr : input.bazi
 

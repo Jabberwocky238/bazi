@@ -1,6 +1,6 @@
 import { tool, type Tool, type ToolContext } from '../tooldef'
-import type { DetailedPillar } from '@jabberwocky238/bazi-engine'
-import { Calculator, parseGz, type Sex } from './_helpers'
+import { shishenOf, type DetailedPillar, type GanC } from '@jabberwocky238/bazi-engine'
+import { Calculator, BaziInputC, parseGz, type Sex } from './_helpers'
 
 /**
  * compute_pillars —— 根据八字四柱 + 性别计算四柱详情。
@@ -9,17 +9,21 @@ import { Calculator, parseGz, type Sex } from './_helpers'
  * 渲染为 Markdown 表格文本 (而非 JSON) 供模型直接朗读给用户。
  */
 
-/** 把 DetailedPillar[] 渲染成 Markdown 表格。 */
-function renderPillarsMarkdown(pillars: DetailedPillar[]): string {
+/** 把 DetailedPillar[] 渲染成 Markdown 表格。十神依日主现场计算 (柱上不再挂十神)。 */
+function renderPillarsMarkdown(pillars: DetailedPillar[], dayGan: GanC): string {
   // 表头: 柱 | 天干(五行·十神) | 地支(五行·长生) | 藏干(十神) | 纳音 | 神煞
   const header = '| 柱 | 天干 (五行·十神) | 地支 (五行·长生) | 藏干 (十神) | 纳音 | 神煞 |'
   const sep = '| --- | --- | --- | --- | --- | --- |'
   const rows = pillars.map((p) => {
-    const gan = `${p.gan.name} (${p.gan.wuxing}·${p.gan.shishen})`
-    const zhi = `${p.zhi.name} (${p.zhi.wuxing}·${p.changsheng})`
-    const cangGan = p.zhi.cangGan.map((c) => `${c.name}(${c.shishen})`).join(' ')
+    const ganSs = p.isRizhu ? '日主' : shishenOf(dayGan, p.pillar.gan).str
+    const gan = `${p.pillar.gan.str} (${p.pillar.gan.wuxing.str}·${ganSs})`
+    const zhi = `${p.pillar.zhi.str} (${p.pillar.zhi.wuxing.str}·${p.changsheng})`
+    const cangGan = p.pillar.zhi
+      .canggan()
+      .map((c) => `${c.str}(${shishenOf(dayGan, c).str})`)
+      .join(' ')
     const shensha = p.shensha.length ? p.shensha.join('、') : '—'
-    return `| ${p.label} | ${gan} | ${zhi} | ${cangGan} | ${p.nayin} | ${shensha} |`
+    return `| ${p.pillar.pillarType} | ${gan} | ${zhi} | ${cangGan} | ${p.pillar.nayinName()} | ${shensha} |`
   })
   return [header, sep, ...rows].join('\n')
 }
@@ -55,17 +59,17 @@ export const computePillars: Tool<{
     const [y, m, d, h = ''] = bazi
     const hourKnown = h.length === 2
     try {
-      const calc = new Calculator(
-        {
-          year: parseGz(y),
-          month: parseGz(m),
-          day: parseGz(d),
-          hour: hourKnown ? parseGz(h) : undefined,
-          sex,
-        },
-      )
+      const calc = new Calculator(BaziInputC.from({
+        year: parseGz(y),
+        month: parseGz(m),
+        day: parseGz(d),
+        hour: hourKnown ? parseGz(h) : undefined,
+        sex,
+      }))
       const pillars = calc.pillars()
-      return renderPillarsMarkdown(pillars)
+      const dayGan = pillars[2]?.pillar.gan
+      if (!dayGan) return JSON.stringify({ error: '计算失败: 无日主' })
+      return renderPillarsMarkdown(pillars, dayGan)
     } catch (e) {
       return JSON.stringify({ error: `计算失败: ${e instanceof Error ? e.message : String(e)}` })
     }

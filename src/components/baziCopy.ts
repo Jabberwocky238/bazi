@@ -1,10 +1,11 @@
-import type { ExtendedDetailedPillar } from '@LIB'
+import type { DetailedPillar, PillarShishenView } from '@LIB'
 
 export interface BaziCopyData {
   solar: string
   trueSolar: string
   lunar: string
-  pillars: ExtendedDetailedPillar[]
+  pillars: DetailedPillar[]
+  shishen: PillarShishenView[]
 }
 
 const display = (value: string): string => value || '—'
@@ -14,10 +15,10 @@ const joinUnique = (values: string[]): string => {
   return unique.length ? unique.join('、') : '—'
 }
 
-function hiddenStems(pillar: ExtendedDetailedPillar): string {
-  const values = pillar.hideGans.map((gan, index) => {
-    const shishen = pillar.hideShishen[index]
-    return shishen ? `${gan}(${shishen})` : gan
+function hiddenStems(pillar: DetailedPillar, view: PillarShishenView | undefined): string {
+  const values = pillar.pillar.zhi.canggan().map((gan, index) => {
+    const shishen = view?.zhi[index]
+    return shishen ? `${gan.str}(${shishen.str})` : gan.str
   })
   return values.length ? values.join('/') : '—'
 }
@@ -28,6 +29,7 @@ export function formatBaziCopyText({
   trueSolar,
   lunar,
   pillars,
+  shishen,
 }: BaziCopyData): string {
   const metadata = [
     solar ? `公历：${solar}` : '',
@@ -36,12 +38,13 @@ export function formatBaziCopyText({
   ].filter(Boolean)
 
   const rows = [
-    ['四柱', ...pillars.map((pillar) => pillar.label)],
-    ['十神', ...pillars.map((pillar) => display(pillar.shishen))],
-    ['干支', ...pillars.map((pillar) => display(`${pillar.gan.name}${pillar.zhi.name}`))],
-    ['藏干', ...pillars.map(hiddenStems)],
-    ['纳音', ...pillars.map((pillar) => display(pillar.nayin))],
-    ['自坐', ...pillars.map((pillar) => display(pillar.zizuo))],
+    ['四柱', ...pillars.map((pillar) => pillar.pillar.pillarType)],
+    ['十神', ...pillars.map((pillar, i) =>
+      display(pillar.isRizhu ? '日主' : (shishen[i]?.gan?.str ?? '')))],
+    ['干支', ...pillars.map((pillar) => display(`${pillar.pillar.gan.str}${pillar.pillar.zhi.str}`))],
+    ['藏干', ...pillars.map((pillar, i) => hiddenStems(pillar, shishen[i]))],
+    ['纳音', ...pillars.map((pillar) => display(pillar.pillar.nayinName()))],
+    ['自坐', ...pillars.map((pillar) => display(pillar.changsheng))],
     ['神煞', ...pillars.map((pillar) => joinUnique(pillar.shensha))],
   ]
 

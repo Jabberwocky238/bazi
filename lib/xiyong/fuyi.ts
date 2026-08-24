@@ -2,7 +2,7 @@
  * 扶抑（依 扶抑.md 五大情况）+ 病根选取 + 调候硬约束 + 强弱归类。
  * 不含从格/专旺格覆写（在 index.ts orchestrator 处理）。
  */
-import type { DetailedPillar } from '../base'
+import type { DetailedPillar, PillarShishenView } from '../base'
 import { CAT_OF_SHISHEN, type Cat, type WuXing } from './types'
 
 const STRONG_LV = new Set(['身极旺', '身旺', '身中强', '身中(偏强)'])
@@ -14,19 +14,22 @@ export function sideOf(level: string): 'strong' | 'weak' | 'neutral' {
   return 'neutral'
 }
 
-/** 判定五大情况中"病根"最重的那一类。 */
-export function pickSickCat(pillars: DetailedPillar[], side: 'strong' | 'weak'): Cat | null {
+/**
+ * 判定五大情况中"病根"最重的那一类。
+ * 十神不再挂在柱上, 由 shishen 视图 (与 pillars 同序) 提供。
+ */
+export function pickSickCat(
+  shishen: PillarShishenView[],
+  side: 'strong' | 'weak',
+): Cat | null {
   const cnt: Record<Cat, number> = { 比劫: 0, 印: 0, 食伤: 0, 财: 0, 官杀: 0 }
-  const ganShens = [pillars[0].gan.shishen, pillars[1].gan.shishen, pillars[3].gan.shishen]
-  for (const s of ganShens) {
-    const c = CAT_OF_SHISHEN[s as string]
-    if (c) cnt[c] += 1
+  // 年/月/时 天干十神 (日柱为日主自身, gan 为 null)
+  for (const i of [0, 1, 3]) {
+    const ss = shishen[i]?.gan
+    if (ss) cnt[ss.cat.str] += 1
   }
-  for (const p of pillars) {
-    for (const s of p.zhi.cangGan) {
-      const c = CAT_OF_SHISHEN[s.shishen as string]
-      if (c) cnt[c] += 1
-    }
+  for (const view of shishen) {
+    for (const ss of view.zhi) cnt[ss.cat.str] += 1
   }
   if (side === 'strong') {
     return cnt.印 >= cnt.比劫 ? '印' : '比劫'
@@ -45,9 +48,12 @@ export interface FuYiResult {
 }
 
 /** 扶抑五大情况：依 side 和 sickCat 选取喜用 / 忌神。 */
-export function pickFuYi(pillars: DetailedPillar[], side: 'strong' | 'weak' | 'neutral'): FuYiResult {
+export function pickFuYi(
+  shishen: PillarShishenView[],
+  side: 'strong' | 'weak' | 'neutral',
+): FuYiResult {
   if (side === 'strong') {
-    const sickCat = pickSickCat(pillars, 'strong')
+    const sickCat = pickSickCat(shishen, 'strong')
     if (sickCat === '印') {
       return {
         sickCat,
@@ -66,7 +72,7 @@ export function pickFuYi(pillars: DetailedPillar[], side: 'strong' | 'weak' | 'n
     }
   }
   if (side === 'weak') {
-    const sickCat = pickSickCat(pillars, 'weak')
+    const sickCat = pickSickCat(shishen, 'weak')
     if (sickCat === '官杀') {
       return {
         sickCat,

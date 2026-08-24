@@ -24,7 +24,11 @@
     "paths": {
       "@/*": ["./src/*"],
       "@LIB": ["./lib/index.ts"],
-      "@@/*": ["./src/components/*"]
+      "@@/*": ["./src/components/*"],
+      // engine 1.2.0 的 exports.types 指向 src/*.ts, 但那些文件用 "@/xxx" 内部别名
+      // 且包内未附 tsconfig 声明该别名 → 直接吃 src 会报一片 TS2307。
+      // dist/index.d.ts 是 dts-bundle-generator 打平的自洽声明, 改指它。
+      "@jabberwocky238/bazi-engine": ["./node_modules/@jabberwocky238/bazi-engine/dist/index.d.ts"]
     }
   },
   "include": ["src", "lib"],

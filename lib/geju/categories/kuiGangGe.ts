@@ -17,8 +17,8 @@ export function isKuiGangGe(ctx: GejuContext): GejuHit | null {
   if (!KUIGANG_DAY.has(ctx.dayGz)) return null
   if (!ctx.strength.shenWang) return null
   const forbidden = KUIGANG_FORBIDDEN_WX[ctx.dayGz]
-  if (forbidden && ctx.calc.touWx(forbidden as WuXing)[0]) return null
-  if (ctx.dayZhi === '辰' && ctx.mainArr.some((p, i) => i !== 2 && p.zhi.name === '戌')) return null
-  if (ctx.dayZhi === '戌' && ctx.mainArr.some((p, i) => i !== 2 && p.zhi.name === '辰')) return null
+  if (forbidden && ctx.touWx(forbidden as WuXing)[0]) return null
+  if (ctx.dayZhi === '辰' && ctx.mainArr.some((p, i) => i !== 2 && p.pillar.zhi.str === '戌')) return null
+  if (ctx.dayZhi === '戌' && ctx.mainArr.some((p, i) => i !== 2 && p.pillar.zhi.str === '辰')) return null
   return { name: '魁罡格', note: `日柱 ${ctx.dayGz} 魁罡 · 身旺 · 无忌透无冲` }
 }

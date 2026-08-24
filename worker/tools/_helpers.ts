@@ -1,18 +1,11 @@
 import {
   Calculator,
-  computeShishenGan,
-  computeShishenZhi,
-  computeShishenWuxing,
-  CANG_GAN,
-  ganWuxing,
-  zhiWuxing,
-  nayinNameOf,
-  changshengState,
+  BaziInputC,
+  PillarC,
   type Gan,
   type Zhi,
   type Sex,
   type Pillar,
-  type ExtraPillar,
   type DetailedPillar,
 } from '@jabberwocky238/bazi-engine'
 import {
@@ -42,37 +35,25 @@ export function parseGz2(gz: string): { gan: Gan; zhi: Zhi } | null {
   return { gan: g as Gan, zhi: z as Zhi }
 }
 
-/** 把单个干支字符串构造成 engine DetailedPillar (供 gejuExtras 用), 需日主定十神。 */
+/** 把单个干支字符串构造成 engine DetailedPillar (供 gejuExtras 用)。
+ *  1.2.0: 干支收在 PillarC 里 (纳音由 pillar.nayinName() 自带);
+ *  changsheng 是 日干 vs 本柱地支, 故另造一柱来取。 */
 export function gzToDetailedPillar(gz: string, dayGan: Gan): DetailedPillar | null {
   const p = parseGz2(gz)
   if (!p) return null
-  const cangGanSs = computeShishenZhi(dayGan, p.zhi)
   return {
-    label: '时柱' as never,
-    gan: {
-      name: p.gan,
-      wuxing: ganWuxing(p.gan),
-      shishen: computeShishenGan(dayGan, p.gan),
-    },
-    zhi: {
-      name: p.zhi,
-      wuxing: zhiWuxing(p.zhi),
-      cangGan: CANG_GAN[p.zhi].map((g, idx) => ({
-        name: g,
-        shishen: cangGanSs[idx]!,
-        wuxing: computeShishenWuxing(dayGan, cangGanSs[idx]!),
-      })),
-    },
-    nayin: nayinNameOf(p.gan, p.zhi),
+    pillar: PillarC.from(p.gan, p.zhi, '时柱'),
     shensha: [],
-    changsheng: changshengState(p.gan, p.zhi),
-  } as DetailedPillar
+    changsheng: PillarC.from(dayGan, p.zhi).changsheng(),
+    isRizhu: false,
+  }
 }
 
 export {
   Calculator,
+  BaziInputC,
+  PillarC,
   type Pillar,
-  type ExtraPillar,
   type DetailedPillar,
   type Sex,
 }
@@ -100,7 +81,8 @@ export function deriveFromCtx(ctx: ToolContext): {
     if (!r.pillars || r.pillars.length !== 4) {
       return { derived: null, error: '排盘失败, 四柱不全' }
     }
-    const dayGan = r.dayGan as Gan
+    const dayGan = r.dayGan?.str
+    if (!dayGan) return { derived: null, error: '排盘失败, 无日主' }
     // 选中大运 → DetailedPillar, 作 gejuExtras 参与格局岁运判定
     const dayunPillar = (ui?.dayun ?? [])
       .map((d) => d.gz)

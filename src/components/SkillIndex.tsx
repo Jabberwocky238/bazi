@@ -1,4 +1,4 @@
-import { type Pillar, skillUrl, type SkillCategory } from '@LIB'
+import { type Pillar, type PillarShishenView, skillUrl, type SkillCategory } from '@LIB'
 import { SkillLink } from '@@/SkillLink'
 
 interface IndexItem {
@@ -7,7 +7,7 @@ interface IndexItem {
   sub?: string
 }
 
-function build(pillars: Pillar[]): IndexItem[] {
+function build(pillars: Pillar[], shishen: PillarShishenView[]): IndexItem[] {
   const seen = new Set<string>()
   const out: IndexItem[] = []
   const labels = ['年', '月', '日', '时']
@@ -20,16 +20,23 @@ function build(pillars: Pillar[]): IndexItem[] {
     out.push(it)
   }
 
-  pillars.forEach((p, i) => push({ category: 'tiangan', name: p.gan.name, sub: `${labels[i]}干` }))
-  pillars.forEach((p) => {
-    if (p.gan.shishen !== '日主') push({ category: 'shishen', name: p.gan.shishen })
+  pillars.forEach((p, i) => push({ category: 'tiangan', name: p.pillar.gan.str, sub: `${labels[i]}干` }))
+  pillars.forEach((p, i) => {
+    const ss = shishen[i]?.gan
+    if (ss) push({ category: 'shishen', name: ss.str })
   })
   pillars.forEach((p) => p.shensha.forEach((s) => push({ category: 'shensha', name: s })))
   return out
 }
 
-export function SkillIndex({ pillars }: { pillars: Pillar[] }) {
-  const items = build(pillars)
+export function SkillIndex({
+  pillars,
+  shishen,
+}: {
+  pillars: Pillar[]
+  shishen: PillarShishenView[]
+}) {
+  const items = build(pillars, shishen)
   if (!items.length) return null
 
   return (

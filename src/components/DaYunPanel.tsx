@@ -11,7 +11,7 @@ import {
 import {
   HOUR_UNKNOWN,
   shishenWuxing,
-} from '@LIB'
+} from 'bazilib'
 import { useBazi } from '@@/stores'
 import { WUXING_TEXT, WUXING_BORDER, WUXING_FROM } from '@@/css'
 import {

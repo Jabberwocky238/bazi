@@ -4,7 +4,7 @@ import {
   type BaziDistributionSample,
   type ProbabilityItem,
   type WuXing,
-} from '@LIB'
+} from 'bazilib'
 import { useBaziInput } from '@@/stores'
 import { STRENGTH_LEVEL_COLOR, WUXING_SVG_COLOR, WUXING_TEXT } from '@@/css'
 

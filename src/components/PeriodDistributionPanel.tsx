@@ -5,7 +5,7 @@ import {
   type CalendarDistributionSample,
   type SamplingUnit,
   type WuXing,
-} from '@LIB'
+} from 'bazilib'
 import { useBaziInput, useDayun } from '@@/stores'
 import { WUXING_SVG_COLOR, WUXING_TEXT } from '@@/css'
 

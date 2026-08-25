@@ -17,6 +17,7 @@
         "@tauri-apps/api": "^2.11.1",
         "@tauri-apps/plugin-store": "^2.4.3",
         "@tauri-apps/plugin-updater": "~2",
+        "bazilib": "workspace:*",
         "lunar-typescript": "^1.8.6",
         "openai": "^6.44.0",
         "react": "^19.2.4",
@@ -53,6 +54,14 @@
         "vite-plugin-pwa": "^1.3.0",
         "vite-react-ssg": "^0.8.4",
         "wrangler": "^4.0.0",
+      },
+    },
+    "bazilib": {
+      "name": "bazilib",
+      "version": "0.0.0",
+      "dependencies": {
+        "@jabberwocky238/bazi-engine": "^1.2.1",
+        "lunar-typescript": "^1.8.6",
       },
     },
   },
@@ -814,6 +823,8 @@
     "base64-js": ["base64-js@1.5.1", "", {}, "sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA=="],
 
     "baseline-browser-mapping": ["baseline-browser-mapping@2.10.37", "", { "bin": { "baseline-browser-mapping": "dist/cli.cjs" } }, "sha512-girxaJ7WZssDOFhzCGZTDKoTa1gk6A1TbflaYTpykLJ4UU9Fz9kx1aREM8JCuoVHbL8X8T/mJg7w2oYSq72Oig=="],
+
+    "bazilib": ["bazilib@workspace:bazilib"],
 
     "big-integer": ["big-integer@1.6.52", "", {}, "sha512-QxD8cf2eVqJOOz63z6JIN9BzvVs/dlySa5HGSBH5xtR8dPteIRQnBxxKqkNTiT6jbDTF6jAfrd4oMcND9RGbQg=="],
 

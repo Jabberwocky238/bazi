@@ -7,7 +7,7 @@ import { ErrorBoundary } from '@@/ErrorBoundary'
 import { HepanCrossPanel } from '@@/HepanCrossPanel'
 import { HepanXiyongMatch } from '@@/HepanXiyongMatch'
 import type { HepanState } from '@@/HepanInput'
-import type { DetailedPillar, PillarShishenView } from '@LIB'
+import type { DetailedPillar, PillarShishenView } from 'bazilib'
 
 interface LocationState {
   a: HepanState

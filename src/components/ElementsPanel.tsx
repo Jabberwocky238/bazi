@@ -11,7 +11,7 @@ import {
   type Zhi,
   type WuXing,
 } from '@jabberwocky238/bazi-engine'
-import type { DetailedPillar, PillarShishenView } from '@LIB'
+import type { DetailedPillar, PillarShishenView } from 'bazilib'
 type Pillar = DetailedPillar
 
 /** 日主五行 → 各 relation 对应五行 (取代已移除的 wuxingRelations)。 */

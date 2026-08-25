@@ -12,7 +12,7 @@ import {
   parseBaziToResult,
   deriveAll,
   type BaziResult,
-} from '@LIB'
+} from 'bazilib'
 import type { ToolContext } from '../tooldef'
 
 // ————————————————————————————————————————————————————————

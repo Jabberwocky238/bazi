@@ -4,7 +4,8 @@ import { computeFromState, deriveAll } from '../compute'
 import type { StrengthLevel } from '../strength'
 import { countWxStrength } from '../xiyong/tongguan'
 
-export * from './calendar'
+export { calculateBaziCalendarDistribution } from './calendar'
+export type { BaziCalendarDistribution, CalendarDistributionSample, SamplingUnit } from './calendar'
 
 // 五行序列直接用 engine 的 WUXING, 不再本地重列
 const NONE = '无' as const

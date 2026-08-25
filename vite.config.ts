@@ -32,7 +32,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(root, 'src'),
-      "@LIB": path.resolve(root, 'lib/index.ts'),
+      bazilib: path.resolve(root, 'bazilib/index.ts'),
       '@@': path.resolve(root, 'src/components'),
     },
   },

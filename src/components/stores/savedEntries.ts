@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { HOUR_UNKNOWN } from '@LIB'
+import { HOUR_UNKNOWN } from 'bazilib'
 import { nativeStore, migrateFromLocalStorage } from '@/native/store'
 import type { BaziInputData } from './compute'
 

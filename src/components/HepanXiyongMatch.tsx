@@ -7,7 +7,7 @@ import {
   wxDistribution,
   wxSupply,
   type SideAnalysis,
-} from '@LIB'
+} from 'bazilib'
 import {
   WUXING_TEXT, WUXING_BG_SOFT, WUXING_BORDER,
   XIYONG_TONE, GANZHI_TONE, STRENGTH_LEVEL_COLOR,

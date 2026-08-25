@@ -1,4 +1,4 @@
-import { type Pillar, type PillarShishenView, skillUrl, type SkillCategory } from '@LIB'
+import { type Pillar, type PillarShishenView, skillUrl, type SkillCategory } from 'bazilib'
 import { SkillLink } from '@@/SkillLink'
 
 interface IndexItem {

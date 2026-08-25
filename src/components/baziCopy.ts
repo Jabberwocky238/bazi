@@ -1,4 +1,4 @@
-import type { DetailedPillar, PillarShishenView } from '@LIB'
+import type { DetailedPillar, PillarShishenView } from 'bazilib'
 
 export interface BaziCopyData {
   solar: string

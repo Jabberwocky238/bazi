@@ -1,4 +1,4 @@
-import type { DetailedPillar, PillarShishenView, ShishenC } from '@LIB'
+import type { DetailedPillar, PillarShishenView, ShishenC } from 'bazilib'
 import { cellBase } from '@@/css'
 import { Row } from './Row'
 import { ShishenCell } from './ShishenCell'
@@ -6,7 +6,7 @@ import { GanZhiCell } from './GanZhiCell'
 import { CangGanCell } from './CangGanCell'
 import { ShenshaCell } from './ShenshaCell'
 import { SkillLink } from '@@/SkillLink'
-import { shishenWuxing } from '@LIB'
+import { shishenWuxing } from 'bazilib'
 
 export function BaziChart({
   pillars,

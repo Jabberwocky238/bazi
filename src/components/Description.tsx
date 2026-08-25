@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { skillUrl, type SkillCategory } from '@LIB'
+import { skillUrl, type SkillCategory } from 'bazilib'
 import { useDialog } from '@@/Dialog'
 import { SkillDetail, SkillListModal, skillSubtitle, type SkillItem } from './SkillDetail'
 

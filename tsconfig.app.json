@@ -23,10 +23,10 @@
 
     "paths": {
       "@/*": ["./src/*"],
-      "@LIB": ["./lib/index.ts"],
+      "bazilib": ["./bazilib/index.ts"],
       "@@/*": ["./src/components/*"]
     }
   },
-  "include": ["src", "lib"],
+  "include": ["src", "bazilib"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts"]
 }

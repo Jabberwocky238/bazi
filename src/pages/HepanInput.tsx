@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { computeFromState } from '@@/stores/compute'
-import type { Pillar } from '@LIB'
+import type { Pillar } from 'bazilib'
 import { BaziChart } from '@@/chart/BaziChart'
 import { ErrorBoundary } from '@@/ErrorBoundary'
 import { defaultA, defaultB, type HepanState } from '@@/HepanInput'

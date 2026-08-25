@@ -68,4 +68,4 @@ export const WUXING_SVG_COLOR: Record<string, string> = {
   水: '#1d4ed8',
 }
 
-export * from './tones'
+export { ADJ_TONE, GANZHI_TONE, KIND_TONE, STRENGTH_LEVEL_COLOR, XIYONG_TONE } from './tones'

@@ -11,7 +11,7 @@ import {
   type GejuCategory,
   type GejuOutput,
   skillNames,
-} from '@LIB'
+} from 'bazilib'
 import { useBaziStore, type ExtraPillar, useBazi } from '@@/stores'
 import { SkillLink, type SkillItem } from '@@/SkillLink'
 

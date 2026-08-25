@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { Pillar } from '@LIB'
+import type { Pillar } from 'bazilib'
 import { useBaziStore } from '@@/stores'
 import {
   GanC,
@@ -14,7 +14,7 @@ import {
 } from '@jabberwocky238/bazi-engine'
 import { WUXING_SVG_COLOR } from '@@/css'
 import { Description } from './Description'
-import type { WuXing, SkillCategory } from '@LIB'
+import type { WuXing, SkillCategory } from 'bazilib'
 
 interface BaziChar {
   key: string

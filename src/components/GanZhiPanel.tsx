@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { analyzeGanZhiWithExtras, type FlatFinding } from '@LIB'
+import { analyzeGanZhiWithExtras, type FlatFinding } from 'bazilib'
 import type { MuKuVerdict } from '@jabberwocky238/bazi-engine'
 import { useBazi, useBaziStore, type ExtraPillar } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'

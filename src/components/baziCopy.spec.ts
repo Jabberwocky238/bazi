@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { Calculator, BaziInputC, type Gan, type Zhi } from '@jabberwocky238/bazi-engine'
-import { computeShishenView } from '@LIB'
+import { computeShishenView } from 'bazilib'
 import { formatBaziCopyText, normalizeAnalysisText } from './baziCopy'
 
 /**

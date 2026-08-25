@@ -23,9 +23,15 @@ export interface SideAnalysis {
   ganZhi: GanZhiAnalysis
 }
 
-export function analyzeSide(pillars: DetailedPillar[]): SideAnalysis | null {
+/**
+ * @param dayInMonth 出生日距本月节令的天数 —— 人元司令用; 不给则旺衰退回月支本气。
+ */
+export function analyzeSide(
+  pillars: DetailedPillar[],
+  dayInMonth?: number,
+): SideAnalysis | null {
   if (pillars.length !== 4) return null
-  const strength = analyzeStrength(pillars)
+  const strength = analyzeStrength(pillars, dayInMonth)
   if (!strength) return null
   const xiyong = analyzeXiyong(pillars, computeShishenView(pillars), strength)
   if (!xiyong) return null
@@ -55,8 +61,8 @@ export interface SideXiyong {
 }
 
 /** @deprecated 用 analyzeSide. */
-export function localXiyong(pillars: DetailedPillar[]): SideXiyong | null {
-  const a = analyzeSide(pillars)
+export function localXiyong(pillars: DetailedPillar[], dayInMonth?: number): SideXiyong | null {
+  const a = analyzeSide(pillars, dayInMonth)
   if (!a) return null
   return {
     dayGan: a.xiyong.dayGan,

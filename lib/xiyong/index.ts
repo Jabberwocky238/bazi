@@ -55,6 +55,7 @@ export function analyzeXiyong(
   const dayWx = dayGanC.wuxing.str as WuXing
 
   const level = strength.level
+  const score = strength.score
   const side = sideOf(level)
   const monthZhi = pillars[1].pillar.zhi.str
 
@@ -69,7 +70,7 @@ export function analyzeXiyong(
 
   return {
     dayGan, dayWx, monthZhi,
-    level, side,
+    level, score, side,
 
     ganZhi: analyzePillarsGanZhi(pillars),
 

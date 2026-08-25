@@ -18,13 +18,16 @@ interface Props {
   b: Pillar[]
   aName: string
   bName: string
+  /** 双方出生日距本月节令的天数 —— 人元司令用, 无公历日期时可省。 */
+  aDayInMonth?: number
+  bDayInMonth?: number
 }
 
-export function HepanXiyongMatch({ a, b, aName, bName }: Props) {
+export function HepanXiyongMatch({ a, b, aName, bName, aDayInMonth, bDayInMonth }: Props) {
   const [open, setOpen] = useState(true)
 
-  const aSide = useMemo(() => analyzeSide(a), [a])
-  const bSide = useMemo(() => analyzeSide(b), [b])
+  const aSide = useMemo(() => analyzeSide(a, aDayInMonth), [a, aDayInMonth])
+  const bSide = useMemo(() => analyzeSide(b, bDayInMonth), [b, bDayInMonth])
   const match = useMemo(
     () => computeXiyongMatch(
       a, aSide?.xiyong ?? null, aName,

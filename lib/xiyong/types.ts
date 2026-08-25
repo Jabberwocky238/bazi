@@ -64,6 +64,8 @@ export interface XiyongAnalysis {
   dayWx: WuXing
   monthZhi: string
   level: string
+  /** 旺衰量化总分 (与 StrengthAnalysis.score 同源), 供 UI 显示数字。 */
+  score: number
   side: 'strong' | 'weak' | 'neutral'
 
   /** 干支作用 (盖头/截脚/覆载) */

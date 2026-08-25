@@ -46,6 +46,7 @@ export function XiyongPanel() {
         <div className="flex items-baseline gap-2 text-sm">
           <span className={`font-medium ${WUXING_TEXT[a.dayWx]}`}>{a.dayGan} · {a.dayWx}</span>
           <span className="text-slate-500">{a.level}</span>
+          <span className="text-slate-400 tabular-nums">S = {a.score}</span>
           {a.primaryWx && <span className="text-slate-400">/ 用 {a.primaryWx}</span>}
         </div>
       </button>
@@ -60,7 +61,7 @@ export function XiyongPanel() {
 
           {/* ① 扶抑分析 */}
           <div className="space-y-1.5">
-            <div className={SECTION_LABEL}>① 扶抑分析 · 日主 {a.level}</div>
+            <div className={SECTION_LABEL}>① 扶抑分析 · 日主 {a.level} (S = {a.score})</div>
             <div className="rounded-lg bg-slate-50 dark:bg-slate-950/40 px-3 py-2 text-xs leading-relaxed space-y-1">
               <div>
                 <span className="text-slate-500">病根 · </span>

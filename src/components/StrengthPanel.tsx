@@ -174,12 +174,12 @@ export function StrengthPanel() {
           {/* 总分 */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-baseline justify-between">
             <span className="text-[11px] tracking-wider text-slate-500 dark:text-slate-400">
-              S = 得令 + 根 + 天干 + 修正
+              S = 根 + 天干 + {a.siLing ? '司令' : '月令'}修正
             </span>
             <span className="text-lg font-bold tabular-nums">
-              {a.deLingPoints} {a.rootPoints >= 0 ? '+' : ''}{a.rootPoints}{' '}
-              {a.ganPoints >= 0 ? '+' : ''}{a.ganPoints}
-              {a.correction !== 0 && ` ${a.correction >= 0 ? '+' : ''}${a.correction}`}
+              {a.rootPoints}
+              {' '}{a.ganPoints >= 0 ? '+' : ''}{a.ganPoints}
+              {' '}{a.correction >= 0 ? '+' : ''}{a.correction}
               {' = '}
               <span className={LEVEL_COLOR[a.level]}>{a.score}</span>
             </span>
@@ -193,7 +193,9 @@ export function StrengthPanel() {
             <span className="mx-1">／</span>
             <SkillLink category="jichu" name="旺衰理论" className="underline">旺衰理论</SkillLink>
             <br />
-            未计入人元司令修正 · 合冲刑害需人工再审
+            {a.siLing
+              ? '月令修正已按人元司令计 · 合冲刑害需人工再审'
+              : '八字直输无出生日期, 月令修正退回月支十二长生 · 合冲刑害需人工再审'}
           </div>
       </div>
     </section>

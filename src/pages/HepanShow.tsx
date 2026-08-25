@@ -20,6 +20,7 @@ const EMPTY_RESULT = {
   pillars: [] as DetailedPillar[],
   shishen: [] as PillarShishenView[],
   hourKnown: false,
+  dayInMonth: undefined as number | undefined,
 }
 
 export default function HepanShow() {
@@ -90,6 +91,8 @@ export default function HepanShow() {
             b={bResult.pillars}
             aName={aName}
             bName={bName}
+            aDayInMonth={aResult.dayInMonth}
+            bDayInMonth={bResult.dayInMonth}
           />
         </ErrorBoundary>
 

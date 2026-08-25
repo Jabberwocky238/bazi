@@ -9,7 +9,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "bazilib": ["./bazilib/index.ts"],
+      "bazilib": ["./bazilib/src/index.ts"],
       "@@/*": ["./src/components/*"]
     }
   }

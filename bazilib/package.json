@@ -5,10 +5,10 @@
   "type": "module",
   "description": "八字算法层 —— 排盘 / 旺衰 / 格局 / 喜用神 / 合盘, 不含任何 UI 依赖",
   "exports": {
-    ".": "./index.ts"
+    ".": "./src/index.ts"
   },
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "dependencies": {
     "@jabberwocky238/bazi-engine": "^1.2.1",
     "lunar-typescript": "^1.8.6"

@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react'
-import { analyzeGanZhiWithExtras, type ExtraInteraction, type FlatFinding } from '@LIB'
+import { analyzeGanZhiWithExtras, type FlatFinding } from '@LIB'
 import type { MuKuVerdict } from '@jabberwocky238/bazi-engine'
 import { useBazi, useBaziStore, type ExtraPillar } from '@@/stores'
 import { SkillLink } from '@@/SkillLink'
 
 const SECTION_LABEL = 'text-[11px] tracking-[0.2em] font-medium text-slate-500 dark:text-slate-400 uppercase'
-const POS_LABEL: Record<string, string> = { 年: '年柱', 月: '月柱', 日: '日柱', 时: '时柱' }
 
 /** 每类关系的色调 (engine 1.2.0 的 kind: 天干三类 + 地支八类)。 */
 const HE_TONE = 'border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400'
@@ -21,6 +20,8 @@ const KIND_TONE: Record<string, string> = {
   暗合: PO_TONE,
   相冲: CHONG_TONE, 相刑: CHONG_TONE,
   相克: KE_TONE, 相害: KE_TONE, 相破: PO_TONE,
+  // 半合 / 拱合 / 拱会 —— 合的一种, 但力弱于整局, 用浅色
+  子集: HE_TONE,
 }
 
 function toExtraInputs(extras: ExtraPillar[]) {
@@ -43,15 +44,13 @@ export function GanZhiPanel() {
   )
   if (!analysis) return null
   const g = analysis.groups
-  const extraHits = analysis.extra
-
-  const extraHeTotal = extraHits.filter((h) => ['相合', '六合', '三合', '三会'].includes(h.kind)).length
-  const extraChongTotal = extraHits.filter((h) => h.kind === '相冲').length
-  const extraXinghaiTotal = extraHits.filter((h) => ['相刑', '相害', '相破'].includes(h.kind)).length
-  const extraKeTotal = extraHits.filter((h) => h.kind === '相克').length
-  const hetotal = g.合.length + extraHeTotal
-  const chongtotal = g.冲.length + extraChongTotal
-  const xinghaiototal = g.刑.length + g.害.length + g.破克暗合.length + extraXinghaiTotal
+  // 岁运柱已由 engine 一并入列 analyze(), 命中直接落在各组里 (hasExtra 标记)
+  const extraHits = [...g.合, ...g.冲, ...g.刑, ...g.害, ...g.破克暗合, ...analysis.subsets]
+    .filter((f) => f.hasExtra)
+  const extraKeTotal = g.破克暗合.filter((f) => f.hasExtra && f.kind === '相克').length
+  const hetotal = g.合.length
+  const chongtotal = g.冲.length
+  const xinghaiototal = g.刑.length + g.害.length + g.破克暗合.length
 
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 md:p-5 shadow-sm">
@@ -98,9 +97,14 @@ export function GanZhiPanel() {
           <Section label="⑥ 墓库 · 开 / 闭 / 静">
             <MukuList list={analysis.muku} />
           </Section>
+          {analysis.subsets.length > 0 && (
+            <Section label="⑦ 子集 · 半合 / 拱合 / 拱会">
+              <FindingList list={analysis.subsets} />
+            </Section>
+          )}
           {extraHits.length > 0 && (
-            <Section label="⑦ 岁运引动 · 大运 / 流年 / 流月 × 原局">
-              <ExtraFindingList list={extraHits} />
+            <Section label="⑧ 岁运引动 · 大运 / 流年 / 流月 × 原局">
+              <FindingList list={extraHits} />
             </Section>
           )}
       </div>
@@ -160,35 +164,6 @@ function MukuList({ list }: { list: readonly MuKuVerdict[] }) {
   )
 }
 
-function ExtraFindingList({ list }: { list: ExtraInteraction[] }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      {list.map((f, idx) => (
-        <ExtraFindingRow key={`${f.source.label}-${f.source.gz}-${f.target}-${f.kind}-${idx}`} f={f} />
-      ))}
-    </div>
-  )
-}
-
-function extraKindTone(kind: ExtraInteraction['kind']): string {
-  return KIND_TONE[kind] ?? PO_TONE
-}
-
-function ExtraFindingRow({ f }: { f: ExtraInteraction }) {
-  return (
-    <div className={`rounded-md border px-2.5 py-1.5 text-xs leading-relaxed ${extraKindTone(f.kind)}`}>
-      <div className="flex items-baseline gap-2 flex-wrap">
-        <span className="inline-flex items-center gap-1 text-[10px] opacity-70 font-medium">{f.kind}</span>
-        <span className="font-bold text-sm">{f.note}</span>
-        <span className="text-[10px] opacity-80 tabular-nums">
-          [{f.source.label} {f.source.gz} × {POS_LABEL[f.target] ?? f.target} {f.targetGz}]
-        </span>
-        {f.huaWx && <span className="ml-auto text-[11px] font-medium">化{f.huaWx}</span>}
-      </div>
-    </div>
-  )
-}
-
 function FindingRow({ f }: { f: FlatFinding }) {
   const isDissolved = f.dissolved.length > 0
   return (
@@ -202,13 +177,14 @@ function FindingRow({ f }: { f: FlatFinding }) {
         <span className={`font-bold text-sm ${isDissolved ? 'line-through decoration-amber-500/70' : ''}`}>
           {f.name}
         </span>
+        {f.sub && <span className="text-[10px] opacity-70">{f.sub}</span>}
         {f.positions && (
           <span className="text-[10px] opacity-80 tabular-nums">
             [{f.positions}{f.close ? ' · 紧贴' : ''}]
           </span>
         )}
+        {f.hasExtra && <span className="text-[10px] opacity-70">· 含岁运</span>}
       </div>
-      {f.note && <div className="text-[10px] opacity-80 mt-0.5">{f.note}</div>}
       {f.dissolved.map((d, i) => (
         <FindingTag key={`d-${d.by.label}-${d.by.gz}-${i}`} tone="amber" prefix="化解">
           {d.by.label} {d.by.gz} → {d.via}

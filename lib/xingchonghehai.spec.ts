@@ -54,7 +54,6 @@ describe('analyzeGanZhiWithExtras 大数定律模拟', () => {
 
     const baseKindCount: Record<string, number> = {}
     const extraKindCount: Record<string, number> = {}
-    const extraSourceCount: Record<string, number> = {}
     const dissolvedKindCount: Record<string, number> = {}
     const dissolvedSourceCount: Record<string, number> = {}
 
@@ -81,16 +80,23 @@ describe('analyzeGanZhiWithExtras 大数定律模拟', () => {
           totalBase += list.length
         }
 
-        for (const item of analysis.extra) {
+        // 岁运柱已由 engine 一并入列 analyze(), 命中落在各组里 (hasExtra 标记)
+        const flat = [
+          ...Object.values(analysis.groups).flat(),
+          ...analysis.subsets,
+        ]
+        for (const item of flat) {
+          if (!item.hasExtra) continue
           bump(extraKindCount, item.kind)
-          bump(extraSourceCount, item.source.label)
           totalExtra++
         }
 
-        for (const item of analysis.dissolved) {
-          bump(dissolvedKindCount, item.kind)
-          bump(dissolvedSourceCount, item.by.label)
-          totalDissolved++
+        for (const item of flat) {
+          for (const mod of item.dissolved) {
+            bump(dissolvedKindCount, item.kind)
+            bump(dissolvedSourceCount, mod.by.label)
+            totalDissolved++
+          }
         }
       } catch {
         errored++
@@ -106,7 +112,6 @@ describe('analyzeGanZhiWithExtras 大数定律模拟', () => {
 
     printSorted('原局 finding 命中 (从多到少)', baseKindCount, totalBase)
     printSorted('岁运 extra 命中 (从多到少)', extraKindCount, totalExtra)
-    printSorted('岁运 source 命中 (从多到少)', extraSourceCount, totalExtra)
     printSorted('引化 dissolved 原局类型 (从多到少)', dissolvedKindCount, totalDissolved)
     printSorted('引化 source 命中 (从多到少)', dissolvedSourceCount, totalDissolved)
 

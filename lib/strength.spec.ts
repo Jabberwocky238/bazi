@@ -96,3 +96,46 @@ describe('analyzeStrength', () => {
     expect(result).toBeNull()
   })
 })
+
+describe('人元司令参与评分', () => {
+  // 巳月分野: 余气戊5天 → 中气庚9天 → 本气丙16天
+  const gengSi = pillars([['甲', '辰'], ['己', '巳'], ['庚', '午'], ['丙', '子']])
+
+  test('不给 dayInMonth 时退回月令本气十二长生', () => {
+    const r = analyzeStrength(gengSi)
+    expect(r?.siLing).toBeNull()
+    expect(r?.correctionNote).toBe('长生 +15')
+  })
+
+  test('巳月第10天 庚中气用事 → 日主庚金「旺」', () => {
+    const r = analyzeStrength(gengSi, 10)
+    expect(r?.siLing?.gan).toBe('庚')
+    expect(r?.siLing?.phase).toBe('中气')
+    expect(r?.siLing?.isBenQi).toBe(false)
+    expect(r?.siLing?.wangShuaiOfDay).toBe('旺')
+    expect(r?.correctionNote).toBe('旺 +22')
+  })
+
+  test('巳月第25天 丙本气用事 → 日主庚金「死」', () => {
+    const r = analyzeStrength(gengSi, 25)
+    expect(r?.siLing?.gan).toBe('丙')
+    expect(r?.siLing?.phase).toBe('本气')
+    expect(r?.siLing?.isBenQi).toBe(true)
+    expect(r?.siLing?.wangShuaiOfDay).toBe('死')
+    expect(r?.correctionNote).toBe('死 -20')
+  })
+
+  // md 明文: 立夏后第十天生者, 按巳火月令判得令, 按庚金司令判则失令 —— 结论相反
+  test('同一命盘 司令段不同 → 身强弱级别可翻转', () => {
+    const day10 = analyzeStrength(gengSi, 10)
+    const day25 = analyzeStrength(gengSi, 25)
+    expect(day10!.score - day25!.score).toBe(42)
+    expect(day10?.level).toBe('身中(偏弱)')
+    expect(day25?.level).toBe('身弱')
+  })
+
+  test('超出分野总天数时取本气 (节气长度有浮动)', () => {
+    const r = analyzeStrength(gengSi, 99)
+    expect(r?.siLing?.phase).toBe('本气')
+  })
+})

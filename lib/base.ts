@@ -71,6 +71,11 @@ export type BaziResult = {
   hourKnown: boolean
   /** 四柱十神 (与 pillars 同序同长)。 */
   shishen: PillarShishenView[]
+  /**
+   * 出生日距本月节令起点的天数 (节令当日记 1) —— 人元司令用。
+   * 八字直输无公历日期, 故为 undefined。
+   */
+  dayInMonth?: number
 
   // BaziDerived 合并字段
   dayGan: GanC | null
@@ -163,6 +168,7 @@ export function fillDerivedFields(result: {
   lunarStr: string
   pillars: DetailedPillar[]
   hourKnown: boolean
+  dayInMonth?: number
 }): BaziResult {
   const { pillars } = result
   const [yearPillar, monthPillar, dayPillar] = pillars

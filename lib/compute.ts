@@ -71,6 +71,7 @@ export function computeBazi(
   const pillars = calc.pillars()
 
   return fillDerivedFields({
+    dayInMonth: dayInMonthOf(lunar, year, month, day),
     solarStr: hourKnown
       ? solar.toYmdHms()
       : `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} 时辰未知`,
@@ -81,6 +82,27 @@ export function computeBazi(
     pillars,
     hourKnown,
   })
+}
+
+/**
+ * 出生日距本月节令起点的天数, 节令当日记 1 —— 人元司令的输入。
+ * 用 lunar-typescript 的 getPrevJie(true) 取当月起点之节 (含当天)。
+ */
+function dayInMonthOf(
+  lunar: ReturnType<Solar['getLunar']>,
+  year: number,
+  month: number,
+  day: number,
+): number | undefined {
+  try {
+    const js = lunar.getPrevJie(true).getSolar()
+    const from = Date.UTC(js.getYear(), js.getMonth() - 1, js.getDay())
+    const to = Date.UTC(year, month - 1, day)
+    const n = Math.floor((to - from) / 86400000) + 1
+    return n >= 1 ? n : undefined
+  } catch {
+    return undefined
+  }
 }
 
 // ————————————————————————————————————————————————————————
@@ -199,7 +221,7 @@ export function computeFromState(s: BaziInputData): ComputedFromState | null {
 // ————————————————————————————————————————————————————————
 
 export function deriveAll(r: BaziResult, gejuExtras: { dayun?: DetailedPillar; liunian?: DetailedPillar } = {}) {
-  const strengthDerived = deriveStrength(r.pillars)
+  const strengthDerived = deriveStrength(r.pillars, r.dayInMonth)
   const gejuHits = detectGejuWith(r, strengthDerived, gejuExtras)
   const xiyongAnalysis = analyzeXiyong(r.pillars, r.shishen, strengthDerived.analysis, gejuHits)
   return { ...r, ...strengthDerived, gejuHits, xiyongAnalysis }

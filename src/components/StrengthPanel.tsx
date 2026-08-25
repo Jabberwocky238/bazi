@@ -79,13 +79,32 @@ export function StrengthPanel() {
             <span className={ptClass(a.deLingPoints)}>{signed(a.deLingPoints)}</span>
           </Row>
 
-          {/* 旺相休囚死 —— 月令层粗判, 与评分法独立 */}
+          {/* 旺相休囚死 —— 按月令本气的粗判 */}
           <Row label="旺衰">
             <span className={WANGSHUAI_TONE[a.wangShuai] ?? ''}>{a.wangShuai}</span>
             <span className="text-slate-600 dark:text-slate-400 flex-1">
               日主 {a.dayWx.str} 在 {a.monthZhi.str}月({a.monthWx.str}) 的旺相休囚死
             </span>
           </Row>
+
+          {/* 人元司令 —— 有出生日期才有; 得令一行的分即由它给出 */}
+          {a.siLing && (
+            <Row label="司令">
+              <span className={WANGSHUAI_TONE[a.siLing.wangShuaiOfDay] ?? ''}>
+                {a.siLing.wangShuaiOfDay}
+              </span>
+              <span className="text-slate-600 dark:text-slate-400 flex-1">
+                {a.monthZhi.str}月第 {a.siLing.dayInMonth} 天 ·{' '}
+                <span className="font-medium">{a.siLing.gan}{a.siLing.phase}</span>用事
+                <span className="ml-1 opacity-70">
+                  ({a.siLing.spans.map((x) => `${x.gan}${x.days}`).join('/')})
+                </span>
+                {a.siLing.wangShuaiOfDay !== a.wangShuai && (
+                  <span className="ml-1 text-amber-700 dark:text-amber-400">· 与月令本气口径不同</span>
+                )}
+              </span>
+            </Row>
+          )}
 
           {/* 得地 (四柱根) */}
           <div>

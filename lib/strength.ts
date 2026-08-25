@@ -10,18 +10,32 @@
 import type { DetailedPillar } from './base'
 import {
   PillarC,
+  SiLingC,
   ganWangShuai,
   shishenOf,
   GanC,
   WuXingC,
   ZhiC,
   type ShishenC,
+  type SiLingSpan,
   type WangShuai,
 } from '@jabberwocky238/bazi-engine'
 
 const HIDDEN_STEM_STRENGTH = [10, 4, 2] as const
 const BRANCH_WEIGHTS = { 年: 0.8, 月: 1.5, 日: 1.2, 时: 1.0 } as const
 const STEM_WEIGHTS = { 年: 0.8, 月: 1.0, 时: 1.0 } as const
+
+/**
+ * 司令旺衰 → 修正分。与十二长生同量级:
+ *   旺 ≈ 帝旺/临官, 相 ≈ 长生, 休 ≈ 衰, 囚 ≈ 病/死, 死 ≈ 绝。
+ */
+const WANG_SHUAI_POINTS: Record<WangShuai, number> = {
+  旺: 22,
+  相: 12,
+  休: 0,
+  囚: -10,
+  死: -20,
+}
 
 const LONG_SHENG_POINTS = {
   临官: 20,
@@ -78,6 +92,22 @@ export interface GanContrib {
   points: number
 }
 
+/** 人元司令展示信息。 */
+export interface SiLingInfo {
+  /** 当日主事的藏干。 */
+  gan: string
+  /** 所处段: 余气 / 中气 / 本气。 */
+  phase: string
+  /** 入本月节令后的天数, 节令当日记 1。 */
+  dayInMonth: number
+  /** 本月令完整分野, 供展示。 */
+  spans: readonly SiLingSpan[]
+  /** 是否本气当令。 */
+  isBenQi: boolean
+  /** 日主以司令干为准的旺衰。 */
+  wangShuaiOfDay: WangShuai
+}
+
 export type StrengthLevel =
   | '身极旺' | '身旺' | '身中强' | '身中(偏强)' | '身中(偏弱)'
   | '身略弱' | '身弱' | '身极弱' | '近从弱'
@@ -101,10 +131,17 @@ export interface StrengthAnalysis {
   correction: number
   correctionNote: string
   /**
-   * 日主在月令下的旺相休囚死 (engine ganWangShuai) —— 粗判, 与评分法独立。
-   * 旺 > 相 > 休 > 囚 > 死。
+   * 日主在月令下的旺相休囚死 (engine ganWangShuai) —— 粗判。
+   * 旺 > 相 > 休 > 囚 > 死。注意这是按月令**本气**判的,
+   * 与 siLing.wangShuaiOfDay (按司令干判) 可能相反。
    */
   wangShuai: WangShuai
+  /**
+   * 人元司令 —— 月令藏干按 余气→中气→本气 轮流当令。
+   * 需要出生日距本月节令的天数才能定, 故仅在有公历日期时可得 (八字直输为 null)。
+   * 有司令时, 十二长生修正按司令干所居之位计 (取代月支本气)。
+   */
+  siLing: SiLingInfo | null
   /** 总分 */
   score: number
   level: StrengthLevel
@@ -179,7 +216,14 @@ function analyzeStem(
 // 4. 主函数
 // ————————————————————————————————————————————————————————
 
-export function analyzeStrength(pillars: DetailedPillar[]): StrengthAnalysis | null {
+/**
+ * @param dayInMonth 出生日距本月节令起点的天数 (节令当日记 1)。
+ *   给了就按**人元司令**定十二长生修正位; 不给则退回月支本气 (八字直输无日期)。
+ */
+export function analyzeStrength(
+  pillars: DetailedPillar[],
+  dayInMonth?: number,
+): StrengthAnalysis | null {
   if (pillars.length !== 4) return null
   const [yearP, monthP, dayP, hourP] = pillars
   const dayGan = dayP.pillar.gan
@@ -202,20 +246,42 @@ export function analyzeStrength(pillars: DetailedPillar[]): StrengthAnalysis | n
   ]
   const ganPoints = Number(ganContribs.reduce((s, c) => s + c.points, 0).toFixed(10))
 
-  // 1.2.0: changshengState 收进 PillarC.changsheng()
+  // 人元司令 —— 有出生日才能定当日主事藏干。
+  //   md: 「司令是确定天干旺衰最权威的依据」「司令一错, 整个旺衰、喜用判断全盘错」。
+  //   司令是 日主五行 vs 司令干五行 的旺相休囚死 (不涉及地支),
+  //   故走 WANG_SHUAI_POINTS, 而非把司令干换算成某个地支再取十二长生。
+  const sl = dayInMonth !== undefined ? SiLingC.from(monthZhi, dayInMonth) : null
+  const siLing: SiLingInfo | null = sl
+    ? {
+        gan: sl.gan.str,
+        phase: sl.phase,
+        dayInMonth: sl.dayInMonth,
+        spans: sl.spans,
+        isBenQi: sl.isBenQi,
+        wangShuaiOfDay: sl.wangShuaiOfGan(dayGan),
+      }
+    : null
+
+  // 月令修正: 有司令按司令干的旺相休囚死计, 否则退回月支十二长生。
   const longState = PillarC.from(dayGan, monthZhi).changsheng()
-  const correction = LONG_SHENG_POINTS[longState]
+  const correction = siLing
+    ? WANG_SHUAI_POINTS[siLing.wangShuaiOfDay]
+    : LONG_SHENG_POINTS[longState]
   const deLing = correction > 0
   const deLingPoints = correction
-  const deLingNote = `月令 ${monthZhi.str}(${monthWx.str}) 为日主 ${dayGan.str}${dayWx.str} 十二长生「${longState}」`
-  const correctionNote = `${longState} ${correction >= 0 ? '+' : ''}${correction}`
+  const deLingNote = siLing
+    ? `司令 ${siLing.gan}${siLing.phase}用事 (${monthZhi.str}月第${siLing.dayInMonth}天) → 日主 ${dayGan.str}${dayWx.str} 「${siLing.wangShuaiOfDay}」`
+    : `月令 ${monthZhi.str}(${monthWx.str}) 为日主 ${dayGan.str}${dayWx.str} 十二长生「${longState}」`
+  const correctionNote = siLing
+    ? `${siLing.wangShuaiOfDay} ${correction >= 0 ? '+' : ''}${correction}`
+    : `${longState} ${correction >= 0 ? '+' : ''}${correction}`
 
   const score = Number((rootPoints + ganPoints + correction).toFixed(10))
   const level = levelOf(score)
   const wangShuai = ganWangShuai(dayGan, monthZhi)
 
   return {
-    dayGan, dayWx, monthZhi, monthWx, wangShuai,
+    dayGan, dayWx, monthZhi, monthWx, wangShuai, siLing,
     deLing, deLingNote, deLingPoints,
     roots: branches, rootPoints,
     ganContribs, ganPoints,
@@ -247,8 +313,11 @@ export interface StrengthDerived {
 }
 
 /** 身强弱派生计算（含得令/得地/得势/身旺/身弱判定）。 */
-export function deriveStrength(pillars: DetailedPillar[]): StrengthDerived {
-  const analysis = analyzeStrength(pillars)
+export function deriveStrength(
+  pillars: DetailedPillar[],
+  dayInMonth?: number,
+): StrengthDerived {
+  const analysis = analyzeStrength(pillars, dayInMonth)
   const rootPoints = analysis?.rootPoints ?? 0
   const ganPoints = analysis?.ganPoints ?? 0
   const score = analysis?.score ?? 0

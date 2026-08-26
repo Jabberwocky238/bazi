@@ -64,6 +64,10 @@ export {
  */
 export function deriveFromCtx(ctx: ToolContext): {
   derived: ReturnType<typeof deriveAll> | null
+  /** 排盘四柱, 供格局求值用。 */
+  pillars?: DetailedPillar[]
+  /** 选中大运柱 (若有), 参与格局岁运判定。 */
+  dayun?: DetailedPillar
   error?: string
 } {
   const basics = (ctx.context as { basics?: { bazi?: string[]; sex?: number } } | undefined)?.basics
@@ -89,8 +93,8 @@ export function deriveFromCtx(ctx: ToolContext): {
       .filter((g): g is string => !!g && g.length === 2)
       .map((g) => gzToDetailedPillar(g, dayGan))
       .find((p): p is DetailedPillar => !!p)
-    const derived = deriveAll(r, dayunPillar ? { dayun: dayunPillar } : {})
-    return { derived }
+    const derived = deriveAll(r)
+    return { derived, pillars: r.pillars, dayun: dayunPillar }
   } catch (e) {
     return { derived: null, error: `排盘/派生失败: ${e instanceof Error ? e.message : String(e)}` }
   }

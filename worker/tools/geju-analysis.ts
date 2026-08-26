@@ -1,5 +1,6 @@
 import { tool, type Tool, type ToolContext } from '../tooldef'
 import { deriveFromCtx } from './_helpers'
+import { evalGeju } from '../../src/components/stores/geju'
 
 /** geju_analysis —— 格局分析 (正格/外格/特殊格, 含岁运显隐)。 */
 export const gejuAnalysis: Tool = tool({
@@ -9,8 +10,16 @@ export const gejuAnalysis: Tool = tool({
     '无需传参, 自动取当前命盘八字与选中大运。',
   parameters: { type: 'object', properties: {}, additionalProperties: false },
   async execute(_args, ctx: ToolContext) {
-    const { derived, error } = deriveFromCtx(ctx)
-    if (!derived) return JSON.stringify({ error })
-    return JSON.stringify(derived.gejuHits ?? [])
+    const { derived, pillars, dayun, error } = deriveFromCtx(ctx)
+    if (!derived || !pillars) return JSON.stringify({ error })
+    const { hits } = evalGeju(pillars, derived, dayun ? { dayun } : {})
+    return JSON.stringify(
+      hits.map((h) => ({
+        name: h.name,
+        category: h.category,
+        成: h.成,
+        ...(h.破.length > 0 ? { 岁运破: h.破.map((r) => r.why) } : {}),
+      })),
+    )
   },
 })

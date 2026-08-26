@@ -12,7 +12,6 @@
  */
 import type { DetailedPillar, PillarShishenView } from '../base'
 import type { StrengthAnalysis } from '../strength'
-import type { GejuOutput } from '../geju'
 import {
   catToWx,
   type Cat,
@@ -27,26 +26,18 @@ import { analyzeJiuying } from './jiuying'
 import { countWxStrength, analyzeTongguan } from './tongguan'
 import { sideOf, pickFuYi, computeTiaohou } from './fuyi'
 
-function pickCongOverride(gejuHits: GejuOutput[]): string | null {
-  const congHit = gejuHits.find((h) => h.category === '从格')
-  if (congHit) return `命中 ${congHit.name} → 日主已极弱顺从所从之神；扶抑结论需反向取用`
-  const zhuanHit = gejuHits.find((h) => h.category === '专旺格')
-  if (zhuanHit) return `命中 ${zhuanHit.name} → 一气成象，顺其旺势；忌官杀逆之`
-  return null
-}
-
 /**
  * 喜用神分析纯函数。
  * @param pillars 4 柱
  * @param shishen 四柱十神视图 (与 pillars 同序)
  * @param strength 身强弱分析结果
- * @param gejuHits 格局命中列表（可选，用于从格/专旺格覆写）
+ * @param congOverride 从格/专旺格覆写说明（可选，由调用方按格局命中给出）
  */
 export function analyzeXiyong(
   pillars: DetailedPillar[],
   shishen: PillarShishenView[],
   strength: StrengthAnalysis | null,
-  gejuHits?: GejuOutput[],
+  congOverride?: string | null,
 ): XiyongAnalysis | null {
   if (pillars.length !== 4) return null
   if (!strength) return null
@@ -88,6 +79,6 @@ export function analyzeXiyong(
     tiaohou: computeTiaohou(monthZhi, dayWx),
     tongguan: analyzeTongguan(pillars, countWxStrength(pillars)),
 
-    congOverride: gejuHits ? pickCongOverride(gejuHits) : null,
+    congOverride: congOverride ?? null,
   }
 }

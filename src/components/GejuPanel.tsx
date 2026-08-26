@@ -7,45 +7,24 @@ import {
   type Pillar,
   type PillarType,
   shishenWuxing,
-  type GejuQuality,
   type GejuCategory,
-  type GejuOutput,
   skillNames,
 } from 'bazilib'
+import type { GejuVerdict } from '@@/stores/geju'
 import { useBaziStore, type ExtraPillar, useBazi } from '@@/stores'
 import { SkillLink, type SkillItem } from '@@/SkillLink'
 
-// 配色 (按"是否引化"区分颜色饱和度, 边框样式不变):
-//   已引化 吉   border-emerald-500 + bg-emerald-500/10
-//   已引化 凶   border-rose-500    + bg-rose-500/10
-//   已引化 中   border-slate-400   + bg-slate-400/10
-//   未引化      同色 30 透明 + 同色 5 底色 (仅岁运潜在格)
-//   岁运破格    border-red-500     + bg-red-500/15 (覆盖以上)
-//
-// 引化判定 (新结构 GejuHit.岁运 + GejuHit.显隐):
-//   显隐 = '显' → 已引化 (原局成格 / 岁运 DefaultTrigger / 岁运 Trigger)。
-//   显隐 = '隐' → 仅潜在 (isSuiyun 而无 DefaultTrigger / Trigger 撑起), 同色淡显。
-//   岁运.Break / 岁运.Conquer 直接覆盖为破格红, 不论显隐。
-const FORMED_BORDER: Record<GejuQuality, string> = {
-  good: 'border-emerald-500 bg-emerald-500/10 [--glow-color:#10b981]',
-  bad: 'border-rose-500 bg-rose-500/10 [--glow-color:#f43f5e]',
-  neutral: 'border-slate-400 bg-slate-400/10 [--glow-color:#94a3b8]',
-}
-const UNFORMED_BORDER: Record<GejuQuality, string> = {
-  good: 'border-emerald-500/30 bg-emerald-500/5 [--glow-color:#10b981]',
-  bad: 'border-rose-500/30 bg-rose-500/5 [--glow-color:#f43f5e]',
-  neutral: 'border-slate-400/30 bg-slate-400/5 [--glow-color:#94a3b8]',
-}
+// 配色 —— 格局只有成与不成, 无吉凶:
+//   原局成格         border-emerald-500 + bg-emerald-500/10
+//   岁运补成 (隐)     同色淡显 (原局未成, 靠大运/流年补齐)
+//   岁运破格         border-red-500 + bg-red-500/15 (覆盖以上)
+const FORMED = 'border-emerald-500 bg-emerald-500/10 [--glow-color:#10b981]'
+const PENDING = 'border-emerald-500/30 bg-emerald-500/5 [--glow-color:#10b981]'
+const BROKEN = 'border-red-500 bg-red-500/15 [--glow-color:#ef4444]'
 
-/** 岁运格是否已被引化激活 (默认 undefined = 显)。 */
-function isFormed(h: GejuOutput): boolean {
-  return (h.显隐 ?? '显') === '显'
-}
-
-function hitBorderClass(h: GejuOutput): string {
-  if (h.岁运?.Break || h.岁运?.Conquer)
-    return 'border-red-500 bg-red-500/15 [--glow-color:#ef4444]'
-  return (isFormed(h) ? FORMED_BORDER : UNFORMED_BORDER)[h.quality]
+function hitBorderClass(h: GejuVerdict): string {
+  if (h.成 && h.破.length > 0) return BROKEN
+  return h.成 ? FORMED : PENDING
 }
 
 /** 专旺格的变体家族 —— 点击 chip 先列出全部变体, 再选看详情 (multiple 模式)。 */
@@ -58,8 +37,8 @@ const ZHUANWANG_FAMILY: SkillItem[] = [
   { category: 'geju', name: '润下格' },
 ]
 
-function GejuChip({ hit }: { hit: GejuOutput }) {
-  const display = hit.guigeVariant ?? hit.name
+function GejuChip({ hit }: { hit: GejuVerdict }) {
+  const display = hit.name
   const chipCls = `text-sm px-3 py-1 rounded-full border-2 ${hitBorderClass(hit)} ${CATEGORY_TEXT[hit.category]}`
 
   // 专旺格: 以 multiple 列出其变体家族
@@ -75,7 +54,7 @@ function GejuChip({ hit }: { hit: GejuOutput }) {
     <SkillLink
       category="geju"
       name={hit.name}
-      subtitle={hit.note}
+      subtitle={hit.破.length > 0 ? `岁运破: ${hit.破.map((r) => r.why).join('; ')}` : undefined}
       className={chipCls}
     >
       {display}
@@ -111,7 +90,8 @@ function extraToPillar(e: ExtraPillar, dayGan: Gan): Pillar {
 
 export function GejuPanel() {
   const pillars = useBazi((s) => s.pillars)
-  const hits = useBazi((s) => s.gejuHits)
+  const geju = useBazi((s) => s.geju)
+  const hits = geju.hits
   const setGejuExtras = useBazi((s) => s.setGejuExtras)
   const extras = useBaziStore((s) => s.extraPillars)
   const dayGan: Gan | undefined = pillars[2]?.pillar.gan.str
@@ -182,10 +162,10 @@ export function GejuPanel() {
       </div>
 
       {(() => {
-        // 原局段 = 非岁运特定
-        const activeHits = hits.filter((h) => !h.岁运?.isSuiyun)
-        // 岁运有变段 = 全部岁运特定（无论是否默认成格/已激发）
-        const suiyunHits = hits.filter((h) => h.岁运?.isSuiyun)
+        // 原局段 = 主局即成格
+        const activeHits = hits.filter((h) => h.成)
+        // 岁运有变段 = 原局未成, 靠岁运补齐
+        const suiyunHits = hits.filter((h) => !h.成)
         if (hits.length === 0) {
           return <p className="text-sm text-slate-500 dark:text-slate-400">未识别到明显格局</p>
         }

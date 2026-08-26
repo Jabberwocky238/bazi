@@ -6,13 +6,13 @@ import {
   type StrengthDerived,
   type Pillar,
   type BaziResult,
-  type GejuOutput,
   type XiyongAnalysis,
   type DeriveAllResult,
 } from 'bazilib'
 import { HOUR_UNKNOWN } from 'bazilib'
 import { computeFromState, type BaziInputMode } from 'bazilib'
 import { computeDaYun, useDayun } from './dayun'
+import { evalGeju, type GejuExtras, type GejuResult } from './geju'
 
 /**
  * 排盘输入模式:
@@ -131,9 +131,11 @@ export const useBaziInput = create<BaziInputState>((set, get) => ({
 // ————————————————————————————————————————————————————————
 
 interface BaziStore extends BaziResult, DeriveAllResult {
-  gejuExtras: { dayun?: Pillar; liunian?: Pillar }
+  gejuExtras: GejuExtras
+  /** 格局求值结果 —— rule 全量判定表 + 格局命中。 */
+  geju: GejuResult
   setResult: (r: BaziResult) => void
-  setGejuExtras: (e: { dayun?: Pillar; liunian?: Pillar }) => void
+  setGejuExtras: (e: GejuExtras) => void
   clearGejuExtras: () => void
 }
 
@@ -141,59 +143,18 @@ export const useBazi = create<BaziStore>((set, get) => ({
   ...EMPTY_RESULT,
   ...deriveAll(EMPTY_RESULT),
   gejuExtras: {},
+  geju: evalGeju(EMPTY_RESULT.pillars, deriveAll(EMPTY_RESULT)),
   setResult: (r) => {
-    const gejuExtras = get().gejuExtras
-    set({ ...r, ...deriveAll(r, gejuExtras) })
+    const derived = deriveAll(r)
+    set({ ...r, ...derived, geju: evalGeju(r.pillars, derived, get().gejuExtras) })
   },
   setGejuExtras: (e) => {
-    // 获取当前完整的 BaziResult 状态
-    const current = get()
-    const r: BaziResult = {
-      pillars: current.pillars,
-      solarStr: current.solarStr,
-      trueSolarStr: current.trueSolarStr,
-      lunarStr: current.lunarStr,
-      hourKnown: current.hourKnown,
-      shishen: current.shishen,
-      dayGan: current.dayGan,
-      dayZhi: current.dayZhi,
-      dayGz: current.dayGz,
-      dayWx: current.dayWx,
-      dayYang: current.dayYang,
-      yearZhi: current.yearZhi,
-      monthZhi: current.monthZhi,
-      season: current.season,
-      monthCat: current.monthCat,
-      monthZhiBeingChong: current.monthZhiBeingChong,
-      mainArr: current.mainArr,
-      ganSet: current.ganSet,
-    }
-    set({ gejuExtras: e, ...deriveAll(r, e) })
+    const c = get()
+    set({ gejuExtras: e, geju: evalGeju(c.pillars, c, e) })
   },
   clearGejuExtras: () => {
-    // 获取当前完整的 BaziResult 状态
-    const current = get()
-    const r: BaziResult = {
-      pillars: current.pillars,
-      solarStr: current.solarStr,
-      trueSolarStr: current.trueSolarStr,
-      lunarStr: current.lunarStr,
-      hourKnown: current.hourKnown,
-      shishen: current.shishen,
-      dayGan: current.dayGan,
-      dayZhi: current.dayZhi,
-      dayGz: current.dayGz,
-      dayWx: current.dayWx,
-      dayYang: current.dayYang,
-      yearZhi: current.yearZhi,
-      monthZhi: current.monthZhi,
-      season: current.season,
-      monthCat: current.monthCat,
-      monthZhiBeingChong: current.monthZhiBeingChong,
-      mainArr: current.mainArr,
-      ganSet: current.ganSet,
-    }
-    set({ gejuExtras: {}, ...deriveAll(r, {}) })
+    const c = get()
+    set({ gejuExtras: {}, geju: evalGeju(c.pillars, c, {}) })
   },
 }))
 

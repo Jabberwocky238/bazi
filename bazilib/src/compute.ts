@@ -18,7 +18,6 @@ import {
   type BaziResult,
 } from './base'
 import { deriveStrength, type StrengthDerived } from './strength'
-import { detectGejuWith, type GejuOutput } from './geju'
 import { analyzeXiyong, type XiyongAnalysis } from './xiyong'
 
 // ————————————————————————————————————————————————————————
@@ -220,11 +219,10 @@ export function computeFromState(s: BaziInputData): ComputedFromState | null {
 // 一站式派生所有排盘数据
 // ————————————————————————————————————————————————————————
 
-export function deriveAll(r: BaziResult, gejuExtras: { dayun?: DetailedPillar; liunian?: DetailedPillar } = {}) {
+export function deriveAll(r: BaziResult) {
   const strengthDerived = deriveStrength(r.pillars, r.dayInMonth)
-  const gejuHits = detectGejuWith(r, strengthDerived, gejuExtras)
-  const xiyongAnalysis = analyzeXiyong(r.pillars, r.shishen, strengthDerived.analysis, gejuHits)
-  return { ...r, ...strengthDerived, gejuHits, xiyongAnalysis }
+  const xiyongAnalysis = analyzeXiyong(r.pillars, r.shishen, strengthDerived.analysis)
+  return { ...r, ...strengthDerived, xiyongAnalysis }
 }
 
 export type DeriveAllResult = ReturnType<typeof deriveAll>

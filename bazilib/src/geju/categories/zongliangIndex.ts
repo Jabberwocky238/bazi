@@ -1,5 +1,0 @@
-export { isCaiGuanYinQuan } from './caiGuanYinQuan'
-export { isBiJieChongChong } from './biJieChongChong'
-export { isLuMaTongXiang } from './luMaTongXiang'
-export { isYiCaiPoYin } from './yiCaiPoYin'
-export { isCaiDuoShenRuo } from './caiDuoShenRuo'

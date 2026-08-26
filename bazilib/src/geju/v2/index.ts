@@ -1,1 +1,0 @@
-export { calcZhengGe } from './正格'
